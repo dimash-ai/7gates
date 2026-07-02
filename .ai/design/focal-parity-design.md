@@ -1,0 +1,176 @@
+# Design summary
+
+This is the **epic-level** architecture for reaching old-focal functional parity. It fixes the two
+decisions everything hinges on — **(1)** a single shared `CalendarFilterContext` that owns
+selected-calendar + role + `canEdit`/`dataOwnerId` and a uniform read-only gating pattern that every
+page consumes, and **(2)** a single `TimezoneProvider` + pure DST helpers that Calendar/Events/AI
+cards render through. Both are ported in behavior from old-focal but re-expressed on the new stack
+(React 19, typed `api/*`, React Query, Wouter, Tailwind 4) over the **existing** FastAPI endpoints.
+Everything else (offline/PWA, assistant/voice, and each per-area page) consumes these foundations;
+per-page component-level design is **deferred to each slice's own gate-3** — this doc sets the
+contracts they must honor, not their internal layout.
+
+Two hard boundaries set here and inherited by every slice:
+- **Client scoping is not security.** `dataOwnerId`/`currentCalendarId`/`canEdit` shape what the UI
+  *requests and shows*; the **backend RBAC + RLS remain the enforcement**. No mutation is "safe"
+  because the client hid a button.
+- **No faked backend fields.** Where parity needs a column the new schema lacks (task recurrence +
+  multi-participant; event custom recurrence), the slice **blocks on a developer-owned model +
+  Alembic migration**; the client wires it only after OpenAPI regenerates.
+
+Traces to: `.ai/think/focal-parity.md` (Recommendation, Phases A/B/C) and
+`.ai/plans/focal-parity-plan.md` (slices 1–13, files table, error map).
+
+# Architecture
+
+```
+App (AuthGate → AppShell)
+ ├─ CalendarFilterProvider ── useCalendarFilter() ──────────────┐  (slice 1)
+ │     state: currentCalendarId, role, canEdit, dataOwnerId,    │
+ │            isViewingAsAssistant, matchesFilter               │
+ │     source: api/sharedCalendars.ts (accessible + my-         │
+ │             participation) via React Query                   │
+ ├─ TimezoneProvider ──────── useTimezone()/useTimeFormat() ────┤  (slice 3)
+ │     state: displayTimezone (localStorage); lib/timezone.ts   │
+ │     pure DST helpers (port of old-focal shared/timezone.ts)  │
+ ├─ AppShell                                                    │
+ │   ├─ AppSidebar  ── limited-menu via canViewOtherPages,      │
+ │   │                 viewing banner, sync/orphan badges       │
+ │   ├─ CalendarSwitcher ── selects main/owned/participating    │
+ │   ├─ PageToolbar ── (slice 12) opens AIAssistantWidget       │
+ │   └─ <page> ── consumes canEdit + dataOwnerId + displayTz ───┘
+ └─ offline/ (slice 11): queue + read-cache + offlineAwareMutation
+```
+
+- **Ownership.** `CalendarFilterContext` lives in `features/calendars/` (it owns calendar identity);
+  `TimezoneProvider`/helpers live in `hooks/` + `lib/`. Both mount in `App.tsx` **inside the auth
+  gate**, wrapping the authed tree, so every page and the shell can read them. Public `/privacy`,
+  `/terms` stay outside both providers.
+- **Coupling is one-directional.** Pages depend on the two contexts; the contexts depend only on
+  `api/*` + auth. No page imports another page. The offline layer wraps `api/queryClient.ts` and is
+  invisible to pages except through the existing mutation hooks.
+- **Reuse, don't rebuild.** New `api/sharedCalendars.ts` and the `src/offline/{queue,storage,setup}`
+  modules already exist; this epic extends them. `@xyflow/react` (goals), Recharts (analytics),
+  and the existing chat SSE transport are reused, not replaced.
+
+# Data model
+
+No client-persistent **database** tables. Client persistent state is browser storage; the only
+**schema** changes are the two backend handoffs.
+
+| entity | change | notes |
+|--------|--------|-------|
+| localStorage `focal_current_calendar_id` | reuse old-focal key | `"main"` sentinel = explicit main-calendar choice; absent = first entry. Auto-select the first accessible calendar **only when `isOnlyParticipant`** (user owns no calendars); an ordinary user with no saved choice defaults to **main**, never an arbitrary shared calendar |
+| localStorage `focal:calendars:main-name` / `focal:calendars:main-color` | reuse | the **same keys the new calendars page already writes** (build corrected the earlier old-focal `focal_main_calendar_*` assumption); the calendars page dispatches `mainCalendarUpdated` so the switcher live-syncs. No legacy-name normalization — the new calendars page stores raw names with a localized default, so old-focal's `normalizeMainCalendarName` is intentionally not ported |
+| localStorage display-timezone key | add | selected IANA zone; invalid/missing → browser default, never corrupts event data |
+| IndexedDB offline store | extend | existing mutation queue + **new** read-cache namespace (events/tasks/projects/goals), versioned for invalidation |
+| `focal.tasks` (server) | **handoff** | add recurrence + multi-participant (`contact_ids`/`other_participants`) columns; SQLAlchemy model + autogenerated Alembic migration by developer |
+| `focal.events`/calendar (server) | **handoff** | add custom-recurrence (interval + unit) representation if not expressible by current `recurrence`/`recurrenceEndDate` fields |
+
+# Interfaces & contracts
+
+**`useCalendarFilter(): CalendarFilterContextType`** — ported 1:1 in semantics from old-focal
+`client/src/context/CalendarFilterContext.tsx`:
+- `currentCalendarId: string | null` (`null` = main), `setCurrentCalendarId(id)`, `currentCalendar`,
+  `calendars`, `participatingCalendars`, `isOnlyParticipant`, `mainCalendarName/Color`, `isMainCalendar`, `isLoading`.
+- `currentCalendarRole: 'owner'|'full_access'|'editor'|'developer'|'viewer'|'requester'|null`.
+- **Main-calendar / owned-calendar override (first):** when `currentCalendarId === null` (main, role
+  `null`) **or** the selected calendar is one the user owns (`currentCalendar.userId === user.id`),
+  rights are full — `canEdit = canViewOtherPages = canManageCalendars = true`,
+  `dataOwnerId = calendarOwnerId =` the signed-in user, `isViewingAsAssistant = false`. This override
+  is evaluated *before* the role-based rules below (matches old-focal's
+  `!stableCurrentCalendar` / `userId === current user` branches).
+- Derived rights for a **shared** (non-owned) calendar (exact old-focal rules):
+  `canEdit = role ∈ {owner, full_access, editor}`;
+  `canViewOtherPages = role ∈ {owner, full_access, developer}`; `canManageCalendars = role === owner`.
+  An unknown / not-yet-loaded participation defaults to **no write, no other-pages**, with
+  `dataOwnerId =` the calendar owner (show owner data; never mix in the viewer's own data).
+- `dataOwnerId` = owner id when `isViewingAsAssistant` (`role ∈ {full_access, developer}`), else the
+  signed-in user; plus `calendarOwnerId` and `isViewingAsAssistant`.
+- `matchesFilter(event) => boolean` over `filterType ∈ {isWorkTime, sphere, project, product, projectType, custom}`.
+- Backed by the new typed `api/sharedCalendars.ts` (accessible + my-participation), not `fetchWithAuth`.
+
+**Read-only gating pattern (every mutating page consumes):**
+1. Render: disable/hide mutation controls when `!canEdit`, each with an accessible label/tooltip + a
+   visible read-only notice. 2. Guard: every mutation handler early-returns (with localized notice)
+   when `!canEdit` **before** calling the API. 3. Scope: pass `dataOwnerId`/`currentCalendarId` into
+   queries that already accept them; `matchesFilter` hides non-matching items (hide, never delete).
+
+**`useTimezone()` / `useTimeFormat()`** + `lib/timezone.ts` pure helpers — DST-aware wall-time
+conversion (Intl-based port of old-focal `shared/timezone.ts`), matching the existing backend
+`test_timezone.py` DST fixtures. Display zone is presentational; stored per-event `timezone` is never
+mutated by display.
+
+**Backend handoff contracts** (developer-owned; client codes against regenerated `openapi.d.ts`):
+- Task: `recurrence` (none/daily/weekly/monthly/yearly + end) and multi-participant
+  (`contactIds: string[]`, `otherParticipants: string`).
+- Event: `customRecurrence: { interval: number; unit: 'day'|'week'|'month'|'year' }` — **only if** the
+  existing `recurrence` / `recurrenceEndDate` / recurrence-exception fields cannot already represent
+  old-focal's custom interval; confirm against the current schema at the events slice's gate before
+  treating it as a handoff (it may be UI-only).
+
+**`offlineAwareMutation`** — wraps a React Query mutation: optimistic cache patch + reversible
+rollback, enqueue on offline, ordered replay on reconnect, broad invalidate after replay; preserves
+the existing 4xx-drop / transient-keep rule.
+
+# Flow (happy + unhappy paths)
+
+| path | trigger | handled where | result |
+|------|---------|---------------|--------|
+| happy — select calendar | user picks calendar in switcher | `CalendarFilterProvider` | context updates, queries refetch by changed key, pages re-scope |
+| happy — read-only view | viewer/requester opens a shared calendar | each page via `canEdit` | data renders; mutation controls disabled with notice |
+| accessible/participation load fails | `api/sharedCalendars` rejects | provider query error branch | main calendar stays usable; switcher shows localized retry; roles default to **no** unsafe cross-owner write |
+| stale saved selection | saved id missing from accessible set during refetch | provider `stableCurrentCalendar` (last-known ref) | keep last-known calendar; only fall to main if confirmed gone |
+| read-only mutation attempt | `canEdit === false` | page handler guard (pre-API) | no request sent; localized read-only notice |
+| filter mismatch | event/task fails `matchesFilter` | consumer | item hidden from the selected view (not deleted) |
+| invalid display timezone | bad IANA value in storage | tz provider sanitizer | fall back to browser default; event data unchanged |
+| backend field missing | OpenAPI lacks task recurrence / event custom-recurrence | slice preflight/typecheck | dependent UI does not ship; slice blocks for migration handoff |
+| offline replay rejected | 4xx during queued replay | offline rollback path | optimistic patch rolled back/refetched; indicator shows dropped state |
+| offline replay transient | network/5xx during replay | queue transient branch | entry stays queued in order; pending count shown; retried later |
+
+# Alternatives rejected
+
+- **Per-page local role/permission state** instead of a shared context — duplication and drift
+  across 7 pages; the same `canEdit` logic re-implemented each time. (Plan option B.) Rejected.
+- **Client-side permission enforcement as the boundary** — a hidden button is not security. Backend
+  RBAC + RLS stay authoritative; the client only scopes/affords. Rejected as a *security* model.
+- **Epoch/offset timezone math** — old-focal deliberately does Intl wall-time conversion to stay
+  DST-correct; epoch math reintroduces the spring-forward/fall-back bugs. Rejected.
+- **Replacing the offline queue** with a new network stack — the existing `src/offline/*` queue is
+  sound; we extend it (read-cache + optimistic) rather than fork it. Rejected.
+- **One mega-PR** for the whole epic — unreviewable; build proceeds strictly per numbered slice,
+  each leaving `lint/typecheck/test:run/build` green. Rejected.
+
+# Test strategy
+
+- **Unit (pure):** timezone DST cases (Almaty no-DST, LA spring-forward, NY fall-back, invalid zone
+  fallback, empty/same-zone) aligned to backend fixtures; `matchesFilter` per `filterType`; the role
+  → rights matrix; `taskSort` preserved.
+- **Component:** `CalendarSwitcher` selection + query invalidation; `AppSidebar` limited menu for
+  `!canViewOtherPages`; one **read-only gate** test per Tasks/Events/Calendar/TimeBudgets/Goals/
+  Tags/Analytics proving a disabled control never calls its API while read data still renders;
+  assistant-mode proving owner-scoped fetch.
+- **Per-slice:** each page slice adds focused tests for its restored behavior (dialogs, filters,
+  drag/resize, undo, export, sync settings, offline, voice) per the plan's test list.
+- **Backend handoffs:** model/schema/service tests prove the new task/event fields validate,
+  persist, and serialize through OpenAPI without regressing existing CRUD; `alembic check` clean.
+- **"Verified" per slice:** `cd superapp/apps/focal/client && pnpm lint && pnpm typecheck &&
+  pnpm test:run && pnpm build` green; backend handoff slices also `cd …/server && make verify &&
+  uv run alembic check`.
+
+# Security & release notes
+
+- **Authorization stays server-side.** `dataOwnerId`/`currentCalendarId` are request *scoping*;
+  every shared-calendar test must include a non-owned-data path proving the backend (RBAC + RLS),
+  not the client, blocks unauthorized reads/writes. Client guards exist for UX, not enforcement.
+- **No secrets in the client / shipped text.** No tokens or PII added to bundles, handoffs, or PR
+  bodies.
+- **PWA cache safety.** Read-cache + service worker are **versioned**; an update prompt + versioned
+  caches prevent stale assets or stale per-user data leaking across sessions; rollback = ship a SW
+  version that clears the parity caches.
+- **Google two-way sync** (slice 10) can create/delete external events — destructive actions need
+  explicit confirmation + visible settings summaries + tests before ship.
+- **Migrations** (handoffs) ship with their model change in the same set; rollback = standard
+  migration down + keep dependent client controls hidden until OpenAPI matches.
+- **Release shape.** Independently shippable slices, foundations (1→3) first; each slice is its own
+  PR per `apps/focal/CLAUDE.md` branching (`feat/focal-<slug>` → `feature/focal-migration`).

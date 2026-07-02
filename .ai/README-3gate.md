@@ -40,7 +40,7 @@ clean-context subagent for Opus — so it never grades an artifact it watched be
 ```
 cp .ai/tasks/TEMPLATE.md .ai/tasks/<feature>.md   # OPTIONAL kickoff — the design doc is self-contained; seed one only if it helps
 
-/gate-design  <feature>                       # A — Opus writes the design doc; GPT scores it
+/gate-design  <feature> <repo> [base-branch]  # A — creates the feature worktree; Opus writes the design doc; GPT scores it
 /gate-build   <feature> <repo> [base-branch]  # B — Opus builds + commits one slice at a time in the feature's worktree; GPT scores each; repeat
 /gate-verify  <feature> <repo> [base-branch]  # C — GPT verifies the whole change + writes tests; Opus scores it, then ships
 ```
@@ -51,17 +51,18 @@ Gate A uses `.ai/design/TEMPLATE-3gate.md` (one topic-structured design doc). Th
 
 **Base branch & commits.** Gate B **commits each approved slice** on `feature/<feature>` (in the
 feature's worktree); gate C diffs the committed change against `[base-branch]` (the 3rd arg —
-**default `main`; `feature/focal-migration` for focal slices**, since those branch off the
-integration branch, not `main`). GPT's verify runs in a `workspace-write` sandbox **scoped to the
+**default `main`; focal passes `feature/focal-migration` until 2026-07-10**, when the migration
+merges and focal too branches off `main`). GPT's verify runs in a `workspace-write` sandbox **scoped to the
 feature's worktree `<repo>/.worktrees/<feature>`**, a different git repo than the pipeline's `.ai/`
 tree — so GPT **prints** its verification report and Opus saves it to
 `reviews/<feature>/C-verify-report.md`; GPT never writes `.ai/` directly.
 
 **Parallel sessions (worktrees).** Each feature builds in its **own git worktree of `<repo>`** —
 `<repo>/.worktrees/<feature>` on branch `feature/<feature>` — so several sessions can run different
-features at once without colliding on files, the branch, or the index. **Gate B creates** it (off
-`[base-branch]`), every later gate reuses it, and **gate C removes** it after the PR merges (keeping
-the branch). Invoke the gates exactly as above — the worktree is derived from `<feature>`. Full
+features at once without colliding on files, the branch, or the index. **Gate A creates** it (off
+`[base-branch]`; gate B creates it if A ran without a `<repo>`), every later gate reuses it, and
+**gate C removes** it after the PR merges (keeping the branch). Invoke the gates exactly as above —
+the worktree is derived from `<feature>`. Full
 convention: [`checklists/worktree.md`](checklists/worktree.md). Only the code repo is isolated; the
 `.ai/` paper trail stays in the shared checkout (commit it per feature so sessions don't race on
 `.ai/` git state).

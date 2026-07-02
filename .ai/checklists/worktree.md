@@ -3,75 +3,76 @@
 Every code-touching gate runs against a **dedicated git worktree of the code repo**, one per
 feature, so several pipeline sessions can run **in parallel without colliding** on files, the
 branch, or the git index. This is the single source of truth for that convention — the gate
-commands (`gate-build`/`gate4-build`, `gate-verify`, `gate5-review`, `gate6-test`,
+commands (`gate-design`, `gate-build`/`gate4-build`, `gate-verify`, `gate5-review`, `gate6-test`,
 `gate7-ship`) reference it.
 
 ## Naming
 
-For feature `$1`, code repo `$2` (the path passed as `<repo>`, relative to the pipeline root),
-base branch `$3`:
+For feature `<feature>`, code repo `<repo>` (the path passed as `<repo>`, relative to the pipeline root),
+base branch `<base>`:
 
 | Thing | Value |
 |-------|-------|
-| Worktree path | `$2/.worktrees/$1` (`.worktrees/` is gitignored in the code repo) |
-| Branch        | `feature/$1` |
-| Base          | `$3` — **default `main`; pass `feature/focal-migration` for focal slices** |
+| Worktree path | `<repo>/.worktrees/<feature>` (`.worktrees/` is gitignored in the code repo) |
+| Branch        | `feature/<feature>` |
+| Base          | `<base>` — **default `main`**. Focal: pass `feature/focal-migration` **until 2026-07-10**; from 2026-07-10 (migration merged) focal branches off the default `main` too |
 
 Pass the **same base** to build, verify, and ship for a given feature: the branch forks from it,
-and verify/ship diff against it as `$3...HEAD`.
+and verify/ship diff against it as `<base>...HEAD`.
 
-> **Path gotcha (don't "fix" it):** `git -C "$2" worktree add/remove` resolves its path argument
-> **relative to `$2`**, so those two subcommands take the repo-relative `.worktrees/$1`. Every other
-> command runs from the pipeline root and takes the full `$2/.worktrees/$1`. Mixing them up creates
-> `$2/$2/.worktrees/$1`.
+> **Path gotcha (don't "fix" it):** `git -C "<repo>" worktree add/remove` resolves its path argument
+> **relative to `<repo>`**, so those two subcommands take the repo-relative `.worktrees/<feature>`. Every other
+> command runs from the pipeline root and takes the full `<repo>/.worktrees/<feature>`. Mixing them up creates
+> `<repo>/<repo>/.worktrees/<feature>`.
 >
 > **No cross-command shell vars:** each gate runs its commands in separate shells, so a `WT=…` set
-> in one block won't survive to the next — write the literal `$2/.worktrees/$1` in each command
-> (`$1`/`$2`/`$3` are substituted by the slash-command layer before bash sees them). The `BR`/`BASE`
+> in one block won't survive to the next — write the literal `<repo>/.worktrees/<feature>` in each command
+> (`<feature>`/`<repo>`/`<base>` are substituted by the gate executor — parsed from the raw `$ARGUMENTS` string, never from positional placeholders — before bash sees them). The `BR`/`BASE`
 > vars below are local to the one block that uses them.
 
 ## Lifecycle
 
-The **build gate creates** the worktree (it's the first code-touching gate); every later gate
-**locates and reuses** it; the **ship gate removes** it after the PR merges. All three are
-idempotent.
+In the **3-gate flow the design gate creates** the worktree (so the feature's branch exists from
+the very first gate); the **build gate creates-or-locates** it (the creator in the 7-step flow,
+and the fallback when design ran without a `<repo>`); every later gate **locates and reuses** it;
+the **ship gate removes** it after the PR merges. All steps are idempotent.
 
-### Create-or-locate — build gates only
+### Create-or-locate — design + build gates
 
 ```bash
-BR="feature/$1"; BASE="$3"; [ -n "$BASE" ] || BASE="main"   # focal: pass feature/focal-migration as $3
-if [ ! -d "$2/.worktrees/$1" ]; then
-  if git -C "$2" show-ref --verify --quiet "refs/heads/$BR"; then
-    git -C "$2" worktree add ".worktrees/$1" "$BR"            # branch exists (prior run) -> attach
+BR="feature/<feature>"; BASE="<base>"; [ -n "$BASE" ] || BASE="main"   # focal until 2026-07-10: pass feature/focal-migration as <base>
+if [ ! -d "<repo>/.worktrees/<feature>" ]; then
+  if git -C "<repo>" show-ref --verify --quiet "refs/heads/$BR"; then
+    git -C "<repo>" worktree add ".worktrees/<feature>" "$BR"            # branch exists (prior run) -> attach
   else
-    git -C "$2" worktree add ".worktrees/$1" -b "$BR" "$BASE" # new branch off base
+    git -C "<repo>" worktree add ".worktrees/<feature>" -b "$BR" "$BASE" # new branch off base
   fi
 fi
-echo "worktree: $2/.worktrees/$1   branch: $BR"
+echo "worktree: <repo>/.worktrees/<feature>   branch: $BR"
 ```
 
 ### Locate-or-fail — verify / review / test / ship
 
 ```bash
-[ -d "$2/.worktrees/$1" ] || echo "ERROR: no worktree for '$1' at $2/.worktrees/$1 — run the build gate first."
+[ -d "<repo>/.worktrees/<feature>" ] || echo "ERROR: no worktree for '<feature>' at <repo>/.worktrees/<feature> — run the build gate first."
 ```
 
-Then run **every** `git`, build, test, and `codex` command of that gate against `$2/.worktrees/$1`
-— never `$2`. That path is a subpath of `$2`, so the codex sandbox scoping is identical to operating
-on `$2` directly; the only change is the path.
+Then run **every** `git`, build, test, and `codex` command of that gate against `<repo>/.worktrees/<feature>`
+— never `<repo>`. That path is a subpath of `<repo>`, so the codex sandbox scoping is identical to operating
+on `<repo>` directly; the only change is the path.
 
 ### Remove — ship/verify, only after the PR has merged
 
 ```bash
-git -C "$2" worktree remove ".worktrees/$1"     # refuses if dirty; KEEPS the branch
-echo "Worktree removed. After confirming the merge landed: git -C $2 branch -d feature/$1"
+git -C "<repo>" worktree remove ".worktrees/<feature>"     # refuses if dirty; KEEPS the branch
+echo "Worktree removed. After confirming the merge landed: git -C <repo> branch -d feature/<feature>"
 ```
 
 ## Scope — code repo only
 
-Only the **code repo (`$2`)** is isolated this way — that's the sole place parallel sessions edit
+Only the **code repo (`<repo>`)** is isolated this way — that's the sole place parallel sessions edit
 files, switch branches, and commit. The `.ai/` paper trail stays in the **shared** pipeline
-checkout: its artifacts are per-feature paths (`design/$1-design.md`, `reviews/$1/`, …) that don't
+checkout: its artifacts are per-feature paths (`design/<feature>-design.md`, `reviews/<feature>/`, …) that don't
 clobber across features. The only shared-state hazard there is two sessions running `git
 add/commit` on `.ai/` at the same instant — commit your `.ai/` paper trail per feature (or
 serialize those commits) and there is nothing to collide.
