@@ -48,10 +48,16 @@ shared infrastructure.
 
 `agent-skills` is upstream canon and nothing in this folder modifies it.
 
+That is also why [`runbook-amendments.md`](runbook-amendments.md) exists: the per-ticket
+procedure is the CTO's RUNBOOK, so our two additions to it — **T1** reads the `/gate-explore`
+findings note before drafting the spec, **T2** holds the architect so gate α has a window —
+live here as copy-paste deltas rather than as edits upstream.
+
 ## Shared infrastructure
 
 ```
 harness/
+├── runbook-amendments.md   our deltas to the CTO's per-ticket prompts (T1, T2)
 ├── prompts/       doer · reviewer · final-release-review     ← role charters, model-agnostic
 ├── checklists/    scoring-rubric · release-gate · review · implementation · worktree
 ├── {design,plans,tasks,think,handoffs,reviews}/TEMPLATE.md
