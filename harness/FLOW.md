@@ -28,21 +28,31 @@ guess.
 
 ## Part 1 — Break the task down (once per epic)
 
-### 1.1 Explore the unknowns — only the real ones
+### 1.1 Sweep for what solving it will need
 
 ```
-/gate-explore <topic> superapp
+/gate-explore <topic> [repo]
 ```
 
-Opus writes its answers to `harness/scratch/<topic>-opus.md`, then Codex answers the **same
-questions blind**, then you synthesize into `harness/notes/<topic>.md` as **Consensus /
-Divergence / Open**. Every answer carries a confidence: High / Medium / Low.
+Two **independent reconnaissance sweeps** — Opus first (it owns external sourcing, since Codex runs
+offline), then Codex cold — over six things a planner needs before designing anything: **Territory**
+(what this touches) · **Prior art** (what already exists and should be reused) · **Constraints**
+(pinned versions, contracts, which constitution rules govern this surface) · **Scars** (what was
+already tried here and failed) · **Tests** (what they actually assert) · **Absences** (unenforced
+invariants, untested paths, dangerous defaults).
 
-This is the one step in the whole system where nobody grades anybody — the value is two
-independent takes converging or disagreeing. It is **not scored**, and it is **optional**:
-reach for it when the epic has genuine open questions, not as a ritual.
+They merge by **union** into `harness/notes/<topic>.md`, each item tagged `[O]` / `[G]` / `[both]`.
+That is the opposite of the build gates: there, independence makes agreement meaningful; here it
+buys **coverage**, because two models search differently. Sweep wide, report narrow — an item earns
+its place only if a planner could make a different decision because of it.
 
-**You decide the divergences.** The agents surface them; they do not settle them.
+Two sections aren't evidence. **Contradictions block planning** — resolve them by reading the code,
+never by picking the more confident sweep. **Gaps** become `UNVERIFIED` assumptions the plan gate
+re-checks.
+
+Not scored, and optional — reach for it when the work has real unknowns. The dossier reaches the
+build flow at **T1**, which folds it in section by section. Skip that fold-in and the sweep
+evaporates: the architect reads `TASK_FILE` and nothing else.
 
 ### 1.2 Point at an architecture doc
 

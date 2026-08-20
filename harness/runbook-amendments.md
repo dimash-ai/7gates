@@ -17,11 +17,12 @@ prose instead of text broken mid-sentence.
 
 ## T1 — read the exploration note before drafting
 
-**Why.** `/gate-explore` writes its findings to `harness/notes/<topic>.md`, and **nothing
-downstream reads it.** The architect takes `TASK_FILE` and nothing else; the RUNBOOK mentions
-`notes/` zero times, and so does the `brownfield-spec-template` skill. An exploration that
-reached a decision and never reached the spec is work the flow will never see. This closes
-that seam at the only place it can be closed — the one step that authors the spec.
+**Why.** `/gate-explore` runs two independent reconnaissance sweeps and merges them into an
+evidence dossier at `harness/notes/<topic>.md`, and **nothing downstream reads it.** The architect
+takes `TASK_FILE` and nothing else; the RUNBOOK mentions `notes/` zero times, and so does the
+`brownfield-spec-template` skill. A sweep that found the prior art, the scars and the contradictions
+and never reached the spec is work the flow will never see. This closes that seam at the only place
+it can be closed — the one step that authors the spec.
 
 **Add this anchor** to the T1 block, beside `BACKLOG_FILE` and `LINEAR_PROJECT` (absolute
 path per the RUNBOOK's anchor convention — do not use `~`, the agent quotes these):
@@ -34,7 +35,7 @@ NOTES_DIR=/Users/<you>/Desktop/allosta/harness/notes
 instruction:
 
 ```
-Then check NOTES_DIR for an exploration note matching this ticket's topic — /gate-explore writes one when a ticket's open questions were worked through with Opus and GPT answering independently, and its structure is Consensus / Divergence / Open. If one exists, read it BEFORE drafting and fold it in three ways: Consensus becomes confirmed assumptions or acceptance criteria in the spec, every unresolved Divergence and Open item becomes an explicit open question IN the spec rather than something you quietly settle yourself, and any claim the note marked Medium or Low confidence stays marked unverified so the plan reviewer checks it instead of inheriting it as settled. Cite the note by filename in the spec so the decision has a traceable origin. If no note exists, say so in one line and carry on — do not go create one, and do not treat its absence as license to invent answers to questions the ticket leaves open.
+Then check NOTES_DIR for a dossier matching this ticket's topic — /gate-explore writes one when the issue was swept by Opus and GPT independently, and its sections are Territory / Prior art / Constraints / Scars / Tests / Absences, followed by Contradictions and Gaps. If one exists, read it BEFORE drafting and fold it in section by section, because each one lands somewhere different in the spec. Territory seeds the MAY EDIT and DO NOT TOUCH lists. Prior art constrains scope: if the dossier shows something already does part of this, the spec says to reuse it and does not silently re-specify building it. Constraints become confirmed assumptions with their citations carried across — including the AI-track determination, which is what decides whether the spec commits the change to the semantic exoskeleton and LDD. Scars become DO NOT lines: an approach already tried and recorded as failed must not be re-proposed without saying why this time differs. Absences are candidate acceptance criteria, and an unenforced invariant the dossier found is exactly what BR-1 exists to guard. Two sections are not evidence and must not be folded in as if they were: an unresolved CONTRADICTION blocks drafting outright — stop and tell me, because a spec built on the wrong one of two contradictory facts is wrong from its first acceptance criterion — and every GAP becomes an explicit open question in the spec, marked UNVERIFIED so the plan gate re-checks it rather than inheriting it as settled. Cite the dossier by filename so each decision has a traceable origin. If no dossier exists, say so in one line and carry on — do not go create one, and do not treat its absence as license to invent answers to questions the ticket leaves open.
 ```
 
 **What it does not do.** It does not make exploration mandatory, and it does not let the note
