@@ -1,5 +1,9 @@
 # The 3-Gate Flow
 
+> **Superseded for superapp work (2026-08-20).** New features enter through the feature-dev cycle
+> with the two cross-model gates — see [`README-gpt-gates.md`](README-gpt-gates.md). This flow's
+> charters and rubric are still live; its doer commands have no active consumer.
+
 The **default** development pipeline: **three gates, each one integrated scored pass.** It lands a
 feature quickly without giving up the two properties the work depends on — *the builder never grades
 its own homework*, and *no model reviews its own work*. Each gate is scored `>= 9.0` by the opposite
@@ -38,14 +42,14 @@ clean-context subagent for Opus — so it never grades an artifact it watched be
 ## How to run a feature
 
 ```
-cp .ai/tasks/TEMPLATE.md .ai/tasks/<feature>.md   # OPTIONAL kickoff — the design doc is self-contained; seed one only if it helps
+cp harness/tasks/TEMPLATE.md harness/tasks/<feature>.md   # OPTIONAL kickoff — the design doc is self-contained; seed one only if it helps
 
 /gate-design  <feature>                       # A — Opus writes the design doc; GPT scores it
 /gate-build   <feature> <repo> [base-branch]  # B — Opus builds + commits one slice at a time in the feature's worktree; GPT scores each; repeat
 /gate-verify  <feature> <repo> [base-branch]  # C — GPT verifies the whole change + writes tests; Opus scores it, then ships
 ```
 
-Gate A uses `.ai/design/TEMPLATE-3gate.md` (one topic-structured design doc). The kickoff task is
+Gate A uses `harness/design/TEMPLATE-3gate.md` (one topic-structured design doc). The kickoff task is
 **optional** — the design doc stands alone. Each command saves its scored verdict under
 `reviews/<feature>/` and **stops** — work advances only at Score `>= 9.0`.
 
@@ -53,9 +57,9 @@ Gate A uses `.ai/design/TEMPLATE-3gate.md` (one topic-structured design doc). Th
 feature's worktree); gate C diffs the committed change against `[base-branch]` (the 3rd arg —
 **default `main`; `feature/focal-migration` for focal slices**, since those branch off the
 integration branch, not `main`). GPT's verify runs in a `workspace-write` sandbox **scoped to the
-feature's worktree `<repo>/.worktrees/<feature>`**, a different git repo than the pipeline's `.ai/`
+feature's worktree `<repo>/.worktrees/<feature>`**, a different git repo than the pipeline's `harness/`
 tree — so GPT **prints** its verification report and Opus saves it to
-`reviews/<feature>/C-verify-report.md`; GPT never writes `.ai/` directly.
+`reviews/<feature>/C-verify-report.md`; GPT never writes `harness/` directly.
 
 **Parallel sessions (worktrees).** Each feature builds in its **own git worktree of `<repo>`** —
 `<repo>/.worktrees/<feature>` on branch `feature/<feature>` — so several sessions can run different
@@ -63,8 +67,8 @@ features at once without colliding on files, the branch, or the index. **Gate B 
 `[base-branch]`), every later gate reuses it, and **gate C removes** it after the PR merges (keeping
 the branch). Invoke the gates exactly as above — the worktree is derived from `<feature>`. Full
 convention: [`checklists/worktree.md`](checklists/worktree.md). Only the code repo is isolated; the
-`.ai/` paper trail stays in the shared checkout (commit it per feature so sessions don't race on
-`.ai/` git state).
+`harness/` paper trail stays in the shared checkout (commit it per feature so sessions don't race on
+`harness/` git state).
 
 ## Verdict files
 
@@ -93,6 +97,6 @@ in `prompts/`, the `checklists/scoring-rubric.md` scoring, the folder layout, an
 ---
 
 > **See also:** a higher-granularity variant with seven separate checkpoints lives in
-> [`README.md`](README.md), for when you want the test author blind to its own review findings. It's
+> [`README-7step.md`](README-7step.md), for when you want the test author blind to its own review findings. It's
 > the alternative to this default — the two flows are peers; reach for the 7-step only when you need
 > the finer granularity.

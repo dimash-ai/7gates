@@ -14,7 +14,7 @@ All of the build flows rest on the same three rules:
 - **The reviewer scores the artifact out of 10 — work advances only at ≥ 9.0.** Below that, the
   reviewer returns cited *Must Fix* items, the doer fixes exactly those (no scope creep), and
   resubmits for a re-score. Scoring is governed by
-  [`.ai/checklists/scoring-rubric.md`](.ai/checklists/scoring-rubric.md).
+  [`harness/checklists/scoring-rubric.md`](harness/checklists/scoring-rubric.md).
 - **The reviewer always runs "blind."** GPT reviews in a separate read-only `codex exec` process;
   Opus reviews from a fresh, clean-context subagent. The reviewer never grades an artifact it
   watched being built.
@@ -57,7 +57,7 @@ Two invariants are load-bearing: **doer ≠ reviewer at every gate**, and **the 
 its own code** — Opus builds (B), GPT verifies (C). The doer sequence is deliberately
 Opus → Opus → GPT (not strict alternation) so each model lands on its strongest work: Opus on design
 and large-repo building, GPT on adversarial verification and test authorship. Gate C doubles as the
-**release gate**. Full detail: [`.ai/README-3gate.md`](.ai/README-3gate.md).
+**release gate**. Full detail: [`harness/README-3gate.md`](harness/README-3gate.md).
 
 ---
 
@@ -84,7 +84,7 @@ Two things this granularity buys you that the 3-gate collapses:
   its own step-5 review findings. "The builder doesn't grade its own homework," taken one step
   further than the 3-gate does.
 
-Full operating manual, folder layout, and worked commands: [`.ai/README.md`](.ai/README.md).
+Full operating manual, folder layout, and worked commands: [`harness/README-7step.md`](harness/README-7step.md).
 
 ---
 

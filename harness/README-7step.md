@@ -1,6 +1,10 @@
 # Two-Agent Development Pipeline
 
-This `.ai/` directory is the **coordination layer** between Opus (Claude Code) and GPT (Codex) —
+> **Superseded for superapp work (2026-08-20).** New features enter through the feature-dev cycle
+> with the two cross-model gates — see [`README-gpt-gates.md`](README-gpt-gates.md). This flow's
+> charters and rubric are still live; its doer commands have no active consumer.
+
+This `harness/` directory is the **coordination layer** between Opus (Claude Code) and GPT (Codex) —
 a lightweight, operational paper trail, not a transcript archive. Every feature flows through a
 scored, adversarial process; each step has a **doer** and a **reviewer**, and the work proceeds
 only when the reviewer scores it **>= 9.0**.
@@ -13,7 +17,7 @@ only when the reviewer scores it **>= 9.0**.
 >
 > **Just exploring?** Before any build flow, `/gate-explore <topic>` brainstorms a question with
 > Opus and GPT answering **independently**, then synthesizes a small findings note to
-> `notes/<topic>.md` (consensus / divergence / open). It is standalone and **not scored** — it
+> `notes/<topic>.md` (an evidence dossier: territory / prior art / constraints / scars / tests / absences). It is standalone and **not scored** — it
 > builds context, it doesn't gate code.
 
 ## Operating Model
@@ -88,7 +92,7 @@ issues remain.
 
 | Path                            | Holds                                                                               | Committed?          |
 | ------------------------------- | ----------------------------------------------------------------------------------- | ------------------- |
-| `README.md`                     | This operating manual.                                                              | yes                 |
+| `README-7step.md`                     | This operating manual.                                                              | yes                 |
 | `prompts/`                      | Role charters: `doer.md` (doer), `reviewer.md` (reviewer), `final-release-review.md` (step-7 release gate). | yes |
 | `checklists/`                   | `scoring-rubric` (how a reviewer scores), `release-gate`, `implementation`, `review`. | yes               |
 | `think/<feature>.md`            | Step 1 — problem framing, assumptions, options, recommendation.                     | yes                 |
@@ -127,15 +131,15 @@ artifact) and `05-review-verdict.md` is Opus's score of that review. Every other
 ## How to Run a Feature
 
 ```
-cp .ai/tasks/TEMPLATE.md .ai/tasks/<feature>.md       # seed the kickoff, then fill it in
+cp harness/tasks/TEMPLATE.md harness/tasks/<feature>.md       # seed the kickoff, then fill it in
 
-# 1. think   — Opus writes .ai/think/<feature>.md (from think/TEMPLATE.md)
+# 1. think   — Opus writes harness/think/<feature>.md (from think/TEMPLATE.md)
 /gate1-think  <feature>
 
-# 2. plan    — GPT writes .ai/plans/<feature>-plan.md; a fresh Opus subagent scores it
+# 2. plan    — GPT writes harness/plans/<feature>-plan.md; a fresh Opus subagent scores it
 /gate2-plan   <feature>
 
-# 3. design  — Opus writes .ai/design/<feature>-design.md
+# 3. design  — Opus writes harness/design/<feature>-design.md
 /gate3-design <feature>
 
 # 4. build   — Opus implements ONE slice + local checks in the feature's worktree; repeat until Score >= 9.0
@@ -147,7 +151,7 @@ cp .ai/tasks/TEMPLATE.md .ai/tasks/<feature>.md       # seed the kickoff, then f
 # 6. test    — GPT authors/runs tests; a fresh Opus subagent scores coverage
 /gate6-test   <feature> <repo>
 
-# 7. ship    — Opus drafts PR text in .ai/handoffs/<feature>-handoff.md; GPT final-reviews
+# 7. ship    — Opus drafts PR text in harness/handoffs/<feature>-handoff.md; GPT final-reviews
 /gate7-ship   <feature> <repo>   # → at Score >= 9.0, open/merge the PR
 ```
 
@@ -160,8 +164,8 @@ features at once without colliding on files, the branch, or the index. **Step 4 
 `[base-branch]`, default `main` / `feature/focal-migration` for focal), steps 5–7 reuse it, and
 **step 7 removes** it after the PR merges (keeping the branch). Invoke the gates exactly as above —
 the worktree is derived from `<feature>`. Full convention:
-[`checklists/worktree.md`](checklists/worktree.md). Only the code repo is isolated; the `.ai/` paper
-trail stays in the shared checkout (commit it per feature so sessions don't race on `.ai/` git state).
+[`checklists/worktree.md`](checklists/worktree.md). Only the code repo is isolated; the `harness/` paper
+trail stays in the shared checkout (commit it per feature so sessions don't race on `harness/` git state).
 
 ## Prerequisites
 
@@ -173,7 +177,7 @@ trail stays in the shared checkout (commit it per feature so sessions don't race
 - **Opus reviewer = fresh subagent.** Steps 2/5/6 spawn a clean-context Opus subagent (Agent tool,
   `subagent_type: "claude"`) loading `prompts/reviewer.md`. Never review those steps inline.
 - **Git for diffs & worktrees** — steps 4–7 operate on `git diff`. Run the commands from the
-  pipeline root (where `.ai/` and `.claude/` live) and pass the product repo (e.g. `superapp`) as
+  pipeline root (where `harness/` and `.claude/` live) and pass the product repo (e.g. `superapp`) as
   the second argument. Step 4 builds in a per-feature **worktree** of that repo
   (`<repo>/.worktrees/<feature>`, branch `feature/<feature>`); steps 4–7 read/write it with
   `git -C <repo>/.worktrees/<feature>`, and step 7 removes it after merge. See
@@ -213,7 +217,7 @@ feature now runs on one of the two current flows — the default 3-gate or this 
 
 ## What to Commit
 
-- **Commit:** `README.md`, `prompts/`, `checklists/`, `think/` + `tasks/` (meaningful features),
+- **Commit:** `README-7step.md`, `prompts/`, `checklists/`, `think/` + `tasks/` (meaningful features),
   `plans/` / `design/` (when useful), `reviews/` (if you want audit history), `archive/` (retired
   legacy history). Also `AGENTS.md` at root.
 - **Ignore** (see root `.gitignore`): `scratch/`, `runs/`, `transcripts/`, `archive/runs-legacy/`, raw dumps.

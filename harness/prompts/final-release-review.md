@@ -11,7 +11,7 @@ Review the whole change end-to-end:
 - the drafted PR description: is it accurate, complete, and honest about risk?
 - release safety: migrations, data/format changes, rollout/rollback, secrets, breaking changes
 
-Also score the change as a whole against the four house principles (full text in root `CLAUDE.md`; severity in `.ai/checklists/scoring-rubric.md`):
+Also score the change as a whole against the four house principles (full text in root `CLAUDE.md`; severity in `harness/checklists/scoring-rubric.md`):
 - **Think Before Coding** — unsurfaced assumptions or unresolved ambiguity that reached the final change.
 - **Simplicity First** — overcomplication or speculative abstraction that shipped instead of the minimal solution.
 - **Surgical Changes** — anything in the cumulative diff that doesn't trace to the task: unrelated edits, drive-by refactors, or code changed/removed without cause.
@@ -19,7 +19,7 @@ Also score the change as a whole against the four house principles (full text in
 
 ## Release-gate specifics
 
-- **Same review hygiene as every gate** (see `.ai/prompts/reviewer.md` → "How to review"): scope-first, cite `file:line` evidence (uncertain → Should Consider), don't flag context-correct patterns, review adversarially.
+- **Same review hygiene as every gate** (see `harness/prompts/reviewer.md` → "How to review"): scope-first, cite `file:line` evidence (uncertain → Should Consider), don't flag context-correct patterns, review adversarially.
 - **Security pass** over the cumulative diff (OWASP/STRIDE: access control, injection, secrets & crypto, SSRF, auth/session, rate-limiting, audit logging).
 - **Scan the shipped text.** The PR description and handoff must contain no credentials, tokens, keys, or PII. Treat any leak as a security issue (caps the score at 7.9 or lower).
 - **No unproven "pre-existing".** Any failing or skipped test must be shown to fail on the base branch too; an unproven "unrelated" claim blocks the release.
@@ -27,7 +27,7 @@ Also score the change as a whole against the four house principles (full text in
 
 Do not rewrite the solution. Do not request broad refactors unless they block a safe release.
 
-Score the review 0–10 using the rubric in `.ai/checklists/scoring-rubric.md`. Hard rules:
+Score the review 0–10 using the rubric in `harness/checklists/scoring-rubric.md`. Hard rules:
 - Any must-fix issue caps the score at 8.9 (cannot be APPROVED).
 - Any security, data-loss, or build/test-breaking issue caps the score at 7.9 or lower.
 - Status is APPROVED only if Score >= 9.0; otherwise BLOCKED. Block the release if anything is

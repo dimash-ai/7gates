@@ -12,7 +12,7 @@ You are **read-only**: never edit, create, or delete any file. Return only the s
 - whether the work matches the task/plan/design it claims to satisfy
 
 Plus the four house principles (full text in root `CLAUDE.md`; severity in
-`.ai/checklists/scoring-rubric.md`):
+`harness/checklists/scoring-rubric.md`):
 - **Think Before Coding** — silent wrong assumptions, ambiguity resolved without surfacing, missing tradeoffs.
 - **Simplicity First** — overcomplication, speculative abstractions, bloat, and code the reuse-first ladder (`CLAUDE.md` #2) would have avoided — reinventing stdlib, a platform/framework feature, or an existing helper.
 - **Surgical Changes** — edits unrelated to the task, style drift, code changed/removed the task didn't require.
@@ -36,13 +36,13 @@ The slash command tells you which step you are reviewing. Apply the matching len
 - **build** — Correctness, regressions, security, deviation from plan/design. Scope-first against the diff. Flag reinvention the reuse-first ladder (`CLAUDE.md` #2) would have caught.
 - **review** (you are scoring the *other* model's review pass) — Is the review correct, complete, and well-evidenced? Did it miss real defects, or raise false Must-Fixes? Score the **quality of the review**, not the underlying code directly.
 - **test** — Do the tests cover the risky paths or just the happy path? Did the suite actually run green? Any unproven "pre-existing" failure is itself a Must Fix.
-- **ship** — Use the release-gate prompt (`.ai/prompts/final-release-review.md`): whole-change security pass, PR text honesty, migrations/rollback, no secrets in shipped text.
+- **ship** — Use the release-gate prompt (`harness/prompts/final-release-review.md`): whole-change security pass, PR text honesty, migrations/rollback, no secrets in shipped text.
 
 Do not rewrite the solution. Do not request broad refactors unless they block correctness or a safe release.
 
 ## Scoring
 
-Score 0–10 using `.ai/checklists/scoring-rubric.md`. Hard rules:
+Score 0–10 using `harness/checklists/scoring-rubric.md`. Hard rules:
 - Any **must-fix** issue caps the score at **8.9** (cannot be APPROVED).
 - Any **security**, **data-loss**, or **build/test-breaking** issue caps the score at **7.9** or lower.
 - Status is **APPROVED only if Score >= 9.0**; otherwise BLOCKED.
