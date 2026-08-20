@@ -21,11 +21,11 @@ disagreeing. So both models answer; nobody scores.
 ## 1 — Capture the questions
 
 Collect the questions for `$1` (from this conversation, or a `## Questions` section in
-`ai/notes/$1.md` if you seeded one). Keep them explicit — each finding traces to a question.
+`harness/notes/$1.md` if you seeded one). Keep them explicit — each finding traces to a question.
 
 ## 2 — Opus answers first, independently
 
-**You (Opus), before invoking GPT,** write your own answer to `ai/scratch/$1-opus.md` — for each
+**You (Opus), before invoking GPT,** write your own answer to `harness/scratch/$1-opus.md` — for each
 question: best answer, reasoning, confidence (High/Medium/Low), assumptions/open points.
 
 **Own the external sourcing.** GPT runs offline in the next step, so you carry the research. For
@@ -50,7 +50,7 @@ codex exec --sandbox read-only "You are GPT Codex, brainstorming partner. Answer
 You have NO network access. Ground claims in repo files you can read read-only (this repo and $2 if a repo path was given) and cite them as file:line. For any claim that needs an external source you cannot verify here, SAY SO and lower your confidence accordingly — do not invent URLs, versions, or API specifics. For EACH question give: (a) your best answer, (b) the reasoning, (c) confidence as High/Medium/Low, (d) any assumptions or open points. Be concise — this feeds a small findings note, not a report. You are read-only and must NEVER edit any file."
 ```
 
-Save GPT's raw answer to `ai/scratch/$1-gpt.md` (scratch is gitignored). When GPT flags a claim it
+Save GPT's raw answer to `harness/scratch/$1-gpt.md` (scratch is gitignored). When GPT flags a claim it
 couldn't verify offline, that's a cue for you to confirm it with the web/doc sources from step 2.
 
 > **If `codex exec` errors or returns an auth failure, STOP — do not synthesize from Opus's answer
@@ -60,9 +60,9 @@ couldn't verify offline, that's a cue for you to confirm it with the web/doc sou
 
 ## 4 — Synthesize into the findings doc
 
-Read **both** `ai/scratch/$1-opus.md` and `ai/scratch/$1-gpt.md` and write
-`ai/notes/$1.md` following `ai/notes/TEMPLATE.md`. Keep it **small** — findings, not transcripts.
-**If `ai/notes/$1.md` already exists from a prior round, read it first and *merge* the new findings
+Read **both** `harness/scratch/$1-opus.md` and `harness/scratch/$1-gpt.md` and write
+`harness/notes/$1.md` following `harness/notes/TEMPLATE.md`. Keep it **small** — findings, not transcripts.
+**If `harness/notes/$1.md` already exists from a prior round, read it first and *merge* the new findings
 in** — add the new questions, fold now-resolved divergences into Consensus, and preserve earlier
 findings; never overwrite a prior round's work.
 For each question, classify the two answers:
@@ -76,9 +76,9 @@ For each question, classify the two answers:
 
 Report the Consensus / Divergence / Open summary. The user reacts, decides the divergences, and may
 add follow-up questions — then re-run from step 1 for those; step 4 **accumulates** them into the
-same `ai/notes/$1.md` rather than replacing it. The gate is "done" when the user is
+same `harness/notes/$1.md` rather than replacing it. The gate is "done" when the user is
 satisfied; there is no score and nothing to approve.
 
 > `--sandbox read-only` keeps GPT from touching the tree — confirm the flag with `codex --help`. The
-> per-model raw answers live in `ai/scratch/` (gitignored); only the synthesized `ai/notes/$1.md`
+> per-model raw answers live in `harness/scratch/` (gitignored); only the synthesized `harness/notes/$1.md`
 > is committed.

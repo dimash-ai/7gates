@@ -1,14 +1,14 @@
 # CLAUDE.md
 
 House rules for Claude Code in this repository — the always-on quality bar. The formal
-review pipeline in `ai/` enforces these same four principles at each gate, where the doer and
+review pipeline in `harness/` enforces these same four principles at each gate, where the doer and
 reviewer alternate between Opus and GPT and the reviewer scores against them
-([`ai/checklists/scoring-rubric.md`](ai/checklists/scoring-rubric.md)). **By default a feature
+([`harness/checklists/scoring-rubric.md`](harness/checklists/scoring-rubric.md)). **By default a feature
 runs the 3-gate flow** — design / build / verify (see
-[`ai/README-3gate.md`](ai/README-3gate.md)); the shorter 2-gate co-dev flow
-([`ai/README-2gate.md`](ai/README-2gate.md)) — GPT plans, Opus reviews; Opus builds, GPT reviews —
+[`harness/README-3gate.md`](harness/README-3gate.md)); the shorter 2-gate co-dev flow
+([`harness/README-2gate.md`](harness/README-2gate.md)) — GPT plans, Opus reviews; Opus builds, GPT reviews —
 is the alternative for ordinary changes, and the higher-granularity 7-step flow
-([`ai/README.md`](ai/README.md)) the one for finer checkpoints. `AGENTS.md`
+([`harness/README-7step.md`](harness/README-7step.md)) the one for finer checkpoints. `AGENTS.md`
 covers Codex's dual doer/reviewer role.
 
 Behavioral guidelines to reduce common LLM coding mistakes, derived from

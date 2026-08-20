@@ -9,7 +9,7 @@ still load-bearing — this flow reuses them — but no new feature enters throu
 
 Two complete methodologies ended up in this repo without either knowing about the other.
 
-| | `ai/` gate pipeline | feature-dev harness |
+| | `harness/` gate pipeline | feature-dev harness |
 |---|---|---|
 | Origin | this repo | `agent-skills/plugins/dev-methodology`, installed `--symlink` into `~/.claude` |
 | Shape | cross-model gates, doer ⇄ reviewer | intra-Claude roles: architect → searcher → coder → qa → debugger |

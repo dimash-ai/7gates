@@ -50,7 +50,7 @@ pass" is the only evidence anyone will ever look at.
 ## How to run a feature
 
 ```
-cp ai/tasks/TEMPLATE.md ai/tasks/<feature>.md   # OPTIONAL kickoff — the plan is self-contained; seed one only if it helps
+cp harness/tasks/TEMPLATE.md harness/tasks/<feature>.md   # OPTIONAL kickoff — the plan is self-contained; seed one only if it helps
 
 /codev-plan   <feature> [repo]                  # 1 — GPT writes the plan; a blind Opus subagent scores it
 /codev-build  <feature> [repo] [base-branch]    # 2 — Opus builds one slice; GPT scores it; repeat, then release + ship
@@ -101,4 +101,4 @@ the worktree contract, and the folder layout.
 ---
 
 > **See also:** [`README-3gate.md`](README-3gate.md) — the default flow, with verification as its own
-> gate. [`README.md`](README.md) — the 7-step flow, for when you want the finest checkpoints.
+> gate. [`README-7step.md`](README-7step.md) — the 7-step flow, for when you want the finest checkpoints.
