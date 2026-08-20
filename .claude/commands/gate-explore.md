@@ -18,6 +18,18 @@ Why no doer/reviewer here: the build gates keep the two models adversarial so ne
 own work. Brainstorming is the opposite — the value is two *independent* takes converging or
 disagreeing. So both models answer; nobody scores.
 
+## 0 — Resolve the harness root
+
+Every `harness/…` path below is relative to the **pipeline root** — the directory that contains
+`harness/`, not the code repo. Resolve it once and use the absolute prefix:
+
+```bash
+d=$PWD; while [ "$d" != / ] && [ ! -d "$d/harness/prompts" ]; do d=$(dirname "$d"); done; echo "$d/harness"
+```
+
+**Never create a `harness/` directory inside the code repo.** If that path appears under `superapp/`,
+the resolution was skipped and the findings are in the wrong tree.
+
 ## 1 — Capture the questions
 
 Collect the questions for `$1` (from this conversation, or a `## Questions` section in
@@ -39,7 +51,7 @@ Writing your answer *first* keeps you from anchoring on GPT.
 
 GPT must not see Opus's answer. The codex sandbox has **no network**, so GPT's value here is an
 independent line of reasoning plus codebase grounding — not external lookup. Run exactly this one
-bash command from the pipeline root, with the question list pasted in place of `<QUESTIONS>`.
+bash command, with the question list pasted in place of `<QUESTIONS>`.
 **Escaping:** the questions land inside a double-quoted shell string — escape any `"` in them (or
 pipe them in via a heredoc / a temp file) so the command doesn't break. The same caution applies
 anywhere a question, feature name, or topic flows into a `codex exec "…"` string in these gates.

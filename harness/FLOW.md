@@ -142,9 +142,9 @@ you can hold. Two or three is realistic — stagger their starts rather than cap
 
 ## Part 3 — The ticket loop
 
-Two sessions per ticket. **Note the working directory changes:** T-steps run in the ticket's
-worktree; the two gates run from the pipeline root, because they read charters out of
-`harness/`.
+Two sessions per ticket. **Everything runs from wherever you are** — the code repo, one of its
+worktrees, or the pipeline root. The gate commands resolve `harness/` by walking up, so you never
+switch directories mid-ticket.
 
 ### Session 1 — spec and build
 
@@ -282,11 +282,11 @@ epic     /gate-explore <topic>          → harness/notes/<topic>.md      [optio
 
 ticket   T1  spec              → specs/ALL-<id>.md          in worktree
          T2  architect + HOLD  → specs/DevelopmentPlan.md    in worktree
-     ▌   /gpt-gate-plan ALL-<id>                             from pipeline root
+     ▌   /gpt-gate-plan ALL-<id>                             resolves harness/ itself
          T2  coder → qa ⇄ debugger → green
          T3 T4 T5 + Triage                                   fresh session
          T6  findings
-     ▌   /gpt-gate-release ALL-<id> superapp dev             from pipeline root
+     ▌   /gpt-gate-release ALL-<id>                          resolves harness/ itself
          T9  ship → dev PR → you merge → Test
              human QA → Done
          T10 promote → main PR → you merge → Published
