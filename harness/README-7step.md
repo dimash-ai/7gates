@@ -17,7 +17,7 @@ only when the reviewer scores it **>= 9.0**.
 >
 > **Just exploring?** Before any build flow, `/gate-explore <topic>` brainstorms a question with
 > Opus and GPT answering **independently**, then synthesizes a small findings note to
-> `notes/<topic>.md` (consensus / divergence / open). It is standalone and **not scored** — it
+> `notes/<topic>.md` (an evidence dossier: territory / prior art / constraints / scars / tests / absences). It is standalone and **not scored** — it
 > builds context, it doesn't gate code.
 
 ## Operating Model
