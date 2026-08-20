@@ -18,9 +18,9 @@ So the builder never verifies its own code: **Opus builds (B), GPT verifies (C)*
 C from a fresh, clean-context subagent using the `final-release-review` charter (gate C doubles as
 the release gate), then ships on APPROVED. The doer fixes only the reviewer's cited Must Fix items on
 a BLOCK, then resubmits. `Step:` in a 3-gate verdict is `design`, `build`, or `verify`. Full flow and
-prompts live in `.ai/` — see `.ai/README-3gate.md`.
+prompts live in `ai/` — see `ai/README-3gate.md`.
 
-The higher-granularity **7-step flow** (`.ai/README.md`) is the alternative when you want finer
+The higher-granularity **7-step flow** (`ai/README.md`) is the alternative when you want finer
 checkpoints — think / plan / design / build / review / test / ship, roles alternating each step.
 There Codex **reviews** steps 1 (think), 3 (design), 4 (build), and 7 (ship) read-only; is the
 **doer** on steps 2 (plan) and 6 (test) under `--sandbox workspace-write`; and runs the holistic
@@ -28,9 +28,9 @@ There Codex **reviews** steps 1 (think), 3 (design), 4 (build), and 7 (ship) rea
 steps from a fresh, clean-context subagent. `Step:` is then `think | plan | design | build | review
 | test | ship`.
 
-A standalone **explore gate** (`/gate-explore`, see `.ai/README.md`) sits before any build flow:
+A standalone **explore gate** (`/gate-explore`, see `ai/README.md`) sits before any build flow:
 Codex answers the user's questions **independently** and read-only — from scratch, not deferring to
-any other model — for Opus to synthesize into `.ai/notes/<topic>.md`. It is **not scored**, so no
+any other model — for Opus to synthesize into `ai/notes/<topic>.md`. It is **not scored**, so no
 verdict block; just give a concise per-question answer with evidence and a confidence level.
 
 ## Review output (any reviewer)
@@ -53,7 +53,7 @@ Status: APPROVED or BLOCKED
 ## Release Risk
 ```
 
-Scoring is governed by `.ai/checklists/scoring-rubric.md`:
+Scoring is governed by `ai/checklists/scoring-rubric.md`:
 
 - Status is **APPROVED only if Score >= 9.0**; otherwise **BLOCKED**.
 - Any **must-fix** issue caps the score at **8.9**.

@@ -70,8 +70,8 @@ echo "Worktree removed. After confirming the merge landed: git -C $2 branch -d f
 ## Scope — code repo only
 
 Only the **code repo (`$2`)** is isolated this way — that's the sole place parallel sessions edit
-files, switch branches, and commit. The `.ai/` paper trail stays in the **shared** pipeline
+files, switch branches, and commit. The `ai/` paper trail stays in the **shared** pipeline
 checkout: its artifacts are per-feature paths (`design/$1-design.md`, `reviews/$1/`, …) that don't
 clobber across features. The only shared-state hazard there is two sessions running `git
-add/commit` on `.ai/` at the same instant — commit your `.ai/` paper trail per feature (or
+add/commit` on `ai/` at the same instant — commit your `ai/` paper trail per feature (or
 serialize those commits) and there is nothing to collide.

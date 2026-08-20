@@ -6,7 +6,7 @@ process, prompts, checklists, and house rules the agents follow. It is project-a
 at any code repository.
 
 New here? Read in this order: this file → [`PIPELINE_OVERVIEW.md`](PIPELINE_OVERVIEW.md) (the three
-flows at a glance) → [`CLAUDE.md`](CLAUDE.md) (the quality bar) → [`.ai/README.md`](.ai/README.md)
+flows at a glance) → [`CLAUDE.md`](CLAUDE.md) (the quality bar) → [`ai/README.md`](ai/README.md)
 (the full process).
 
 ## What this is
@@ -18,15 +18,15 @@ when the reviewer scores the artifact **≥ 9.0 / 10**; below that, the doer fix
 
 | # | Step | Doer | Reviewer | Artifact |
 |---|------|------|----------|----------|
-| 1 | think  | **Opus** | GPT  | `.ai/think/<feature>.md` |
-| 2 | plan   | **GPT**  | Opus | `.ai/plans/<feature>-plan.md` |
-| 3 | design | **Opus** | GPT  | `.ai/design/<feature>-design.md` |
+| 1 | think  | **Opus** | GPT  | `ai/think/<feature>.md` |
+| 2 | plan   | **GPT**  | Opus | `ai/plans/<feature>-plan.md` |
+| 3 | design | **Opus** | GPT  | `ai/design/<feature>-design.md` |
 | 4 | build  | **Opus** | GPT  | code diff in the target repo |
-| 5 | review | **GPT**  | Opus | `.ai/reviews/<feature>/05-review-pass.md` |
-| 6 | test   | **GPT**  | Opus | tests + `.ai/runs/<feature>-test.txt` |
-| 7 | ship   | **Opus** | GPT  | `.ai/handoffs/<feature>-handoff.md` + PR |
+| 5 | review | **GPT**  | Opus | `ai/reviews/<feature>/05-review-pass.md` |
+| 6 | test   | **GPT**  | Opus | tests + `ai/runs/<feature>-test.txt` |
+| 7 | ship   | **Opus** | GPT  | `ai/handoffs/<feature>-handoff.md` + PR |
 
-Full operating manual, folder layout, and scoring rules: [`.ai/README.md`](.ai/README.md).
+Full operating manual, folder layout, and scoring rules: [`ai/README.md`](ai/README.md).
 
 ## House rules
 
@@ -43,7 +43,7 @@ All work — by humans or agents — holds to four principles (full text in [`CL
 
 | Path | Holds |
 |------|-------|
-| [`.ai/`](.ai/)         | The pipeline: prompts, checklists, and per-feature think / plan / design / reviews / handoffs |
+| [`ai/`](ai/)         | The pipeline: prompts, checklists, and per-feature think / plan / design / reviews / handoffs |
 | `.claude/`             | Slash commands (`/gate1-think` … `/gate7-ship`) and local settings |
 | [`CLAUDE.md`](CLAUDE.md) | House rules — the always-on quality bar |
 | [`AGENTS.md`](AGENTS.md) | Codex's doer/reviewer conventions |
@@ -64,9 +64,9 @@ argument is the target repository that holds the diff:
 /gate7-ship   <feature> <repo>
 ```
 
-Each command runs the step's reviewer, saves a scored verdict under `.ai/reviews/<feature>/`, and
+Each command runs the step's reviewer, saves a scored verdict under `ai/reviews/<feature>/`, and
 **stops** — work advances only at score ≥ 9.0. See
-[`.ai/README.md`](.ai/README.md) for the kickoff template and per-step detail.
+[`ai/README.md`](ai/README.md) for the kickoff template and per-step detail.
 
 ## Prerequisites
 
