@@ -57,6 +57,7 @@ live here as copy-paste deltas rather than as edits upstream.
 
 ```
 harness/
+├── FLOW.md                 the end-to-end procedure, epic -> Published
 ├── runbook-amendments.md   our deltas to the CTO's per-ticket prompts (T1, T2)
 ├── prompts/       doer · reviewer · final-release-review     ← role charters, model-agnostic
 ├── checklists/    scoring-rubric · release-gate · review · implementation · worktree

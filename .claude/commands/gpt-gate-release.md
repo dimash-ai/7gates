@@ -22,12 +22,13 @@ branch the change forks from and the PR targets — **optional, defaults to `dev
 were omitted, substitute `superapp` / `dev` for every occurrence below — inside the codex prompt
 string too — before running anything.**
 
-> **Get the base right or the gate is worthless.** superapp runs two bases: the RUNBOOK ladder
-> (`T9` → `dev`, `T10` → `main`) and a direct-to-`main` convention where the branch name carries a
-> `-main` suffix (`feature/all-555-focal-settings-main`, merged as PR #718). Diffing a
-> `-main` branch against `dev` yields a diff full of unrelated commits and the verdict is noise.
-> Confirm before running: `git -C $2 merge-base --fork-point dev HEAD` vs `… main HEAD` — pass the
-> one that is actually this branch's fork point.
+> **Get the base right.** The default `dev` is correct for this gate, because gate γ runs before
+> **T9**, which ships to `dev`. Do not be misled by the `-main` branches: `feature/all-555-…-main`
+> is the **T10 promotion branch**, cherry-picked onto `main` *after* human QA moves the issue to
+> `Done` — every ticket has both (`feature/all-551-focal-analytics` and `…-analytics-main`). Pass
+> `main` only when you are gating a promotion branch itself. If unsure, confirm the real fork point:
+> `git -C $2 merge-base --fork-point dev HEAD` vs `… main HEAD` — a wrong base fills the diff with
+> unrelated commits and the verdict is noise.
 
 ## Reviewer = GPT Codex, write-enabled so it can execute
 
