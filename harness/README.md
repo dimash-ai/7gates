@@ -1,8 +1,8 @@
 # harness — the two-agent development methodology
 
 Everything we know about making **Opus (Claude Code)** and **GPT (Codex)** build software
-together, in one place. Four flows share one set of charters, one scoring rubric, and one verdict
-home; they differ only in how many times the work stops to be graded, and by whom.
+together, in one place. Five flows share one set of charters and one scoring rubric; they differ
+only in how many times the work stops to be graded, and by whom.
 
 The invariant every flow is built to protect:
 
@@ -12,28 +12,31 @@ The invariant every flow is built to protect:
 
 Work advances only at **Score >= 9.0** ([`checklists/scoring-rubric.md`](checklists/scoring-rubric.md)).
 
-## The four flows
+## The five flows
 
 | Flow | Status | Gates | Who does / who reviews | Entry |
 |---|---|---|---|---|
-| **[GPT gates](README-gpt-gates.md)** | **live** | 2, spliced into the CTO's feature-dev cycle | Claude `architect → coder → qa` builds; **Codex** scores the plan and runs the release suite | `/gpt-gate-plan` · `/gpt-gate-release` |
-| **[2-gate](README-2gate.md)** | superseded | plan · build | GPT plans → Opus reviews; Opus builds → GPT reviews | `/codev-plan` · `/codev-build` |
+| **[3-step co-dev](README-codev.md)** | **live — default** | brief · plan · build | Opus and GPT research independently, you approve the brief; GPT plans → Opus reviews; Opus builds → GPT reviews | `/codev-brief` · `/codev-plan` · `/codev-build` |
+| **[GPT gates](README-gpt-gates.md)** | live, for feature-dev tickets | 2, spliced into the CTO's feature-dev cycle | Claude `architect → coder → qa` builds; **Codex** scores the plan and runs the release suite | `/gpt-gate-plan` · `/gpt-gate-release` |
+| **[2-gate](README-2gate.md)** | superseded by 3-step co-dev | plan · build | GPT plans → Opus reviews; Opus builds → GPT reviews | its commands were rewritten for 3-step co-dev |
 | **[3-gate](README-3gate.md)** | superseded | design · build · verify | Opus does A+B, GPT does C; each scored by the other | `/gate-design` · `/gate-build` · `/gate-verify` |
 | **[7-step](README-7step.md)** | superseded | think · plan · design · build · review · test · ship | strict alternation, Opus ⇄ GPT at every step | `/gate1-think` … `/gate7-ship` |
 
-**Superseded means retired-from-new-work, not broken.** All three still run, and their charters are
-the ones the live flow calls. Nothing was deleted.
+**Superseded means retired-from-new-work, not broken.** The 3-gate and 7-step commands still run,
+and their charters are the ones the live flows call. Nothing was deleted.
 
 ## Which one to reach for
 
-- **Default — GPT gates.** superapp ships through the CTO's feature-dev cycle (Linear ticket →
-  spec → architect → coder → qa → review session → ship). Our two Codex gates bolt onto it at the
-  only two places where a second vendor changes the outcome: **before any code exists**, and
-  **when the suite actually runs**.
-- **A repo with no feature-dev harness installed** — the 3-gate flow is the self-contained one.
-- **Ordinary change, want the shortest honest path** — 2-gate.
-- **You want the test author blind to its own review findings** — 7-step, the only flow that
-  separates them.
+- **Default — 3-step co-dev.** Our own tasks: the intent is researched by both models and written
+  down as a brief you approve, GPT plans from it cold, Opus builds, GPT reviews every slice and runs
+  the checks itself before the PR. Results land in the code repo's `specs/<slug>/`.
+- **A ticket that runs through the CTO's feature-dev cycle** (Linear ticket → spec → architect →
+  coder → qa → review session → ship) — the GPT gates, which bolt Codex onto it at the only two
+  places where a second vendor changes the outcome: **before any code exists**, and **when the
+  suite actually runs**.
+The superseded 3-gate and 7-step flows are the ones where GPT, not the builder, writes the tests.
+They still run, but their commands predate the co-dev conventions (results under `harness/`, base
+branch defaulting to `main`), so a superapp run through them needs the base passed explicitly.
 
 ## Why the GPT gates exist at all
 
@@ -57,19 +60,24 @@ live here as copy-paste deltas rather than as edits upstream.
 
 ```
 harness/
-├── FLOW.md                 the end-to-end procedure, epic -> Published
+├── README-codev.md         the live flow: brief / plan / build
+├── FLOW.md                 the end-to-end procedure for feature-dev tickets, epic -> Published
 ├── runbook-amendments.md   our deltas to the CTO's per-ticket prompts (T1, T2)
 ├── prompts/       doer · reviewer · final-release-review     ← role charters, model-agnostic
-├── checklists/    scoring-rubric · release-gate · review · implementation · worktree
-├── {design,plans,tasks,think,handoffs,reviews}/TEMPLATE.md
-├── reviews/<feature>/   every scored verdict, from every flow
-├── design/ · handoffs/ · notes/ · tasks/    the artifact paper trail
+├── checklists/    scoring-rubric · ponytail · release-gate · review · implementation · worktree
+├── {briefs,design,plans,tasks,think,handoffs,reviews}/TEMPLATE.md
+├── reviews/<feature>/   scored verdicts of the older flows and the GPT gates
+├── design/ · handoffs/ · notes/ · tasks/    the older flows' artifact paper trail
 └── runs/ · scratch/ · archive/              raw transcripts (gitignored)
 ```
 
+The 3-step co-dev flow keeps nothing here but its charters and templates: every result it produces
+(brief, research, plan, verdicts, build log, PR body) lands in the code repo's gitignored
+`specs/<slug>/`.
+
 `prompts/reviewer.md` carries a per-step lens (think / plan / design / build / review / test /
 ship). A flow picks its lens; the charter, the rubric and the verdict format never change. That is
-what makes the four flows one system rather than four.
+what makes the five flows one system rather than five.
 
 > **Note on the run logs.** Files under `runs/`, `scratch/` and `archive/runs-legacy/` still contain
 > the original `.ai/` paths from before this folder was renamed twice (`.ai` → `ai` → `harness`).

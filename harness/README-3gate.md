@@ -1,8 +1,10 @@
 # The 3-Gate Flow
 
-> **Superseded for superapp work (2026-08-20).** New features enter through the feature-dev cycle
-> with the two cross-model gates — see [`README-gpt-gates.md`](README-gpt-gates.md). This flow's
-> charters and rubric are still live; its doer commands have no active consumer.
+> **Superseded for superapp work (2026-08-20, by the [GPT gates](README-gpt-gates.md)).** Since
+> 2026-09-24 our own features enter through the [3-step co-dev flow](README-codev.md); tickets in the
+> CTO's feature-dev cycle keep the GPT gates. This flow's charters and rubric are still live, and it
+> is one of the two flows where GPT, not the builder, writes the tests. Its commands default the base
+> to `main`: pass `dev` for superapp.
 
 The **default** development pipeline: **three gates, each one integrated scored pass.** It lands a
 feature quickly without giving up the two properties the work depends on — *the builder never grades

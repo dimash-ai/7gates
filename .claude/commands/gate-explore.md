@@ -19,6 +19,10 @@ It is **not scored** and **not adversarial**. That is the whole point of the des
 `$1` is a topic or ticket slug (`focal-recurrence-model`, `ALL-555`). `$2` is the code repo —
 optional, defaults to the current git repo.
 
+For a single task in the co-dev flow, use `/codev-brief` instead: it runs the same two sweeps after
+the requester confirms the intent, and turns them into the planner's brief under the code repo's
+`specs/<slug>/`. This gate stays the standalone one, for an epic or an open question.
+
 **Sweep wide, report narrow.** The sweep should be exhaustive; the dossier should not. An item
 earns a place only if a planner could plausibly **make a different decision because of it**. A
 dossier that reprints the codebase is the same as no dossier.

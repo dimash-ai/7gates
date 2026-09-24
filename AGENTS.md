@@ -2,36 +2,28 @@
 
 Conventions for AI agents working in this repository.
 
-## Roles (3-gate pipeline — default)
+## Roles (3-step co-dev flow — default)
 
-By default every feature flows through 3 gates — **design / build / verify** — each with a **doer**
-and a **reviewer** that alternate between Opus (Claude Code) and GPT (Codex). Codex therefore has
-**two** roles:
+By default every feature flows through three steps — **brief / plan / build** — and Codex has a
+different role in each. Every Codex run is a separate `codex exec` process whose final message is
+written to a file by `-o`; results land in the code repo's `specs/<slug>/`, never in this repo.
 
-- **Codex reviews** gate A (design) and each build slice in gate B. Here Codex is **read-only** and
-  must not edit any file — it returns a scored verdict only.
-- **Codex is the doer** on gate C (verify): invoked with `--sandbox workspace-write`, it verifies
-  the whole change and authors/runs the tests, then prints its verification report for Opus to
-  persist. Outside the file(s) the gate names, Codex changes nothing.
+- **Step 1, brief — Codex researches.** Read-only, independently, from scratch: it never looks for
+  or defers to another model's findings. It sweeps the code repo for what a planner needs (Territory,
+  Prior art by ladder rung, Constraints, Scars, Tests, Absences), cites every item, may use web
+  search for facts outside the repo, and proposes no design. Not scored, so no verdict block.
+- **Step 2, plan — Codex is the doer.** Read-only: it plans cold from the brief alone and returns
+  the plan as its final message. If the brief is ambiguous in a way that would change the plan, it
+  returns QUESTIONS instead of planning around the ambiguity. Opus reviews it from a fresh,
+  clean-context subagent.
+- **Step 3, build — Codex reviews.** Read-only on each slice Opus builds; write-enabled on the
+  release pass for one reason only, to **run the checks itself** and report the counts it observed.
+  It never creates, edits or deletes a file. Both reviews apply the over-engineering lens in
+  `harness/checklists/ponytail.md`. `Step:` is `build` per slice and `ship` for the release pass.
 
-So the builder never verifies its own code: **Opus builds (B), GPT verifies (C)**. Opus reviews gate
-C from a fresh, clean-context subagent using the `final-release-review` charter (gate C doubles as
-the release gate), then ships on APPROVED. The doer fixes only the reviewer's cited Must Fix items on
-a BLOCK, then resubmits. `Step:` in a 3-gate verdict is `design`, `build`, or `verify`. Full flow and
-prompts live in `harness/` — see `harness/README-3gate.md`.
-
-The higher-granularity **7-step flow** (`harness/README-7step.md`) is the alternative when you want finer
-checkpoints — think / plan / design / build / review / test / ship, roles alternating each step.
-There Codex **reviews** steps 1 (think), 3 (design), 4 (build), and 7 (ship) read-only; is the
-**doer** on steps 2 (plan) and 6 (test) under `--sandbox workspace-write`; and runs the holistic
-**review pass** on step 5 read-only, printing it for Claude to persist. Opus reviews Codex's doer
-steps from a fresh, clean-context subagent. `Step:` is then `think | plan | design | build | review
-| test | ship`.
-
-A standalone **explore gate** (`/gate-explore`, see `harness/README-7step.md`) sits before any build flow:
-Codex answers the user's questions **independently** and read-only — from scratch, not deferring to
-any other model — for Opus to synthesize into `harness/notes/<topic>.md`. It is **not scored**, so no
-verdict block; just give a concise per-question answer with evidence and a confidence level.
+The doer fixes only the reviewer's cited Must Fix items on a BLOCK, then resubmits. Full flow:
+`harness/README-codev.md`. The other flows, and Codex's roles in them, are in each flow's
+`harness/README-*.md`; `PIPELINE_OVERVIEW.md` says when each still applies.
 
 ## Review output (any reviewer)
 

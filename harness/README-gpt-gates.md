@@ -1,9 +1,10 @@
 # GPT Gates — the cross-model review layer for the feature-dev flow
 
-**Status: this is the live flow.** The 2-gate, 3-gate and 7-step flows documented beside this file
-are **superseded for superapp work**. Their artifacts stay readable, their charters and rubric are
-still load-bearing — this flow reuses them — but no new feature enters through `/codev-plan`,
-`/gate-design` or `/gate1-think`.
+**Status: live for tickets that run through the CTO's feature-dev cycle.** Our own work runs the
+[3-step co-dev flow](README-codev.md) instead (since 2026-09-24), which rewrote `/codev-plan` and
+`/codev-build`; the section below records the state of things when these gates were built, on
+2026-08-20. The 3-gate and 7-step flows remain **superseded**: their artifacts stay readable, and
+their charters and rubric are still load-bearing, since this flow reuses them.
 
 ## What happened
 
@@ -47,9 +48,9 @@ T6   implement findings
 T9   ship to base   ·   T10 promote   ·   T11 backlog ↔ Linear sync
 ```
 
-Both gates take `<ticket-slug> [work-root] [base-branch]`, default `superapp`, and are run **from
-the pipeline root** — the same contract every gate command in `.claude/commands/` already uses.
-They are symlinked into `superapp/.claude/commands/` exactly like `codev-*` and `gate-*`.
+Both gates take `<ticket-slug> [work-root] [base-branch]`, default `superapp`, and find `harness/`
+by walking up, so they run from anywhere at or under the pipeline root. They are symlinked into
+`superapp/.claude/commands/` like the other commands.
 
 ### Gate α — plan · [`/gpt-gate-plan`](../.claude/commands/gpt-gate-plan.md)
 
@@ -118,5 +119,6 @@ changelog first; treat it like merging into `main`.
 - **Generalization.** This is superapp-scoped by decision. If it holds for a few tickets, the two
   commands and this doc are the extractable part — they would go to `agent-skills` as a plugin, at
   which point the RUNBOOK becomes the right place for the T2 hold instruction.
-- **The dormant half.** `codev-*` and `gate*-*` commands still exist and still work. Nothing was
-  deleted; they simply have no live consumer.
+- **The dormant half.** The `gate*-*` commands still exist and still work. Nothing was deleted;
+  they simply have no live consumer. (The `codev-*` commands were dormant here too, until
+  2026-09-24, when they were rewritten for the live [3-step co-dev flow](README-codev.md).)

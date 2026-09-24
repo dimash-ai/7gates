@@ -1,108 +1,91 @@
-# Pipeline Overview — the three ways to run it
+# Pipeline Overview — the ways to run it
 
 This repository is a **two-agent development pipeline**: every feature is built by one AI coding
 agent and checked by the other — **Opus** (Claude Code) and **GPT** (Codex) — so no model ever
-grades its own work. There are **three setups** you actually invoke, at three different
-granularities. This page explains what each is and when to reach for it.
+grades its own work. **One flow is live for our own work**, the 3-step co-dev flow. The others still
+run, for the cases named below. This page explains what each is and when to reach for it.
 
 ## The shared foundation
 
 All of the build flows rest on the same three rules:
 
-- **Every step has a doer and a reviewer, and they are always different models.** The doer produces
-  the artifact; the reviewer is the *other* model.
+- **Every scored step has a doer and a reviewer, and they are always different models.** The doer
+  produces the artifact; the reviewer is the *other* model.
 - **The reviewer scores the artifact out of 10 — work advances only at ≥ 9.0.** Below that, the
   reviewer returns cited *Must Fix* items, the doer fixes exactly those (no scope creep), and
   resubmits for a re-score. Scoring is governed by
   [`harness/checklists/scoring-rubric.md`](harness/checklists/scoring-rubric.md).
-- **The reviewer always runs "blind."** GPT reviews in a separate read-only `codex exec` process;
-  Opus reviews from a fresh, clean-context subagent. The reviewer never grades an artifact it
-  watched being built.
+- **The reviewer always runs "blind."** GPT reviews in a separate `codex exec` process; Opus reviews
+  from a fresh, clean-context subagent. The reviewer never grades an artifact it watched being
+  built.
 
 Both roles work to the four house-rule principles in [`CLAUDE.md`](CLAUDE.md) — Think Before Coding,
 Simplicity First, Surgical Changes, Goal-Driven Execution.
 
 ---
 
-## 1 · `/gate-explore` — the standalone, *unscored* gate
+## 1 · The 3-step co-dev flow — **the default**
 
-The odd one out: **not a build flow, and deliberately not scored.** Its job is to turn open
-questions into grounded answers by getting **two independent perspectives** before any code exists.
+A request becomes a researched brief, the brief becomes a plan, the plan becomes code.
 
-1. **Opus answers first, independently** — and owns all external research (library docs, web),
-   because GPT runs offline in the next step.
-2. **GPT answers the same questions, blind** to Opus's answer.
-3. The two are **synthesized** into a small findings note — organized as
-   **consensus / divergence / open questions**.
+| Step | Produces | Does | Checks |
+|------|----------|------|--------|
+| **1 — brief** | One document the planner works from alone: intent, acceptance criteria, merged findings, open questions | **Opus and GPT**, independently; Opus merges | **you** |
+| **2 — plan**  | The complete plan: slices, new surface by ladder rung, architecture, test strategy | **GPT**, cold | Opus |
+| **3 — build** | The implementation, one slice at a time, then a release pass and the PR | **Opus** | GPT |
 
-Why no doer/reviewer here: brainstorming is the opposite of adversarial review — the value is two
-*independent* takes converging or disagreeing, so both models answer and nobody scores. The output
-can later seed a build flow, or just stand on its own. Command:
+Step 1 is not scored: two independent sweeps buy **coverage**, so they merge as a union, and the only
+judge of an intent is the person who has it. Every result lands in the code repo's gitignored
+`specs/<slug>/`. [ponytail](https://github.com/DietrichGebert/ponytail)'s ladder and
+over-engineering review run through all three steps from
+[`harness/checklists/ponytail.md`](harness/checklists/ponytail.md). Full detail:
+[`harness/README-codev.md`](harness/README-codev.md).
+
+---
+
+## 2 · `/gate-explore` — standalone reconnaissance, *unscored*
+
+**Not a build flow, and deliberately not scored.** Two models sweep the codebase independently for
+what a planner needs to know before designing anything (Territory, Prior art, Constraints, Scars,
+Tests, Absences), and the union becomes one dossier, with contradictions and gaps flagged. Reach
+for it on its own for an epic or an open question; for a single task, step 1 of the co-dev flow runs
+the same kind of sweep and turns it into the brief. Command:
 [`/gate-explore`](.claude/commands/gate-explore.md).
 
 ---
 
-## 2 · The 3-gate flow — **the default**
+## 3 · The GPT gates — for tickets in the CTO's feature-dev cycle
 
-A feature has three real phases — **decide what to build → build it → prove it's right** — and this
-flow gives each phase exactly one stop-and-score checkpoint.
-
-| Gate | Produces | Doer | Reviewer |
-|------|----------|------|----------|
-| **A — design**  | The complete design (decision + build slices + architecture) in one doc | **Opus** | GPT |
-| **B — build**   | The implementation, one independently reviewable slice at a time | **Opus** | GPT |
-| **C — verify**  | Proof the change is correct and tested, then the PR | **GPT** | Opus |
-
-Two invariants are load-bearing: **doer ≠ reviewer at every gate**, and **the builder never verifies
-its own code** — Opus builds (B), GPT verifies (C). The doer sequence is deliberately
-Opus → Opus → GPT (not strict alternation) so each model lands on its strongest work: Opus on design
-and large-repo building, GPT on adversarial verification and test authorship. Gate C doubles as the
-**release gate**. Full detail: [`harness/README-3gate.md`](harness/README-3gate.md).
+When a ticket runs through the CTO's feature-dev harness (architect → coder → qa, all Claude), two
+Codex gates bolt onto it: **α** scores the architect's plan before any code exists, **γ** runs the
+suite itself before ship. Full detail: [`harness/README-gpt-gates.md`](harness/README-gpt-gates.md).
 
 ---
 
-## 3 · The 7-step flow — the **higher-granularity** peer
+## 4 · Superseded — no new work
 
-The same principles, with the three phases broken into **seven separately-scored steps** that
-alternate doer/reviewer more finely.
+- **2-gate** ([`harness/README-2gate.md`](harness/README-2gate.md)): GPT plans, Opus builds. The
+  co-dev flow grew out of it and rewrote its two commands, so it no longer runs as documented; the
+  document stays as the record of the design.
+- **3-gate** ([`harness/README-3gate.md`](harness/README-3gate.md)): design / build / verify, with GPT
+  authoring the verification. Its commands still run.
+- **7-step** ([`harness/README-7step.md`](harness/README-7step.md)): think / plan / design / build /
+  review / test / ship, strict alternation, GPT authoring the tests blind to its own review. Its
+  commands still run.
 
-| # | Step | Doer | Reviewer |
-|---|------|------|----------|
-| 1 | think  | **Opus** | GPT  |
-| 2 | plan   | **GPT**  | Opus |
-| 3 | design | **Opus** | GPT  |
-| 4 | build  | **Opus** | GPT  |
-| 5 | review | **GPT**  | Opus |
-| 6 | test   | **GPT**  | Opus |
-| 7 | ship   | **Opus** | GPT  |
-
-Two things this granularity buys you that the 3-gate collapses:
-
-- **Step 4 vs Step 5 are distinct.** Step 4 gates each build *slice* for correctness; step 5 is one
-  *holistic, whole-change* adversarial sweep. Per-slice gate vs cross-cutting review.
-- **The test author is isolated.** GPT writes the tests (step 6) — not the Opus builder, and blind to
-  its own step-5 review findings. "The builder doesn't grade its own homework," taken one step
-  further than the 3-gate does.
-
-Full operating manual, folder layout, and worked commands: [`harness/README-7step.md`](harness/README-7step.md).
+The 3-gate and 7-step flows are the ones where GPT, not the builder, writes the tests. Their
+commands predate the co-dev conventions (results under `harness/`, base branch defaulting to
+`main`), so a superapp run through them needs the base passed explicitly.
 
 ---
 
 ## Which one, when
 
 ```
-/gate-explore   →  open question, no code yet     →  builds shared context (unscored)
-     │
-     ├─ 3-gate   →  DEFAULT. design / build / verify →  3 scored passes, short cycle
-     └─ 7-step   →  when you want finer checkpoints   →  7 scored passes, max isolation
+open question or epic, no code yet    →  /gate-explore   (unscored dossier)
+a task of ours                        →  3-step co-dev   DEFAULT: brief / plan / build
+a ticket in the feature-dev cycle     →  GPT gates       α before code, γ before ship
 ```
 
-- **3-gate and 7-step are peers, not a hierarchy.** 3-gate is the default pick; escalate to 7-step
-  only when the extra checkpoints earn their cost (e.g. you specifically want the test author
-  isolated from the review step).
-- **`/gate-explore` is orthogonal** to both — a context-building pre-step you can run before either,
-  or skip entirely.
-
 > **Heads-up on terminology:** an earlier **5-gate** flow ("Opus builds, GPT reviews at every gate")
-> has been **retired**. If you see "5-gate" referenced anywhere, that's the deprecated design,
-> superseded by the two current flows above.
+> has been **retired**. If you see "5-gate" referenced anywhere, that's the deprecated design.

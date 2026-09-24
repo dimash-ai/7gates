@@ -1,8 +1,10 @@
 # The 2-Gate Co-Dev Flow
 
-> **Superseded for superapp work (2026-08-20).** New features enter through the feature-dev cycle
-> with the two cross-model gates — see [`README-gpt-gates.md`](README-gpt-gates.md). This flow's
-> charters and rubric are still live; its doer commands have no active consumer.
+> **Superseded by the [3-step co-dev flow](README-codev.md) (2026-09-24).** The same two gates, now
+> preceded by a researched brief, with results in the code repo's `specs/<slug>/`. `/codev-plan` and
+> `/codev-build` were rewritten for it, so the commands described below no longer match this
+> document; it stays as the record of the design the co-dev flow grew from. (It had been superseded
+> once before, on 2026-08-20, by the [GPT gates](README-gpt-gates.md).)
 
 **Two gates, the two models trading places.** GPT plans, Opus reviews the plan; Opus builds, GPT
 reviews the build. It's the shortest flow that still keeps the load-bearing property intact — *no

@@ -1,127 +1,208 @@
 ---
-description: "Co-dev 2 (build): Opus does, GPT reviews"
-argument-hint: <feature-name> [repo-path] [base-branch]
+description: "Co-dev 3 (build): Opus builds slice by slice, GPT reviews each slice, then runs the release pass"
+argument-hint: <slug> [repo-path]
 ---
 
-# Co-dev · 2 — build  ·  Opus does · GPT reviews
+# Co-dev · 3 — build  ·  Opus does · GPT reviews
 
-The second and final gate of the **2-gate co-dev flow** (`harness/README-2gate.md`). Invoke as
-`/codev-build <feature> [repo] [base-branch]` (e.g. `/codev-build focal-habits-crud dev`).
-`$1` is the feature; `$2` is the path — relative to this pipeline root — to the git repo holding the
-changes (**optional, defaults to `superapp`**); `$3` is the **base branch** the feature forks from
-(**optional, defaults to `main`**; pass `dev` for superapp app work, per that repo's branch policy).
+The third and last step of the **3-step co-dev flow** (`harness/README-codev.md`). Opus builds the
+approved plan one slice at a time, GPT reviews every slice, and when the last slice is committed GPT
+runs the release pass itself before anything ships.
 
-Run this command **once per slice**. Each run does **Phase 1**; on the run whose slice verdict
-completes the last slice in the plan, continue straight into **Phase 2** in that same run.
+`$1` is the slug; `$2` is the code repo, optional. Every bash block sources
+`harness/bin/codev-env.sh`, which prints `codev: slug=… results=<S> worktree=<WT> branch=… base=…`;
+in the prose, `<S>`, `<WT>` and `<H>` (the `harness/` directory) mean those literal paths. The
+branch and base come from the brief's header, and the worktree is the one step 1 created: the plan
+was written against this tree.
 
-**Worktree + arguments (first thing).** This gate builds in a **dedicated worktree of the repo** —
-`<repo>/.worktrees/$1` on branch `feature/$1` — so parallel sessions never collide. Create it (first
-slice) or reuse it (later slices), per the worktree contract `harness/checklists/worktree.md`. This block
-also resolves the two optional arguments — both are positional, so it disambiguates them by testing
-whether `$2` is an actual directory (`superapp` is; `dev` isn't). Run from the pipeline root:
+Run this command **once per slice**. Each run does **Phase 1**; the run whose verdict completes the
+last slice of the plan continues into **Phase 2**. Every Codex run goes **in the background** (Bash
+`run_in_background`): a review that runs the suites outlasts the Bash tool's timeout.
+
+## 0 — Where the build stands
 
 ```bash
-REPO="$2"; BASE="$3"; BR="feature/$1"
-[ -d "$REPO" ] || { BASE="${BASE:-$REPO}"; REPO="superapp"; }  # arg2 isn't a directory -> it was the base branch
-[ -n "$BASE" ] || BASE="main"
-if [ ! -d "$REPO/.worktrees/$1" ]; then
-  if git -C "$REPO" show-ref --verify --quiet "refs/heads/$BR"; then
-    git -C "$REPO" worktree add ".worktrees/$1" "$BR"            # branch exists (prior run) -> attach
-  else
-    git -C "$REPO" fetch origin "$BASE" --quiet || true          # fork from the remote tip, not a stale local ref
-    git -C "$REPO" worktree add ".worktrees/$1" -b "$BR" "$BASE"
-  fi
-fi
-echo "repo: $REPO   base: $BASE   worktree: $REPO/.worktrees/$1   branch: $BR"
+H=$(d=$PWD; while [ "$d" != / ] && [ ! -f "$d/harness/prompts/reviewer.md" ]; do d=$(dirname "$d"); done; [ "$d" != / ] && echo "$d/harness")
+. "${H:?no harness/ at or above this directory}/bin/codev-env.sh" "$1" "$2" || exit 1
+codev_need_header && codev_need_worktree && codev_need_approved_plan || exit 1
+git -C "$WT" status --short
+git -C "$WT" log --oneline "origin/$BASE..HEAD"
 ```
 
-**Use the printed `repo:` and `base:` values literally in every command below**, in the bash blocks
-and inside the codex prompt strings alike — shell variables do not survive between these blocks, so
-wherever `$2` or `$3` appears below, write the resolved value instead. Every `git`, build, and review
-command targets `<repo>/.worktrees/$1`, never `<repo>` itself.
+No approved plan, no build. The log shows the slices already committed; the status shows
+uncommitted work.
+
+**First slice only:** the worktree has no dependencies yet. Install what the app needs in `<WT>`
+(`uv sync` in its server dir, `pnpm install` at the root). The checks do not need a `.env`: CI runs
+them without one. Copy a `.env` in only to run the app itself, for a check in the browser, and
+remember that GPT's release pass will run in a tree that holds it.
 
 ---
 
 ## Phase 1 — build one slice, GPT reviews it
 
-**Doer = Opus (you, in this conversation).** Implement **one slice** of the plan, keep the tree
-green, and run the local checks yourself.
+**Doer = Opus (you).** Best in the session that ran step 1: it holds the requester's context. The
+plan still governs.
 
-- Read the plan `harness/design/$1-design.md` and the task `harness/tasks/$1.md` if present, then run
-  `git -C $2/.worktrees/$1 --no-pager diff` and `git -C $2/.worktrees/$1 status` to see what is
-  already done.
-- Implement the NEXT single unbuilt slice: the minimum code that satisfies it, matching existing
-  style. Walk the reuse-first ladder (CLAUDE.md #2) before adding new surface. Touch ONLY the files
-  under `$2/.worktrees/$1` this slice needs — do not start later slices or refactor unrelated code.
-- **Write this slice's tests.** In the 2-gate flow you author your own tests — GPT never writes an
-  independent one, it only judges yours — so cover the failure mode the plan names for this slice,
-  not just the happy path.
-- Keep the tree green: run the repo's local checks (its lint / type / test commands, e.g.
-  `make -C $2/.worktrees/$1 verify`) and append the **exact commands with their real pass/fail
-  counts** to `harness/runs/$1-codev-build.txt`. Never write a count you didn't observe — the reviewer
-  re-runs the suite in Phase 2.
+- Read `<S>/brief.md`, `<S>/plan.md` and `<H>/checklists/ponytail.md` (the ladder, and what is *not*
+  over-engineering in superapp).
+- Implement the NEXT slice in the plan's order, or a **release fix** that Phase 2 asked for: the
+  minimum code that satisfies it. Climb the ladder before adding any surface; touch only the files
+  in `<WT>` this slice needs.
+- Write this slice's tests as the plan's test strategy says, in the repo's stack. Cover the failure
+  mode the plan names for this slice, not just the happy path. If the slice changes DB-backed
+  behaviour, run the app's real-DB suite against the migration sandbox: `scripts/migration-sandbox.sh`
+  with `--keep` prints a DSN; set it in the suite's test-DB variable (the pytest step of
+  `.github/workflows/ci-<app>.yml` names it, e.g. `FOCAL_TEST_DATABASE_URL`); tear the sandbox down
+  after. Never a shared database: those suites truncate.
+- A deliberate shortcut with a known ceiling gets a `ponytail:` marker naming the ceiling and the
+  trigger to upgrade.
+- Append to `<S>/runs/build.txt`, under a heading naming the slice (or `release fix` and the Must
+  Fix items it closes): the **exact commands with their real pass/fail counts**, the real-DB output
+  when it ran, and a `Deviations` list with the reason for each departure from the plan. Never write
+  a count you did not observe.
 
-**Reviewer = GPT (Codex), read-only.** Do not review your own slice. Run exactly this one bash
-command from the pipeline root — **bump `-1` in the `-o` path to the next unused number** for each
-slice and each re-review after a fix:
+**Reviewer = GPT (Codex), read-only.** Do not review your own slice. Replace `<slice>` with the
+slice's number and name from the plan, or `release fix` and the Must Fix items it closes:
 
 ```bash
-mkdir -p harness/reviews/$1 harness/runs
-codex exec --sandbox read-only -o harness/reviews/$1/2-build-verdict-1.md "$(cat harness/prompts/reviewer.md)
-You are GPT Codex, the reviewer. Step: build. First run 'git -C $2/.worktrees/$1 --no-pager diff' and 'git -C $2/.worktrees/$1 status' to see the uncommitted slice, and read the build log harness/runs/$1-codev-build.txt. Review that diff against the plan harness/design/$1-design.md and the task harness/tasks/$1.md. Apply the build lens: correctness, regressions, unhandled edge cases, security, and any deviation from the plan or scope creep beyond this single slice. Judge the TESTS as hard as the code — the builder wrote them itself, so ask whether they actually exercise the failure mode this slice's plan row names, or only the happy path; a new behavior with no test that could fail is a Must Fix. Any pass/fail claim in the build log that the log itself does not show is a Must Fix. You are read-only and must NEVER edit any file. Score 0-10 per harness/checklists/scoring-rubric.md. Your FINAL message must be the verdict block EXACTLY as the charter specifies (Reviewer: GPT Codex, Step: build) and nothing else. Status is APPROVED only if Score is 9.0 or higher." 2>&1 | tee harness/runs/$1-codev-review.txt
+H=$(d=$PWD; while [ "$d" != / ] && [ ! -f "$d/harness/prompts/reviewer.md" ]; do d=$(dirname "$d"); done; [ "$d" != / ] && echo "$d/harness")
+. "${H:?no harness/ at or above this directory}/bin/codev-env.sh" "$1" "$2" || exit 1
+codev_need_header && codev_need_worktree || exit 1
+N=$(( $(ls "$S"/reviews/build-*.md 2>/dev/null | wc -l) + 1 ))
+P="$S/runs/build-$N.prompt.md"
+{ printf 'THE PIPELINE HOUSE RULES (the charter below calls this root CLAUDE.md; its #2 is the reuse-first ladder):\n\n'; cat "$H/../CLAUDE.md"
+  printf '\n\n'; cat "$H/prompts/reviewer.md"
+  printf '\n\n'; cat "$H/checklists/scoring-rubric.md"
+  printf '\n\n'; cat "$H/checklists/ponytail.md"
+  printf '\n\nTHE BRIEF:\n\n'; cat "$S/brief.md"
+  printf '\n\nTHE PLAN:\n\n'; cat "$S/plan.md"
+  printf '\n\nTHE BUILD LOG:\n\n'; cat "$S/runs/build.txt" 2>/dev/null
+  cat <<EOF
+
+THE SLICE UNDER REVIEW: <slice>
+You are GPT Codex, the reviewer. Step: build. Your working directory is the worktree, which holds this slice uncommitted on top of the slices already committed. Run 'git status --porcelain -uall' and 'git --no-pager diff HEAD' to see it; git diff omits untracked files, so open every untracked path in the status list and read it in full. Review that slice against the plan and the brief with the build lens: correctness, regressions, unhandled edge cases, security, and any deviation from the plan or scope creep beyond the slice named above. A deviation the build log does not record is a Must Fix; a release fix is not a deviation. Judge the TESTS as hard as the code: the builder wrote them, so ask whether they exercise the failure mode the plan names for this slice or only the happy path; a new behaviour with no test that could fail is a Must Fix. Any pass or fail count in the build log that the log itself does not show is a Must Fix. Hold the touched files to the repo's rules: read CLAUDE.md, including its rule headed AI-track code, and the CLAUDE.md of the app involved. The exoskeleton and LDD belong exactly where that rule puts them: full markup in a new AI-track Python module, a FUNC_ region and full LDD for a new function in a pre-existing one, LDD on the added control flow of an edited function, nothing at module level of a pre-existing module, nothing in frontend code or Alembic revisions. User-facing strings go through i18next with ru and en. No AI attribution in code or comments. Then apply the over-engineering lens above to the lines this slice adds or modifies: put the tagged findings under Should Consider, ending with the net line, unless the rubric makes one a Must Fix; section 4 of the lens lists what is not over-engineering here. Do not open or quote any .env file. You are read-only and must NEVER edit any file. Score 0-10 per the rubric. Your FINAL message must be the verdict block exactly as the charter specifies (Reviewer: GPT Codex, Step: build) and nothing else. Status is APPROVED only if Score is 9.0 or higher.
+EOF
+} > "$P"
+cd "$WT" && codex exec --sandbox read-only -o "$S/reviews/build-$N.md" - < "$P" > "$S/runs/build-$N.log" 2>&1
+if [ -s "$S/reviews/build-$N.md" ]; then echo "verdict: $S/reviews/build-$N.md"; else rm -f "$S/reviews/build-$N.md"; echo "codev: no verdict - see $S/runs/build-$N.log"; exit 1; fi
 ```
 
-Then read the verdict file and report **Score** and **Status**:
+Read the verdict and report **Score** and **Status**:
 
-- **BLOCKED** (< 9.0): list every Must Fix, fix only those in this slice, re-run the review (next `-o` number).
-- **APPROVED** (>= 9.0): **commit the slice in the worktree** —
-  `git -C $2/.worktrees/$1 add -A && git -C $2/.worktrees/$1 commit -m "…"` (it is already on
-  `feature/$1`) — with a clear message and **no AI attribution** (root `CLAUDE.md`). Then: if slices
-  remain, STOP and re-invoke this command for the next one; if this was the last slice, continue to
-  Phase 2 now.
+- **APPROVED** (>= 9.0): commit the slice. Commit messages carry **no AI attribution**: superapp's
+  `CLAUDE.md` forbids it in commits and PRs.
+
+  ```bash
+  H=$(d=$PWD; while [ "$d" != / ] && [ ! -f "$d/harness/prompts/reviewer.md" ]; do d=$(dirname "$d"); done; [ "$d" != / ] && echo "$d/harness")
+  . "${H:?no harness/ at or above this directory}/bin/codev-env.sh" "$1" "$2" || exit 1
+  codev_need_header && codev_need_worktree || exit 1
+  git -C "$WT" add -A && git -C "$WT" commit -m "<type>(<scope>): <subject> (ALL-<id>)"
+  ```
+
+  If slices remain, STOP and re-invoke this command for the next one. If this was the last slice,
+  continue to Phase 2 now.
+- **BLOCKED** (< 9.0): fix only the cited Must Fix items in this slice and review again. **The same
+  slice BLOCKED twice after fixes: STOP** and take it to the requester. Findings that keep coming
+  back mean the plan is wrong for this slice: put the finding into the brief, and re-plan from
+  `/codev-plan` step 1, which restarts the round count. A plan changed mid-build is reviewed like a
+  new one.
 
 ---
 
-## Phase 2 — release review over the whole change, then ship
+## Phase 2 — the release pass, then ship
 
-Runs **once**, after the final slice is committed. Here GPT gets a write-enabled sandbox for one
-reason: to **run the checks itself**, so the release never rests on the builder's own claim that the
-suite was green. It still may not change anything.
+Runs after the last slice is committed. GPT gets a write-enabled sandbox for one reason: to **run
+the checks itself**, so for every check the sandbox can run, the release rests on counts GPT
+observed rather than on the builder's claim. It still may not change anything.
 
-```bash
-git -C $2/.worktrees/$1 status --porcelain   # must be EMPTY — every slice is committed before this pass
-codex exec --sandbox workspace-write -o harness/reviews/$1/2-release-verdict.md "$(cat harness/prompts/final-release-review.md)
-You are GPT Codex, the reviewer for the RELEASE gate of $1. Step: ship. Run 'git -C $2/.worktrees/$1 --no-pager diff $3...HEAD' (substitute the base branch resolved above) and review the WHOLE change against the plan harness/design/$1-design.md: every success criterion actually met, plus the defects a per-slice gate misses — cross-cutting races, resource leaks, security (authz, injection, SSRF, secrets, rate-limiting), silent data corruption, swallowed failures. Cite file:line. Then RUN the repo's own checks yourself inside $2/.worktrees/$1 (its lint, type, and test commands) and report the counts you actually observed; treat the build log harness/runs/$1-codev-build.txt as a claim to verify, not evidence. The builder wrote its own tests, so judge whether they prove the risky paths the plan names or merely the happy path. You have NO network and no secrets: if a check cannot run here because it needs the network, a database, or credentials, say so explicitly and fall back to reviewing the log for it — that is a limitation of the sandbox, NOT a failure of the change. You may run commands, but you must NOT create, edit, or delete ANY file — no source, no test, no fixture, no config: if something needs changing, report it as a Must Fix instead of patching it. Your FINAL message must be the verdict block EXACTLY as that charter specifies (Reviewer: GPT Codex, Step: ship) and nothing else. Status is APPROVED only if Score is 9.0 or higher." 2>&1 | tee harness/runs/$1-codev-release.txt
-git -C $2/.worktrees/$1 status --porcelain   # must STILL be empty
-```
+First, **draft the PR body** in `<S>/handoff.md`, for the people who read the PR rather than for the
+branch's history, in superapp's usual shape:
 
-If that second `status` is not empty, the reviewer touched the tree: inspect the diff, discard it
-(`git -C $2/.worktrees/$1 checkout -- .`), and re-run the pass — a verdict produced while editing the
-code isn't a review.
+- `## What`: what a user can now do, or what now behaves differently.
+- `## Why`: the problem, with the Linear id.
+- `## Changes`: per file or area, one line each.
+- `## Verification`: the commands and counts from the build log, plus any check in the browser. After
+  APPROVED these are replaced by the counts GPT observed.
+- `## Known follow-ups (not in this PR)`: the `ponytail:` markers the change adds (ceiling and
+  trigger each), and anything deliberately left out.
 
-Then report **Score** and **Status**:
-
-- **BLOCKED** (< 9.0): list every Must Fix. Fix them back in **Phase 1** as a new slice (build →
-  GPT slice review → commit), then re-run Phase 2.
-- **APPROVED** (>= 9.0): proceed to **Ship**.
-
-**Ship (Opus, on APPROVED only).** Draft the PR text for `$1` into `harness/handoffs/$1-handoff.md`
-following `harness/handoffs/TEMPLATE.md` (title, summary, what changed, tests, verification output,
-risks/rollback). The PR body is **for users** — what they can now do — not the branch's history, and
-carries **no AI attribution**. Confirm it contains no secrets, tokens, keys, or PII. Then push and
-open the PR, **always naming the base explicitly** (`gh pr create` defaults to the repo's default
-branch, which is how a feature branch ends up targeting `main` by accident):
+No AI attribution, no secrets, tokens or personal data. Then run the pass:
 
 ```bash
-git -C $2/.worktrees/$1 push -u origin "feature/$1"
-gh pr create --repo <owner/repo> --base <the base resolved above> --head "feature/$1" --title "…" --body-file harness/handoffs/$1-handoff.md
+H=$(d=$PWD; while [ "$d" != / ] && [ ! -f "$d/harness/prompts/reviewer.md" ]; do d=$(dirname "$d"); done; [ "$d" != / ] && echo "$d/harness")
+. "${H:?no harness/ at or above this directory}/bin/codev-env.sh" "$1" "$2" || exit 1
+codev_need_header && codev_need_worktree || exit 1
+[ -z "$(git -C "$WT" status --porcelain)" ] || { echo "codev: $WT is not clean - commit the slice, or stash what an earlier pass left (below)"; exit 1; }
+[ -s "$S/handoff.md" ] || { echo "codev: draft $S/handoff.md first"; exit 1; }
+N=$(( $(ls "$S"/reviews/release-*.md 2>/dev/null | wc -l) + 1 ))
+P="$S/runs/release-$N.prompt.md"
+{ printf 'THE PIPELINE HOUSE RULES (the charter below calls this root CLAUDE.md):\n\n'; cat "$H/../CLAUDE.md"
+  printf '\n\n'; cat "$H/prompts/final-release-review.md"
+  printf '\n\n'; cat "$H/checklists/scoring-rubric.md"
+  printf '\n\n'; cat "$H/checklists/ponytail.md"
+  printf '\n\nTHE BRIEF:\n\n'; cat "$S/brief.md"
+  printf '\n\nTHE PLAN:\n\n'; cat "$S/plan.md"
+  printf '\n\nTHE BUILD LOG:\n\n'; cat "$S/runs/build.txt" 2>/dev/null
+  printf '\n\nTHE DRAFTED PR BODY:\n\n'; cat "$S/handoff.md"
+  cat <<EOF
+
+You are GPT Codex, the reviewer for the RELEASE pass of $SLUG. Step: ship. Your working directory is the worktree, and every slice is committed. Review the WHOLE change with 'git --no-pager diff origin/$BASE...HEAD' against the brief and the plan: every acceptance criterion met AND proven by a test you name; plus the defects a per-slice review misses: cross-cutting races, resource leaks, security (authz, injection, SSRF, secrets, rate limiting, tenant isolation), silent data corruption, swallowed failures. Cite file:line.
+RUN THE CHECKS YOURSELF in this worktree: the jobs of .github/workflows/ci-<app>.yml for each app the diff touches (lint, format, type, tests, i18n, migration drift, generated API types), as far as this sandbox allows. Report the exact command lines and the counts you observed; the build log is a claim to verify, not evidence. A check that cannot run here because it needs a network, a database or credentials (the real-DB suites skip without their test DSN) is neither a pass nor a failure of the change: list each under Should Consider as UNVERIFIED IN SANDBOX, with what the build log claims for it, and set Release Risk to at least Medium when such a check covers changed code. This overrides the charter's rule on skipped tests for environment-caused skips only; a skip for any other reason still needs proof that it also skips on the base. A check that rewrites a tracked file (a generated API types file, say) and leaves a diff has found drift: report it as a Must Fix, do not keep the change.
+THE REPO'S RULES: read CLAUDE.md, including its rule headed AI-track code, and apply it as written to every Python file in the diff: full markup (the MODULE_CONTRACT region, FUNC_ and CLASS_ regions, GREP_SUMMARY, STRUCTURE) and LDD as structlog fields (imp=, func=, block=) in a new AI-track module or a new test module covering those paths; a FUNC_ region and full LDD for a new function in a pre-existing module; LDD on the added control flow of an edited function; nothing at module level of a pre-existing module; nothing in frontend code or Alembic revisions. Missing required instrumentation is a Must Fix, and so is markup where the rule puts none. A schema change carries its revision with RLS and grants, and the sandbox proof appears in the build log.
+OVER-ENGINEERING: apply the lens above to the whole diff, with findings under Should Consider unless the rubric makes one a Must Fix.
+DEBT: run git --no-pager diff origin/$BASE...HEAD | grep -E '^\+.*(#|//|\*|--) ?ponytail:' and list every marker the change adds under Should Consider as file:line, ceiling, trigger; tag a marker that names no upgrade trigger no-trigger.
+PR BODY: check the drafted PR body above: accurate, written for users, no secrets or personal data, and no count in it that you did not observe.
+Do not open, print or quote any .env file or environment variable: the worktree may hold real credentials. You may run commands, but you must NOT create, edit or delete any file: if something needs changing, report it as a Must Fix. Your FINAL message must be the verdict block exactly as the charter specifies (Reviewer: GPT Codex, Step: ship) and nothing else. Status is APPROVED only if Score is 9.0 or higher.
+EOF
+} > "$P"
+cd "$WT" && codex exec --sandbox workspace-write -o "$S/reviews/release-$N.md" - < "$P" > "$S/runs/release-$N.log" 2>&1
+if [ -s "$S/reviews/release-$N.md" ]; then echo "verdict: $S/reviews/release-$N.md"; else rm -f "$S/reviews/release-$N.md"; echo "codev: no verdict - see $S/runs/release-$N.log"; fi
+git -C "$WT" status --porcelain   # must be empty
 ```
 
-**After the PR merges, remove the worktree** (keep the branch), per `harness/checklists/worktree.md`:
+**If that last `status` is not empty**, look at what changed before anything else. A generated file
+a check rewrote is the drift GPT should have reported as a Must Fix; anything else is the reviewer
+touching the tree, and a verdict made while editing the code is not a review. Either way, clear it
+without losing it, then re-run the pass:
 
 ```bash
-git -C "$2" worktree remove ".worktrees/$1"     # refuses if dirty; keeps the branch
-echo "Worktree removed. After confirming the merge landed: git -C $2 branch -d feature/$1"
+H=$(d=$PWD; while [ "$d" != / ] && [ ! -f "$d/harness/prompts/reviewer.md" ]; do d=$(dirname "$d"); done; [ "$d" != / ] && echo "$d/harness")
+. "${H:?no harness/ at or above this directory}/bin/codev-env.sh" "$1" "$2" || exit 1
+codev_need_header && codev_need_worktree || exit 1
+git -C "$WT" status --porcelain
+git -C "$WT" stash push --include-untracked -m "codev $SLUG: left by the release pass"
 ```
 
-> `--sandbox read-only` keeps the per-slice reviewer off the tree; `--sandbox workspace-write` in Phase 2 exists only so it can run the suite — the two `git status --porcelain` calls around it are the guard. Confirm both flags with `codex --help`. `-o <file>` writes the reviewer's final message straight to the verdict file, so no verdict is ever transcribed by hand.
+Report **Score** and **Status**:
+
+- **BLOCKED** (< 9.0): list every Must Fix and fix them in **Phase 1** as a `release fix` slice
+  (build, GPT slice review, commit), then re-run Phase 2.
+- **APPROVED** (>= 9.0): ship.
+
+**Ship (Opus, on APPROVED only).** Replace the handoff's `## Verification` counts with the ones in
+the release verdict, and carry its UNVERIFIED IN SANDBOX list and its Release Risk line into the PR
+body. Title: `<type>(<scope>): <subject> (ALL-<id>)`. Push and open the PR **with the base named
+explicitly** (`gh pr create` otherwise targets the default branch):
+
+```bash
+H=$(d=$PWD; while [ "$d" != / ] && [ ! -f "$d/harness/prompts/reviewer.md" ]; do d=$(dirname "$d"); done; [ "$d" != / ] && echo "$d/harness")
+. "${H:?no harness/ at or above this directory}/bin/codev-env.sh" "$1" "$2" || exit 1
+codev_need_header && codev_need_worktree || exit 1
+git -C "$WT" push -u origin "$BR" && cd "$WT" && gh pr create --base "$BASE" --head "$BR" --title "<type>(<scope>): <subject> (ALL-<id>)" --body-file "$S/handoff.md"
+```
+
+The requester merges. After PM QA on `dev`, promotion to `main` follows superapp's `CLAUDE.md`:
+cherry-pick the feature commits onto `<branch>-main` and open a PR into `main`.
+
+**After the merge, remove the worktree** (the branch stays). Removing it deletes its gitignored
+files, so the block refuses while a `.env` is still inside; the results are safe in `<S>`:
+
+```bash
+H=$(d=$PWD; while [ "$d" != / ] && [ ! -f "$d/harness/prompts/reviewer.md" ]; do d=$(dirname "$d"); done; [ "$d" != / ] && echo "$d/harness")
+. "${H:?no harness/ at or above this directory}/bin/codev-env.sh" "$1" "$2" || exit 1
+[ -d "$WT" ] || { echo "codev: no worktree at $WT"; exit 0; }
+E=$(git -C "$WT" status --ignored --porcelain | grep -E '^!! (.*/)?\.env')
+[ -z "$E" ] || { echo "codev: $WT still holds these - keep what you need, delete them, re-run:"; echo "$E"; exit 1; }
+git -C "$M" worktree remove ".worktrees/$SLUG" && echo "worktree removed; branch $BR kept"
+```

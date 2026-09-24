@@ -4,17 +4,19 @@ House rules for Claude Code in this repository — the always-on quality bar. Th
 review pipeline in `harness/` enforces these same four principles at each gate, where the doer and
 reviewer alternate between Opus and GPT and the reviewer scores against them
 ([`harness/checklists/scoring-rubric.md`](harness/checklists/scoring-rubric.md)). **By default a feature
-runs the 3-gate flow** — design / build / verify (see
-[`harness/README-3gate.md`](harness/README-3gate.md)); the shorter 2-gate co-dev flow
-([`harness/README-2gate.md`](harness/README-2gate.md)) — GPT plans, Opus reviews; Opus builds, GPT reviews —
-is the alternative for ordinary changes, and the higher-granularity 7-step flow
-([`harness/README-7step.md`](harness/README-7step.md)) the one for finer checkpoints. `AGENTS.md`
-covers Codex's dual doer/reviewer role.
+runs the 3-step co-dev flow** — brief / plan / build: Opus and GPT research the intent independently
+and you approve the brief, GPT plans and Opus reviews, Opus builds and GPT reviews (see
+[`harness/README-codev.md`](harness/README-codev.md)). Results land in the code repo's `specs/<slug>/`,
+never in this repo. The other flows and when they still apply are in
+[`PIPELINE_OVERVIEW.md`](PIPELINE_OVERVIEW.md). `AGENTS.md` covers Codex's roles.
 
 Behavioral guidelines to reduce common LLM coding mistakes, derived from
 [Andrej Karpathy's observations](https://x.com/karpathy/status/2015883857489522876) on LLM
 coding pitfalls (source kept in `andrej-karpathy-skills/`) and the reuse-first minimal-code ladder
-from [ponytail](https://github.com/DietrichGebert/ponytail) (MIT), folded into principle 2 below.
+from [ponytail](https://github.com/DietrichGebert/ponytail) (MIT), folded into principle 2 below. The
+gates use ponytail's full lens (the ladder, the over-engineering review tags, the `ponytail:` debt
+marker, and what is not over-engineering in superapp) from the pinned copy in
+[`harness/checklists/ponytail.md`](harness/checklists/ponytail.md).
 
 **Tradeoff:** these guidelines bias toward caution over speed. For trivial tasks, use judgment.
 

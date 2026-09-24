@@ -1,7 +1,8 @@
 # Design: <feature>
-<!-- The complete pre-build design for the 3-gate flow (gate A). ONE cohesive document, structured
-by topic — not a sequence of sub-steps. The builder (gate B) and verifier (gate C) work from this
-alone, so make it self-contained, and keep it tight. -->
+<!-- The complete pre-build design: gate A of the 3-gate flow, step 2 (plan) of the co-dev flow. ONE
+cohesive document, structured by topic — not a sequence of sub-steps. The builder and the verifier
+(gate C, or the co-dev release pass) work from this alone, so make it self-contained, and keep it
+tight. -->
 
 ## Problem & decision
 <!-- What we're solving and for whom; why now. The approach you're taking, and the main
@@ -16,7 +17,7 @@ explicitly out of scope. Open questions that must be answered before building ("
 - Open questions:
 
 ## Success criteria
-<!-- Observable conditions that make this done — these become the tests the verifier (gate C) expects. -->
+<!-- Observable conditions that make this done — these become the tests the verifier expects. -->
 - [ ]
 
 ## Build approach (slices)
@@ -26,6 +27,15 @@ touches, its main failure mode, and what its test proves. Add rows as needed. --
 | # | slice | files | main failure mode | what its test proves |
 |---|-------|-------|-------------------|----------------------|
 | 1 |       |       |                   |                      |
+
+## New surface
+<!-- Every new file, module, dependency or abstraction, with the rung of the reuse-first ladder it
+stopped at (harness/checklists/ponytail.md) and why the earlier rungs did not hold. "None" when the
+change only edits what exists. -->
+
+| new surface | rung | why the earlier rungs did not hold |
+|-------------|------|------------------------------------|
+|             |      |                                  |
 
 ## Architecture & contracts
 <!-- Components touched/added and how they couple. Data model: new/changed tables, columns, indexes,
