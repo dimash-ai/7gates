@@ -111,14 +111,17 @@ Set up once:
   `codex exec --config 'web_search="live"'`: step 1 uses it so GPT can research outside the repo too.
   If it does not, step 1 still runs, and external facts rest on Opus alone.
 - **git ≥ 2.31** (for `rev-parse --path-format`), and **`gh`**, authenticated, for the PR.
-- **The commands** live in this repo and are symlinked into `~/.claude/commands/`, where Claude Code
-  lists them as user commands in every project. A symlink keeps them live: a pull here updates the
-  command. From the pipeline root, drop any old `codev-*` links and add the three steps, then start a
-  new Claude Code session:
+- **The commands** live in this repo's `.claude/commands/`, and `~/.claude/commands` is a symlink to
+  that directory, so Claude Code lists them as user commands in every project and a pull here
+  updates them. The link serves whatever branch the pipeline root has checked out: the three steps
+  appear once this flow is on that branch (normally `main`) and vanish while a branch without them
+  is checked out. Nothing else to install; start a new Claude Code session. Never link or copy a
+  single command file into `~/.claude/commands`: through the directory link, `ln -sf` replaces the
+  repo's file with a link to itself, and `rm` followed by `cp` deletes it. On a new machine, move
+  any existing `~/.claude/commands` aside, then create the link once from the pipeline root:
 
   ```
-  rm -f ~/.claude/commands/codev-brief.md ~/.claude/commands/codev-plan.md ~/.claude/commands/codev-build.md
-  for s in step1 step2 step3; do ln -sf "$PWD/.claude/commands/$s.md" ~/.claude/commands/$s.md; done
+  ln -s "$PWD/.claude/commands" ~/.claude/commands
   ```
 
   Claude Code reads commands from `~/.claude/commands/` and from the `.claude/commands/` of the
