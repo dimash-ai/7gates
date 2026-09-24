@@ -9,9 +9,9 @@ feature-dev cycle keep the [GPT gates](README-gpt-gates.md).
 
 | step | command | does | checks | result in `superapp/specs/<slug>/` |
 |------|---------|------|--------|------------------------------------|
-| 1 · brief | `/codev-brief <slug>` | pins a worktree; Opus and GPT research the intent in it independently; Opus merges | **you**: the brief is done when you say yes | `brief.md`, `research/` |
-| 2 · plan  | `/codev-plan <slug>`  | GPT, cold, from the brief alone, in the same worktree | a blind Opus subagent, ≥ 9.0, three rounds at most | `plan.md`, `reviews/plan-N.md` |
-| 3 · build | `/codev-build <slug>` | Opus, one slice per run, in the same worktree | GPT per slice, then GPT runs the checks itself (release pass), ≥ 9.0 | code and a PR into `dev`; `reviews/build-N.md`, `reviews/release-N.md`, `handoff.md` |
+| 1 · brief | `/step1 <slug>` | pins a worktree; Opus and GPT research the intent in it independently; Opus merges | **you**: the brief is done when you say yes | `brief.md`, `research/` |
+| 2 · plan  | `/step2 <slug>` | GPT, cold, from the brief alone, in the same worktree | a blind Opus subagent, ≥ 9.0, three rounds at most | `plan.md`, `reviews/plan-N.md` |
+| 3 · build | `/step3 <slug>` | Opus, one slice per run, in the same worktree | GPT per slice, then GPT runs the checks itself (release pass), ≥ 9.0 | code and a PR into `dev`; `reviews/build-N.md`, `reviews/release-N.md`, `handoff.md` |
 
 The invariant is the pipeline's own: **no model grades its own work.** Opus scores GPT's plan; GPT
 scores Opus's build. The two researchers in step 1 are not graded at all: independence there buys
@@ -96,9 +96,9 @@ deliberate act: read the changelog, carry the change over, bump the pin.
 From anywhere at or under the pipeline root: `superapp`, one of its worktrees, or the root itself.
 
 ```
-/codev-brief ALL-646     # 1: you + Opus; the worktree is pinned; Opus and GPT sweep; you approve brief.md
-/codev-plan  ALL-646     # 2: GPT plans; a blind Opus scores it; up to three rounds
-/codev-build ALL-646     # 3: once per slice; the last run does the release pass and opens the PR
+/step1 ALL-646     # brief: you + Opus; the worktree is pinned; Opus and GPT sweep; you approve brief.md
+/step2 ALL-646     # plan:  GPT plans; a blind Opus scores it; up to three rounds
+/step3 ALL-646     # build: once per slice; the last run does the release pass and opens the PR
 ```
 
 Every Codex call runs in the background: a sweep, a plan or a release pass outlasts the Bash tool's
@@ -112,10 +112,14 @@ Set up once:
   If it does not, step 1 still runs, and external facts rest on Opus alone.
 - **git ≥ 2.31** (for `rev-parse --path-format`), and **`gh`**, authenticated, for the PR.
 - **The commands** live in this repo and are symlinked into `superapp/.claude/commands/` (gitignored
-  there). For the new one, from the pipeline root:
-  `ln -s "$PWD/.claude/commands/codev-brief.md" superapp/.claude/commands/codev-brief.md`
+  there). From the pipeline root, drop the old `codev-*` links and add the three steps:
 
-Abandoning a slug: remove its worktree with the last block of `/codev-build`, then delete its branch.
+  ```
+  rm -f superapp/.claude/commands/codev-brief.md superapp/.claude/commands/codev-plan.md superapp/.claude/commands/codev-build.md
+  for s in step1 step2 step3; do ln -s "$PWD/.claude/commands/$s.md" "superapp/.claude/commands/$s.md"; done
+  ```
+
+Abandoning a slug: remove its worktree with the last block of `/step3`, then delete its branch.
 
 ## Where it stops
 
@@ -127,7 +131,7 @@ Abandoning a slug: remove its worktree with the last block of `/codev-build`, th
 | 2 | the third review is still BLOCKED: back to the brief, sharpen or split | rounds that do not converge point at the task, not the plan |
 | 2 | APPROVED: you skim the slice table | the last cheap moment to change course |
 | 3 | no APPROVED plan verdict: the build refuses to start | a plan nobody approved is not a plan |
-| 3 | the same slice BLOCKED twice after fixes: re-plan from `/codev-plan` step 1 | findings that keep coming back are a plan defect |
+| 3 | the same slice BLOCKED twice after fixes: re-plan with `/step2` from 2a | findings that keep coming back are a plan defect |
 | 3 | the release pass must leave the tree untouched; whatever it left is stashed, not deleted | a verdict made while editing the code is not a review |
 | ship | you merge; PM QA on `dev`; promotion to `main` per superapp's `CLAUDE.md` | agents open PRs and stop |
 
@@ -137,7 +141,7 @@ Abandoning a slug: remove its worktree with the last block of `/codev-build`, th
   never writes one. Where a wrong test is as dangerous as wrong code (migrations, auth and tenant
   isolation, money), that is this flow's known gap: raise it with the requester before step 3.
 - **A second run of the real-DB suites.** GPT's sandbox has no database and no network, so those
-  suites skip there. Opus runs them against the migration sandbox in Phase 1 and logs the output;
+  suites skip there. Opus runs them against the migration sandbox in 3a and logs the output;
   the release pass lists them as UNVERIFIED IN SANDBOX, raises the Release Risk, and the PR says so.
   CI then runs them against its own Postgres.
 - **A guard around `.env`.** If you copy a `.env` into the worktree to run the app, the release pass

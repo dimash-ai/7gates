@@ -1,4 +1,4 @@
-# codev-env.sh — sourced by every bash block of the /codev-* commands; never executed on its own.
+# codev-env.sh — sourced by every bash block of /step1, /step2 and /step3; never executed on its own.
 #
 # Each block starts with the same two lines: find harness/ by walking up, then source this file
 # with the command's own arguments (the slug, and the optional code-repo path):
@@ -40,7 +40,7 @@ codev_need_header() {
 
 # The worktree must exist and be on the brief's branch, so nothing is built or committed elsewhere.
 codev_need_worktree() {
-  [ -d "$WT" ] || { echo "codev: no worktree at $WT - /codev-brief $SLUG creates it" >&2; return 1; }
+  [ -d "$WT" ] || { echo "codev: no worktree at $WT - /step1 $SLUG creates it" >&2; return 1; }
   [ "$(git -C "$WT" branch --show-current)" = "$BR" ] || { echo "codev: $WT is not on $BR" >&2; return 1; }
 }
 
@@ -48,5 +48,5 @@ codev_need_worktree() {
 codev_need_approved_plan() {
   local v
   v=$(ls "$S"/reviews/plan-*.md 2>/dev/null | sort | tail -1)
-  { [ -s "$S/plan.md" ] && [ -n "$v" ] && grep -q '^Status: APPROVED' "$v"; } || { echo "codev: no APPROVED plan verdict in $S/reviews - finish /codev-plan $SLUG first" >&2; return 1; }
+  { [ -s "$S/plan.md" ] && [ -n "$v" ] && grep -q '^Status: APPROVED' "$v"; } || { echo "codev: no APPROVED plan verdict in $S/reviews - finish /step2 $SLUG first" >&2; return 1; }
 }

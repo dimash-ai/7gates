@@ -7,7 +7,7 @@ Depth: <quick or full>
 Date: YYYY-MM-DD
 Pinned: <the sha the step-1 worktree block printed>
 
-<!-- Step 1 of the co-dev flow (/codev-brief). The ONE document the planner (GPT, step 2) works
+<!-- Step 1 of the co-dev flow (/step1). The ONE document the planner (GPT, /step2) works
      from, cold: it never saw the conversation. So no "as discussed", every fact carries file:line
      or a URL, the contract comes first and the open questions come last.
      It says WHAT and WHY, never HOW. No solution design: if the brief already holds a design, the

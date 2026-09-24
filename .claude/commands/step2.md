@@ -1,9 +1,9 @@
 ---
-description: "Co-dev 2 (plan): GPT plans from the brief, a blind Opus reviews"
+description: "Step 2 (plan): GPT plans from the brief, a blind Opus reviews"
 argument-hint: <slug> [repo-path]
 ---
 
-# Co-dev · 2 — plan  ·  GPT does · Opus reviews
+# Step 2 — plan  ·  GPT does · Opus reviews
 
 The second step of the **3-step co-dev flow** (`harness/README-codev.md`): **GPT writes the complete
 plan for `$1` from the brief**, and a blind Opus scores it. No code is written until the score
@@ -18,7 +18,7 @@ code the build will change. Every Codex run below goes **in the background** (Ba
 `run_in_background`): a plan over a large repo outlasts the Bash tool's timeout. Its output goes to
 files, and the block prints only whether it produced something.
 
-## 0 — Where this round stands
+## Before you start — where this round stands
 
 ```bash
 H=$(d=$PWD; while [ "$d" != / ] && [ ! -f "$d/harness/prompts/reviewer.md" ]; do d=$(dirname "$d"); done; [ "$d" != / ] && echo "$d/harness")
@@ -30,7 +30,7 @@ ls "$S/reviews" 2>/dev/null | grep '^plan-' || echo "no plan reviews yet: this i
 No brief header or no worktree means step 1 is not finished. The listing tells you the round:
 `plan-1.md` and `plan-2.md` present means the next review is round 3, the last.
 
-## 1 — GPT plans, cold and read-only
+## 2a — GPT plans, cold and read-only
 
 **Doer = GPT (Codex).** It sees the brief and the repo, nothing of this conversation. It runs
 **read-only**, and its final message is the plan.
@@ -68,7 +68,7 @@ plan only when it is non-empty.
 into the brief, and re-run this step. That is the brief failing, not the plan, and it costs one run
 instead of a wrong plan.
 
-## 2 — A blind Opus reviews
+## 2b — A blind Opus reviews
 
 **Reviewer = Opus, fresh context.** Do **not** review inline: you shaped the request and watched the
 brief being written. Spawn a clean-context reviewer with the **Agent tool** (`subagent_type:
@@ -107,18 +107,18 @@ Save **only the verdict block**, from the `# Review Verdict` line to the end, to
 **Score** and **Status**:
 
 - **APPROVED** (>= 9.0): tell the requester to skim the slice table (two minutes, the last cheap
-  moment to change course). Next: `/codev-build $1`.
-- **BLOCKED** (< 9.0) in round 1 or 2: list every Must Fix, run the revision below, and review again
+  moment to change course). Next: `/step3 $1`.
+- **BLOCKED** (< 9.0) in round 1 or 2: list every Must Fix, run the revision (2c), and review again
   with a fresh subagent.
 - **BLOCKED in round 3**: STOP. Three rounds that do not converge mean the brief is too broad or too
-  vague, not that the plan needs a fourth pass. Go back to `/codev-brief` with the requester:
-  sharpen the brief, or split the work into several slugs, each with its own branch.
+  vague, not that the plan needs a fourth pass. Go back to `/step1` with the requester: sharpen the
+  brief, or split the work into several slugs, each with its own branch.
 
 **When the brief changes** (answers to QUESTIONS, a return from round 3, or a plan defect found
 during the build), the round count restarts: move `<S>/reviews/plan-*.md` into
-`<S>/reviews/archive-<date>/`, then run step 1 again from scratch.
+`<S>/reviews/archive-<date>/`, then run 2a again from scratch.
 
-## 3 — Revision (only on BLOCKED)
+## 2c — Revision (only on BLOCKED)
 
 GPT revises its own plan against the latest verdict, fixing only the cited Must Fix items. Replace
 `<N>` with the number of that verdict:

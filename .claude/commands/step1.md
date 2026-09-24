@@ -1,9 +1,9 @@
 ---
-description: "Co-dev 1 (brief): you state the intent, Opus and GPT research it independently, the union becomes the planner's brief"
+description: "Step 1 (brief): you state the intent, Opus and GPT research it independently, the union becomes the planner's brief"
 argument-hint: <slug> [repo-path]
 ---
 
-# Co-dev · 1 — brief  ·  you + Opus · Opus and GPT research independently
+# Step 1 — brief  ·  you + Opus · Opus and GPT research independently
 
 The first step of the **3-step co-dev flow** (`harness/README-codev.md`). It turns what the requester
 wants into **one document the planner can work from alone**: the intent and its acceptance criteria
@@ -143,7 +143,7 @@ touches: that is where superapp's real checks live.
 
 **STOP.** Show the requester the Goal, the Acceptance criteria, the Decided list, and every
 question the merge produced. Their answers go into the brief; no contradiction may stay open. Their
-yes ends step 1. Next: `/codev-plan $1`.
+yes ends step 1. Next: `/step2 $1`.
 
 If their answers change the intent itself rather than filling it in, go back to 1a: the sweeps
 answered a different question.

@@ -2,7 +2,8 @@
 
 **Status: live for tickets that run through the CTO's feature-dev cycle.** Our own work runs the
 [3-step co-dev flow](README-codev.md) instead (since 2026-09-24), which rewrote `/codev-plan` and
-`/codev-build`; the section below records the state of things when these gates were built, on
+`/codev-build` as `/step2` and `/step3`; the section below records the state of things when these
+gates were built, on
 2026-08-20. The 3-gate and 7-step flows remain **superseded**: their artifacts stay readable, and
 their charters and rubric are still load-bearing, since this flow reuses them.
 
@@ -121,4 +122,5 @@ changelog first; treat it like merging into `main`.
   which point the RUNBOOK becomes the right place for the T2 hold instruction.
 - **The dormant half.** The `gate*-*` commands still exist and still work. Nothing was deleted;
   they simply have no live consumer. (The `codev-*` commands were dormant here too, until
-  2026-09-24, when they were rewritten for the live [3-step co-dev flow](README-codev.md).)
+  2026-09-24, when they were rewritten as `/step2` and `/step3` of the live
+  [3-step co-dev flow](README-codev.md).)

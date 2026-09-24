@@ -19,7 +19,7 @@ It is **not scored** and **not adversarial**. That is the whole point of the des
 `$1` is a topic or ticket slug (`focal-recurrence-model`, `ALL-555`). `$2` is the code repo —
 optional, defaults to the current git repo.
 
-For a single task in the co-dev flow, use `/codev-brief` instead: it runs the same two sweeps after
+For a single task in the co-dev flow, use `/step1` instead: it runs the same two sweeps after
 the requester confirms the intent, and turns them into the planner's brief under the code repo's
 `specs/<slug>/`. This gate stays the standalone one, for an epic or an open question.
 

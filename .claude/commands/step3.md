@@ -1,9 +1,9 @@
 ---
-description: "Co-dev 3 (build): Opus builds slice by slice, GPT reviews each slice, then runs the release pass"
+description: "Step 3 (build): Opus builds slice by slice, GPT reviews each slice, then runs the release pass"
 argument-hint: <slug> [repo-path]
 ---
 
-# Co-dev · 3 — build  ·  Opus does · GPT reviews
+# Step 3 — build  ·  Opus does · GPT reviews
 
 The third and last step of the **3-step co-dev flow** (`harness/README-codev.md`). Opus builds the
 approved plan one slice at a time, GPT reviews every slice, and when the last slice is committed GPT
@@ -15,11 +15,11 @@ in the prose, `<S>`, `<WT>` and `<H>` (the `harness/` directory) mean those lite
 branch and base come from the brief's header, and the worktree is the one step 1 created: the plan
 was written against this tree.
 
-Run this command **once per slice**. Each run does **Phase 1**; the run whose verdict completes the
-last slice of the plan continues into **Phase 2**. Every Codex run goes **in the background** (Bash
+Run this command **once per slice**. Each run does **3a**; the run whose verdict completes the last
+slice of the plan continues into **3b**. Every Codex run goes **in the background** (Bash
 `run_in_background`): a review that runs the suites outlasts the Bash tool's timeout.
 
-## 0 — Where the build stands
+## Before you start — where the build stands
 
 ```bash
 H=$(d=$PWD; while [ "$d" != / ] && [ ! -f "$d/harness/prompts/reviewer.md" ]; do d=$(dirname "$d"); done; [ "$d" != / ] && echo "$d/harness")
@@ -39,14 +39,14 @@ remember that GPT's release pass will run in a tree that holds it.
 
 ---
 
-## Phase 1 — build one slice, GPT reviews it
+## 3a — build one slice, GPT reviews it
 
 **Doer = Opus (you).** Best in the session that ran step 1: it holds the requester's context. The
 plan still governs.
 
 - Read `<S>/brief.md`, `<S>/plan.md` and `<H>/checklists/ponytail.md` (the ladder, and what is *not*
   over-engineering in superapp).
-- Implement the NEXT slice in the plan's order, or a **release fix** that Phase 2 asked for: the
+- Implement the NEXT slice in the plan's order, or a **release fix** that 3b asked for: the
   minimum code that satisfies it. Climb the ladder before adding any surface; touch only the files
   in `<WT>` this slice needs.
 - Write this slice's tests as the plan's test strategy says, in the repo's stack. Cover the failure
@@ -101,16 +101,16 @@ Read the verdict and report **Score** and **Status**:
   ```
 
   If slices remain, STOP and re-invoke this command for the next one. If this was the last slice,
-  continue to Phase 2 now.
+  continue to 3b now.
 - **BLOCKED** (< 9.0): fix only the cited Must Fix items in this slice and review again. **The same
   slice BLOCKED twice after fixes: STOP** and take it to the requester. Findings that keep coming
-  back mean the plan is wrong for this slice: put the finding into the brief, and re-plan from
-  `/codev-plan` step 1, which restarts the round count. A plan changed mid-build is reviewed like a
-  new one.
+  back mean the plan is wrong for this slice: put the finding into the brief, and re-plan with
+  `/step2` from 2a, which restarts the round count. A plan changed mid-build is reviewed like a new
+  one.
 
 ---
 
-## Phase 2 — the release pass, then ship
+## 3b — the release pass, then ship
 
 Runs after the last slice is committed. GPT gets a write-enabled sandbox for one reason: to **run
 the checks itself**, so for every check the sandbox can run, the release rests on counts GPT
@@ -176,8 +176,8 @@ git -C "$WT" stash push --include-untracked -m "codev $SLUG: left by the release
 
 Report **Score** and **Status**:
 
-- **BLOCKED** (< 9.0): list every Must Fix and fix them in **Phase 1** as a `release fix` slice
-  (build, GPT slice review, commit), then re-run Phase 2.
+- **BLOCKED** (< 9.0): list every Must Fix and fix them in **3a** as a `release fix` slice (build,
+  GPT slice review, commit), then re-run 3b.
 - **APPROVED** (>= 9.0): ship.
 
 **Ship (Opus, on APPROVED only).** Replace the handoff's `## Verification` counts with the ones in

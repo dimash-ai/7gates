@@ -43,7 +43,7 @@ All work — by humans or agents — holds to four principles (full text in [`CL
 | Path | Holds |
 |------|-------|
 | [`harness/`](harness/)         | The pipeline: charters, checklists, templates, and the manuals for every flow |
-| `.claude/`             | Slash commands (`/codev-brief`, `/codev-plan`, `/codev-build`, and the older flows') and local settings |
+| `.claude/`             | Slash commands (`/step1`, `/step2`, `/step3`, and the older flows') and local settings |
 | [`CLAUDE.md`](CLAUDE.md) | House rules — the always-on quality bar |
 | [`AGENTS.md`](AGENTS.md) | Codex's roles and verdict conventions |
 | `Makefile`             | Verification gates — `make verify` runs test, lint, typecheck, build |
@@ -54,9 +54,9 @@ In Claude Code, from anywhere at or under the pipeline root (the code repo, one 
 the root itself):
 
 ```
-/codev-brief <slug>    # 1 — you + Opus; Opus and GPT research; you approve the brief
-/codev-plan  <slug>    # 2 — GPT plans; a blind Opus scores it
-/codev-build <slug>    # 3 — once per slice; the last run does the release pass and opens the PR
+/step1 <slug>    # brief — you + Opus; Opus and GPT research; you approve the brief
+/step2 <slug>    # plan  — GPT plans; a blind Opus scores it
+/step3 <slug>    # build — once per slice; the last run does the release pass and opens the PR
 ```
 
 `<slug>` is the Linear id when there is an issue (`ALL-646`). Each scored command saves its verdict
