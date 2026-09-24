@@ -50,8 +50,8 @@ T9   ship to base   ·   T10 promote   ·   T11 backlog ↔ Linear sync
 ```
 
 Both gates take `<ticket-slug> [work-root] [base-branch]`, default `superapp`, and find `harness/`
-by walking up, so they run from anywhere at or under the pipeline root. They are symlinked into
-`superapp/.claude/commands/` like the other commands.
+by walking up, so they run from anywhere at or under the pipeline root. Like the other commands,
+they are symlinked into `~/.claude/commands/` (setup in [`README-codev.md`](README-codev.md)).
 
 ### Gate α — plan · [`/gpt-gate-plan`](../.claude/commands/gpt-gate-plan.md)
 

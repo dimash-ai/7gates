@@ -111,13 +111,19 @@ Set up once:
   `codex exec --config 'web_search="live"'`: step 1 uses it so GPT can research outside the repo too.
   If it does not, step 1 still runs, and external facts rest on Opus alone.
 - **git ≥ 2.31** (for `rev-parse --path-format`), and **`gh`**, authenticated, for the PR.
-- **The commands** live in this repo and are symlinked into `superapp/.claude/commands/` (gitignored
-  there). From the pipeline root, drop the old `codev-*` links and add the three steps:
+- **The commands** live in this repo and are symlinked into `~/.claude/commands/`, where Claude Code
+  lists them as user commands in every project. A symlink keeps them live: a pull here updates the
+  command. From the pipeline root, drop any old `codev-*` links and add the three steps, then start a
+  new Claude Code session:
 
   ```
-  rm -f superapp/.claude/commands/codev-brief.md superapp/.claude/commands/codev-plan.md superapp/.claude/commands/codev-build.md
-  for s in step1 step2 step3; do ln -s "$PWD/.claude/commands/$s.md" "superapp/.claude/commands/$s.md"; done
+  rm -f ~/.claude/commands/codev-brief.md ~/.claude/commands/codev-plan.md ~/.claude/commands/codev-build.md
+  for s in step1 step2 step3; do ln -sf "$PWD/.claude/commands/$s.md" ~/.claude/commands/$s.md; done
   ```
+
+  Claude Code reads commands from `~/.claude/commands/` and from the `.claude/commands/` of the
+  project it has open, nowhere else. A link in `superapp/.claude/commands/` works too, but only when
+  Claude Code is opened in superapp.
 
 Abandoning a slug: remove its worktree with the last block of `/step3`, then delete its branch.
 
