@@ -49,11 +49,11 @@ T6   implement findings
 T9   ship to base   ·   T10 promote   ·   T11 backlog ↔ Linear sync
 ```
 
-Both gates take `<ticket-slug> [work-root] [base-branch]`, default `superapp`, and find `harness/`
-by walking up, so they run from anywhere at or under the pipeline root. Like the other commands,
-they are symlinked into `~/.claude/commands/` (setup in [`README-codev.md`](README-codev.md)).
+Both gates take `<ticket-slug> [work-root] [base-branch]`; the work root defaults to the current git
+repo, and they find `harness/` by walking up, so they run from superapp, its worktrees or the
+harness. Like the other commands, they reach Claude Code through the `~/.claude/commands` link (setup in [`README-codev.md`](README-codev.md)).
 
-### Gate α — plan · [`/gpt-gate-plan`](../.claude/commands/gpt-gate-plan.md)
+### Gate α — plan · [`/gpt-gate-plan`](.claude/commands/gpt-gate-plan.md)
 
 Codex reads `DevelopmentPlan.md` cold and scores it before the coder touches a file. It enforces
 the devplan-protocol schema, checks every AC traces to a slice, and verifies the plan commits new
@@ -69,7 +69,7 @@ adversarially reviewed before any code* — which nothing in the harness provide
 implementation until I return with a plan verdict."* Without that line the architect delegates
 straight through and the gate arrives too late to be a gate.
 
-### Gate γ — release · [`/gpt-gate-release`](../.claude/commands/gpt-gate-release.md)
+### Gate γ — release · [`/gpt-gate-release`](.claude/commands/gpt-gate-release.md)
 
 Codex gets `--sandbox workspace-write` for one reason: **so it runs the checks itself and reports
 the counts it observed.** Everything upstream reads. This executes.

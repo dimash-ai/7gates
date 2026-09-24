@@ -2,8 +2,8 @@
 
 > **Superseded for superapp work (2026-08-20, by the [GPT gates](README-gpt-gates.md)).** Since
 > 2026-09-24 our own features enter through the [3-step co-dev flow](README-codev.md); tickets in the
-> CTO's feature-dev cycle keep the GPT gates. This flow's charters and rubric are still live; its doer
-> commands have no active consumer.
+> CTO's feature-dev cycle keep the GPT gates. This flow's charters and rubric are still live. **Its
+> commands were removed on 2026-09-24**; git history has them, and this document stays as the record.
 
 This `harness/` directory is the **coordination layer** between Opus (Claude Code) and GPT (Codex) —
 a lightweight, operational paper trail, not a transcript archive. Every feature flows through a
@@ -38,7 +38,7 @@ The doer fixes **only** the cited Must Fix items on a BLOCK — no scope creep, 
 refactors — then resubmits.
 
 **House quality bar.** Both roles work to four principles — Think Before Coding, Simplicity First,
-Surgical Changes, Goal-Driven Execution (full text in root [`CLAUDE.md`](../CLAUDE.md)). The doer
+Surgical Changes, Goal-Driven Execution (full text in root [`CLAUDE.md`](CLAUDE.md)). The doer
 follows them; the reviewer scores against them, with severities in
 [`checklists/scoring-rubric.md`](checklists/scoring-rubric.md).
 

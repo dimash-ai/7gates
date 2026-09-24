@@ -71,7 +71,7 @@ H=$(d=$PWD; while [ "$d" != / ] && [ ! -f "$d/harness/prompts/reviewer.md" ]; do
 codev_need_header && codev_need_worktree || exit 1
 N=$(( $(ls "$S"/reviews/build-*.md 2>/dev/null | wc -l) + 1 ))
 P="$S/runs/build-$N.prompt.md"
-{ printf 'THE PIPELINE HOUSE RULES (the charter below calls this root CLAUDE.md; its #2 is the reuse-first ladder):\n\n'; cat "$H/../CLAUDE.md"
+{ printf 'THE PIPELINE HOUSE RULES (the charter below calls this root CLAUDE.md; its #2 is the reuse-first ladder):\n\n'; cat "$H/CLAUDE.md"
   printf '\n\n'; cat "$H/prompts/reviewer.md"
   printf '\n\n'; cat "$H/checklists/scoring-rubric.md"
   printf '\n\n'; cat "$H/checklists/ponytail.md"
@@ -137,7 +137,7 @@ codev_need_header && codev_need_worktree || exit 1
 [ -s "$S/handoff.md" ] || { echo "codev: draft $S/handoff.md first"; exit 1; }
 N=$(( $(ls "$S"/reviews/release-*.md 2>/dev/null | wc -l) + 1 ))
 P="$S/runs/release-$N.prompt.md"
-{ printf 'THE PIPELINE HOUSE RULES (the charter below calls this root CLAUDE.md):\n\n'; cat "$H/../CLAUDE.md"
+{ printf 'THE PIPELINE HOUSE RULES (the charter below calls this root CLAUDE.md):\n\n'; cat "$H/CLAUDE.md"
   printf '\n\n'; cat "$H/prompts/final-release-review.md"
   printf '\n\n'; cat "$H/checklists/scoring-rubric.md"
   printf '\n\n'; cat "$H/checklists/ponytail.md"

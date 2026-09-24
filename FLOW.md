@@ -159,7 +159,7 @@ you can hold. Two or three is realistic — stagger their starts rather than cap
 ## Part 3 — The ticket loop
 
 Two sessions per ticket. **Everything runs from wherever you are** — the code repo, one of its
-worktrees, or the pipeline root. The gate commands resolve `harness/` by walking up, so you never
+worktrees, or the harness. The gate commands resolve `harness/` by walking up, so you never
 switch directories mid-ticket.
 
 ### Session 1 — spec and build

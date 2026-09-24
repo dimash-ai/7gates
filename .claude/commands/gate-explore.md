@@ -29,14 +29,14 @@ dossier that reprints the codebase is the same as no dossier.
 
 ## 0 — Resolve the harness root
 
-Every `harness/…` path below is relative to the **pipeline root** — the directory containing
-`harness/`, not the code repo:
+Every `harness/…` path below is relative to the directory containing `harness/`: the main
+checkout of superapp, where the harness is its own repository, ignored by superapp's git:
 
 ```bash
 d=$PWD; while [ "$d" != / ] && [ ! -d "$d/harness/prompts" ]; do d=$(dirname "$d"); done; echo "$d/harness"
 ```
 
-**Never create a `harness/` directory inside the code repo.** If that path appears under the repo,
+**Never create a second `harness/` directory**, in a worktree or anywhere else. If one appears,
 resolution was skipped and the dossier is in the wrong tree.
 
 ## 1 — State the issue in one paragraph
@@ -80,7 +80,7 @@ Save the raw output to `harness/scratch/$1-gpt.md` (gitignored).
 ## 4 — Merge into the dossier
 
 Read **both** scratch files and write `harness/notes/$1.md` from
-[`harness/notes/TEMPLATE.md`](../../harness/notes/TEMPLATE.md). Six evidence sections, then
+[`harness/notes/TEMPLATE.md`](../../notes/TEMPLATE.md). Six evidence sections, then
 contradictions, then gaps:
 
 | Section | What goes in it |
@@ -118,7 +118,7 @@ a note on how they were settled, and preserve the earlier provenance markers.
 
 The dossier is not the end state — it is an input. It reaches the build flow at **T1**, which reads
 `harness/notes/$1.md` before drafting the spec and folds it in per
-[`harness/runbook-amendments.md`](../../harness/runbook-amendments.md): evidence becomes confirmed
+[`harness/runbook-amendments.md`](../../runbook-amendments.md): evidence becomes confirmed
 assumptions and ACs, gaps become explicit open questions, and anything the sweeps could not verify
 stays marked unverified so the plan gate re-checks it.
 

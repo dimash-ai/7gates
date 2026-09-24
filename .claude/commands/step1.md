@@ -11,8 +11,8 @@ on top, the evidence both models found below. Nothing is designed here. The brie
 *why*; GPT designs the *how* in step 2, cold, from this document.
 
 `$1` is the slug: the Linear id when there is an issue (`ALL-646`), otherwise a short kebab-case
-name. `$2` is the code repo, optional: the current git repo, or `superapp` when run from the
-pipeline root.
+name. `$2` is the code repo, optional: the current git repo, or `superapp` when run inside
+`superapp/harness`.
 
 Not scored. Two independent sweeps here buy **coverage**, not agreement: the merge is a union. The
 gate is the requester, and the step ends when they confirm the brief.

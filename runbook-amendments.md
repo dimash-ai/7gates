@@ -57,7 +57,7 @@ After writing DevelopmentPlan.md, STOP and report its absolute path. Do NOT dele
 ```
 
 Full context in [`README-gpt-gates.md`](README-gpt-gates.md) and
-[`../.claude/commands/gpt-gate-plan.md`](../.claude/commands/gpt-gate-plan.md).
+[`../.claude/commands/gpt-gate-plan.md`](.claude/commands/gpt-gate-plan.md).
 
 ---
 

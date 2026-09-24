@@ -6,7 +6,7 @@ process, prompts, checklists, and house rules the agents follow. The work itself
 the pipeline produces, lives in the code repository it points at.
 
 New here? Read in this order: this file → [`PIPELINE_OVERVIEW.md`](PIPELINE_OVERVIEW.md) (all the
-flows at a glance) → [`CLAUDE.md`](CLAUDE.md) (the quality bar) → [`harness/README-codev.md`](harness/README-codev.md)
+flows at a glance) → [`CLAUDE.md`](CLAUDE.md) (the quality bar) → [`harness/README-codev.md`](README-codev.md)
 (the live flow in full).
 
 ## What this is
@@ -24,8 +24,8 @@ fixes the cited *Must Fix* items and resubmits.
 Results land in the code repo's gitignored `specs/<slug>/` (for superapp, `superapp/specs/`), never
 in this repo. [ponytail](https://github.com/DietrichGebert/ponytail)'s reuse-first ladder and
 over-engineering review run through all three steps from one pinned file,
-[`harness/checklists/ponytail.md`](harness/checklists/ponytail.md). Full manual:
-[`harness/README-codev.md`](harness/README-codev.md).
+[`harness/checklists/ponytail.md`](checklists/ponytail.md). Full manual:
+[`harness/README-codev.md`](README-codev.md).
 
 ## House rules
 
@@ -42,7 +42,7 @@ All work — by humans or agents — holds to four principles (full text in [`CL
 
 | Path | Holds |
 |------|-------|
-| [`harness/`](harness/)         | The pipeline: charters, checklists, templates, and the manuals for every flow |
+| [`harness/`](./)         | The pipeline: charters, checklists, templates, and the manuals for every flow |
 | `.claude/`             | Slash commands (`/step1`, `/step2`, `/step3`, and the older flows') and local settings |
 | [`CLAUDE.md`](CLAUDE.md) | House rules — the always-on quality bar |
 | [`AGENTS.md`](AGENTS.md) | Codex's roles and verdict conventions |
@@ -50,8 +50,7 @@ All work — by humans or agents — holds to four principles (full text in [`CL
 
 ## Running a feature
 
-In Claude Code, from anywhere at or under the pipeline root (the code repo, one of its worktrees, or
-the root itself):
+In Claude Code, from superapp, one of its worktrees, or the harness itself (`superapp/harness`):
 
 ```
 /step1 <slug>    # brief — you + Opus; Opus and GPT research; you approve the brief
@@ -60,12 +59,12 @@ the root itself):
 ```
 
 `<slug>` is the Linear id when there is an issue (`ALL-646`). Each scored command saves its verdict
-under `specs/<slug>/reviews/` and **stops**. See [`harness/README-codev.md`](harness/README-codev.md)
+under `specs/<slug>/reviews/` and **stops**. See [`harness/README-codev.md`](README-codev.md)
 for where it stops and why.
 
-The other flows still run and are documented in [`PIPELINE_OVERVIEW.md`](PIPELINE_OVERVIEW.md):
-`/gate-explore` for epic-level research, the GPT gates for tickets that run through the CTO's
-feature-dev cycle, and the superseded 3-gate and 7-step flows.
+The other flows are documented in [`PIPELINE_OVERVIEW.md`](PIPELINE_OVERVIEW.md): `/gate-explore`
+for epic-level research and the GPT gates for tickets that run through the CTO's feature-dev
+cycle. The 3-gate and 7-step commands were removed on 2026-09-24.
 
 ## Prerequisites
 

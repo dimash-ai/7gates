@@ -8,7 +8,7 @@
 #
 # Shell variables do not survive between blocks, so every block re-derives the same values here
 # instead of trusting a variable set earlier. It sets:
-#   R     the code repo (the pipeline root resolves to its superapp/)
+#   R     the code repo (run inside the harness itself, R is the harness's parent: superapp)
 #   M     the code repo's MAIN checkout, even when run from inside a worktree
 #   S     M/specs/<slug>      every result of the flow (gitignored in superapp)
 #   WT    M/.worktrees/<slug> the one tree steps 1-3 read, plan against and build in
@@ -18,7 +18,7 @@
 SLUG="$1"
 [ -n "$SLUG" ] || { echo "codev: no slug given" >&2; return 1; }
 R=$(cd "${2:-$(git rev-parse --show-toplevel 2>/dev/null)}" 2>/dev/null && pwd) || { echo "codev: no code repo at '${2:-$PWD}'" >&2; return 1; }
-[ -d "$R/harness/prompts" ] && R="$R/superapp"   # ran from the pipeline root -> the code repo
+[ -f "$R/prompts/reviewer.md" ] && R=$(dirname "$R")   # ran inside the harness -> the code repo is its parent
 M=$(git -C "$R" rev-parse --path-format=absolute --git-common-dir 2>/dev/null) && M=$(dirname "$M")
 { [ -n "$M" ] && [ -d "$M/.git" ]; } || { echo "codev: $R is not inside a git checkout" >&2; return 1; }
 # Results live in the main checkout: a worktree has its own empty specs/, and removing a worktree

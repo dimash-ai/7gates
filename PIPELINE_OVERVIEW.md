@@ -14,7 +14,7 @@ All of the build flows rest on the same three rules:
 - **The reviewer scores the artifact out of 10 — work advances only at ≥ 9.0.** Below that, the
   reviewer returns cited *Must Fix* items, the doer fixes exactly those (no scope creep), and
   resubmits for a re-score. Scoring is governed by
-  [`harness/checklists/scoring-rubric.md`](harness/checklists/scoring-rubric.md).
+  [`harness/checklists/scoring-rubric.md`](checklists/scoring-rubric.md).
 - **The reviewer always runs "blind."** GPT reviews in a separate `codex exec` process; Opus reviews
   from a fresh, clean-context subagent. The reviewer never grades an artifact it watched being
   built.
@@ -38,8 +38,8 @@ Step 1 is not scored: two independent sweeps buy **coverage**, so they merge as 
 judge of an intent is the person who has it. Every result lands in the code repo's gitignored
 `specs/<slug>/`. [ponytail](https://github.com/DietrichGebert/ponytail)'s ladder and
 over-engineering review run through all three steps from
-[`harness/checklists/ponytail.md`](harness/checklists/ponytail.md). Full detail:
-[`harness/README-codev.md`](harness/README-codev.md).
+[`harness/checklists/ponytail.md`](checklists/ponytail.md). Full detail:
+[`harness/README-codev.md`](README-codev.md).
 
 ---
 
@@ -58,24 +58,23 @@ the same kind of sweep and turns it into the brief. Command:
 
 When a ticket runs through the CTO's feature-dev harness (architect → coder → qa, all Claude), two
 Codex gates bolt onto it: **α** scores the architect's plan before any code exists, **γ** runs the
-suite itself before ship. Full detail: [`harness/README-gpt-gates.md`](harness/README-gpt-gates.md).
+suite itself before ship. Full detail: [`harness/README-gpt-gates.md`](README-gpt-gates.md).
 
 ---
 
 ## 4 · Superseded — no new work
 
-- **2-gate** ([`harness/README-2gate.md`](harness/README-2gate.md)): GPT plans, Opus builds. The
+- **2-gate** ([`harness/README-2gate.md`](README-2gate.md)): GPT plans, Opus builds. The
   co-dev flow grew out of it and rewrote its two commands, so it no longer runs as documented; the
   document stays as the record of the design.
-- **3-gate** ([`harness/README-3gate.md`](harness/README-3gate.md)): design / build / verify, with GPT
-  authoring the verification. Its commands still run.
-- **7-step** ([`harness/README-7step.md`](harness/README-7step.md)): think / plan / design / build /
+- **3-gate** ([`harness/README-3gate.md`](README-3gate.md)): design / build / verify, with GPT
+  authoring the verification. Its commands were removed on 2026-09-24; the document stays as the
+  record.
+- **7-step** ([`harness/README-7step.md`](README-7step.md)): think / plan / design / build /
   review / test / ship, strict alternation, GPT authoring the tests blind to its own review. Its
-  commands still run.
+  commands were removed on 2026-09-24; the document stays as the record.
 
-The 3-gate and 7-step flows are the ones where GPT, not the builder, writes the tests. Their
-commands predate the co-dev conventions (results under `harness/`, base branch defaulting to
-`main`), so a superapp run through them needs the base passed explicitly.
+The 3-gate and 7-step flows were the ones where GPT, not the builder, wrote the tests.
 
 ---
 

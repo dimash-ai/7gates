@@ -40,7 +40,7 @@ H=$(d=$PWD; while [ "$d" != / ] && [ ! -f "$d/harness/prompts/reviewer.md" ]; do
 . "${H:?no harness/ at or above this directory}/bin/codev-env.sh" "$1" "$2" || exit 1
 codev_need_header && codev_need_worktree || exit 1
 P="$S/runs/plan-codex.prompt.md"
-{ printf 'THE PIPELINE HOUSE RULES (the charter below calls this root CLAUDE.md; its #2 is the reuse-first ladder):\n\n'; cat "$H/../CLAUDE.md"
+{ printf 'THE PIPELINE HOUSE RULES (the charter below calls this root CLAUDE.md; its #2 is the reuse-first ladder):\n\n'; cat "$H/CLAUDE.md"
   printf '\n\n'; cat "$H/prompts/doer.md"
   printf '\n\n'; cat "$H/checklists/ponytail.md"
   printf '\n\nTHE BRIEF:\n\n'; cat "$S/brief.md"
@@ -77,7 +77,7 @@ brief being written. Spawn a clean-context reviewer with the **Agent tool** (`su
 > You are Opus, the blind reviewer for the PLAN step of `$1`. GPT Codex wrote this plan; you did not,
 > and you did not take part in the conversation behind the brief. Read, in this order:
 > `<H>/prompts/reviewer.md` (your charter: follow its review rules and output its verdict format
-> exactly), `<H>/../CLAUDE.md` (the pipeline house rules the charter calls root CLAUDE.md; its #2 is
+> exactly), `<H>/CLAUDE.md` (the pipeline house rules the charter calls root CLAUDE.md; its #2 is
 > the reuse-first ladder), `<H>/checklists/scoring-rubric.md`, `<H>/checklists/ponytail.md`, the
 > brief `<S>/brief.md`, the plan `<S>/plan.md`, then `<WT>/CLAUDE.md`, the CLAUDE.md of the app
 > involved, and the code the plan cites, in `<WT>`. **From round 2:** also read the previous plan
@@ -129,7 +129,7 @@ H=$(d=$PWD; while [ "$d" != / ] && [ ! -f "$d/harness/prompts/reviewer.md" ]; do
 codev_need_header && codev_need_worktree || exit 1
 V="$S/reviews/plan-<N>.md"; [ -s "$V" ] || { echo "codev: no verdict at $V"; exit 1; }
 P="$S/runs/plan-revision.prompt.md"
-{ printf 'THE PIPELINE HOUSE RULES (the charter below calls this root CLAUDE.md; its #2 is the reuse-first ladder):\n\n'; cat "$H/../CLAUDE.md"
+{ printf 'THE PIPELINE HOUSE RULES (the charter below calls this root CLAUDE.md; its #2 is the reuse-first ladder):\n\n'; cat "$H/CLAUDE.md"
   printf '\n\n'; cat "$H/prompts/doer.md"
   printf '\n\n'; cat "$H/checklists/ponytail.md"
   printf '\n\nTHE BRIEF:\n\n'; cat "$S/brief.md"

@@ -11,13 +11,13 @@ The **cross-model plan gate** for the feature-dev flow. It runs between the arch
 Why it exists: feature-dev's `coder` and `qa` are **both Sonnet**, and its design-level findings
 only surface *after* the build, as Triage class **C1**. This gate restores the property the 2-gate
 co-dev flow was built around — *the plan is adversarially reviewed before any code*, by a model
-from a different vendor. See [`harness/README-gpt-gates.md`](../../harness/README-gpt-gates.md).
+from a different vendor. See [`harness/README-gpt-gates.md`](../../README-gpt-gates.md).
 
-`$1` is the ticket slug (`ALL-555`) — it names the verdict file. `$2` is the work root relative to
-the pipeline root — **optional, defaults to `superapp`**; pass the worktree
-(`superapp/.claude/worktrees/all-555-focal-settings`) when the ticket runs in one. **If `$2` was
-omitted, substitute `superapp` for every `$2` below — inside the codex prompt string too — before
-running anything.**
+`$1` is the ticket slug (`ALL-555`) — it names the verdict file. `$2` is the path to the work root —
+**optional, defaults to the current git repo** (superapp); pass the worktree
+(`.claude/worktrees/all-555-focal-settings` from superapp) when the ticket runs in one. **If `$2` was
+omitted, substitute the current git repo's absolute path for every `$2` below — inside the codex
+prompt string too — before running anything.**
 
 ## Precondition — hold the architect
 
@@ -30,8 +30,8 @@ Then run this gate. Nothing here creates or edits a file in `$2` — the plan is
 
 ## Where this runs
 
-**Anywhere at or under the pipeline root** — the repo you are working in (`superapp`), one of its
-worktrees, or the root itself. The block below resolves two things for you rather than assuming a
+**Anywhere in superapp** — the main checkout (`superapp`), one of its worktrees, or the harness
+itself (`superapp/harness`). The block below resolves two things for you rather than assuming a
 working directory: `$H` (the `harness/` charters) and `$R` (the work root being reviewed, defaulting
 to the current git repo when `$2` is omitted). A bare `harness/…` path would silently resolve inside
 the code repo, and `$(cat …)` on a missing charter returns **empty** — the gate would run with no
@@ -43,11 +43,11 @@ Codex has none of the architect's conversation — it reads the plan cold, which
 exactly this one bash command:
 
 ```bash
-# Resolve the pipeline root from wherever you are (superapp, a worktree, or the root itself)
+# Resolve the harness and the work root from wherever you are (superapp, a worktree, or the harness)
 H=$(d=$PWD; while [ "$d" != / ] && [ ! -f "$d/harness/prompts/reviewer.md" ]; do d=$(dirname "$d"); done; [ "$d" != / ] && echo "$d/harness")
 [ -n "$H" ] || { echo "ERROR: no harness/ at or above $PWD"; exit 1; }
 R=$(cd "${2:-$(git rev-parse --show-toplevel)}" && pwd) || exit 1
-[ -d "$R/harness/prompts" ] && R="$R/superapp"   # ran from the pipeline root -> default to the code repo
+[ -f "$R/prompts/reviewer.md" ] && R=$(dirname "$R")   # ran inside the harness -> the code repo is its parent
 mkdir -p $H/reviews/$1 $H/runs
 codex exec --sandbox read-only "$(cat $H/prompts/reviewer.md)
 $(cat $H/checklists/scoring-rubric.md)

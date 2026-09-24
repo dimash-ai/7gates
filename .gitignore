@@ -1,8 +1,8 @@
 # Local AI pipeline working files — kept out of the committed paper trail.
-harness/scratch/
-harness/runs/
-harness/transcripts/
-harness/archive/runs-legacy/
+/scratch/
+/runs/
+/transcripts/
+/archive/runs-legacy/
 
 # macOS
 .DS_Store

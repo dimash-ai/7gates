@@ -19,11 +19,11 @@ Work advances only at **Score >= 9.0** ([`checklists/scoring-rubric.md`](checkli
 | **[3-step co-dev](README-codev.md)** | **live — default** | brief · plan · build | Opus and GPT research independently, you approve the brief; GPT plans → Opus reviews; Opus builds → GPT reviews | `/step1` · `/step2` · `/step3` |
 | **[GPT gates](README-gpt-gates.md)** | live, for feature-dev tickets | 2, spliced into the CTO's feature-dev cycle | Claude `architect → coder → qa` builds; **Codex** scores the plan and runs the release suite | `/gpt-gate-plan` · `/gpt-gate-release` |
 | **[2-gate](README-2gate.md)** | superseded by 3-step co-dev | plan · build | GPT plans → Opus reviews; Opus builds → GPT reviews | its commands were rewritten as 3-step co-dev's `/step2` and `/step3` |
-| **[3-gate](README-3gate.md)** | superseded | design · build · verify | Opus does A+B, GPT does C; each scored by the other | `/gate-design` · `/gate-build` · `/gate-verify` |
-| **[7-step](README-7step.md)** | superseded | think · plan · design · build · review · test · ship | strict alternation, Opus ⇄ GPT at every step | `/gate1-think` … `/gate7-ship` |
+| **[3-gate](README-3gate.md)** | removed 2026-09-24 | design · build · verify | Opus does A+B, GPT does C; each scored by the other | commands removed; README kept as the record |
+| **[7-step](README-7step.md)** | removed 2026-09-24 | think · plan · design · build · review · test · ship | strict alternation, Opus ⇄ GPT at every step | commands removed; README kept as the record |
 
-**Superseded means retired-from-new-work, not broken.** The 3-gate and 7-step commands still run,
-and their charters are the ones the live flows call. Nothing was deleted.
+**The 3-gate and 7-step commands were removed on 2026-09-24**; git history has them. Their charters
+and rubric are still the ones the live flows call, and their READMEs stay as the record.
 
 ## Which one to reach for
 
@@ -34,13 +34,12 @@ and their charters are the ones the live flows call. Nothing was deleted.
   coder → qa → review session → ship) — the GPT gates, which bolt Codex onto it at the only two
   places where a second vendor changes the outcome: **before any code exists**, and **when the
   suite actually runs**.
-The superseded 3-gate and 7-step flows are the ones where GPT, not the builder, writes the tests.
-They still run, but their commands predate the co-dev conventions (results under `harness/`, base
-branch defaulting to `main`), so a superapp run through them needs the base passed explicitly.
+The removed 3-gate and 7-step flows were the ones where GPT, not the builder, wrote the tests; for a
+change where a wrong test is as dangerous as wrong code, see the known gaps in README-codev.
 
 ## Why the GPT gates exist at all
 
-The CTO's harness ([`agent-skills`](../agent-skills), installed as live symlinks into `~/.claude`)
+The CTO's harness ([`agent-skills`](../../agent-skills), installed as live symlinks into `~/.claude`)
 brought things this pipeline never had: the semantic exoskeleton, LDD logging, role decomposition,
 spec normalization, a Linear-tracked ticket flow. It ships superapp daily.
 

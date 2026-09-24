@@ -93,7 +93,7 @@ deliberate act: read the changelog, carry the change over, bump the pin.
 
 ## Running a feature
 
-From anywhere at or under the pipeline root: `superapp`, one of its worktrees, or the root itself.
+From `superapp`, one of its worktrees, or the harness itself (`superapp/harness`).
 
 ```
 /step1 ALL-646     # brief: you + Opus; the worktree is pinned; Opus and GPT sweep; you approve brief.md
@@ -113,12 +113,12 @@ Set up once:
 - **git ≥ 2.31** (for `rev-parse --path-format`), and **`gh`**, authenticated, for the PR.
 - **The commands** live in this repo's `.claude/commands/`, and `~/.claude/commands` is a symlink to
   that directory, so Claude Code lists them as user commands in every project and a pull here
-  updates them. The link serves whatever branch the pipeline root has checked out: the three steps
+  updates them. The link serves whatever branch this checkout (`superapp/harness`) has: the three steps
   appear once this flow is on that branch (normally `main`) and vanish while a branch without them
   is checked out. Nothing else to install; start a new Claude Code session. Never link or copy a
   single command file into `~/.claude/commands`: through the directory link, `ln -sf` replaces the
   repo's file with a link to itself, and `rm` followed by `cp` deletes it. On a new machine, move
-  any existing `~/.claude/commands` aside, then create the link once from the pipeline root:
+  any existing `~/.claude/commands` aside, then create the link once from `superapp/harness`:
 
   ```
   ln -s "$PWD/.claude/commands" ~/.claude/commands
@@ -163,9 +163,10 @@ Abandoning a slug: remove its worktree with the last block of `/step3`, then del
 
 ## Beside the other flows
 
-- [`/gate-explore`](../.claude/commands/gate-explore.md): standalone reconnaissance for an epic;
+- [`/gate-explore`](.claude/commands/gate-explore.md): standalone reconnaissance for an epic;
   step 1 runs the same kind of sweep for one task.
 - [GPT gates](README-gpt-gates.md): for tickets that run through the CTO's feature-dev cycle.
 - [2-gate](README-2gate.md): the record of the design this flow grew from; its two commands were
   rewritten here.
-- [3-gate](README-3gate.md) and [7-step](README-7step.md): superseded.
+- [3-gate](README-3gate.md) and [7-step](README-7step.md): superseded; their commands were removed
+  on 2026-09-24, and the READMEs stay as the record.
