@@ -20,7 +20,9 @@ gate is the requester, and the step ends when they confirm the brief.
 **Paths.** Every bash block below starts by sourcing `harness/bin/codev-env.sh`, which prints one
 line: `codev: slug=… results=<S> worktree=<WT> …`. In the prose, `<S>`, `<WT>` and `<H>` (the
 `harness/` directory) mean those literal paths. Results land in `<S>` = the code repo's
-`specs/$1/`, always in the **main** checkout, gitignored in superapp.
+`specs/$1/`, gitignored in superapp: in the **main** checkout, or, when this session runs in a
+worktree of its own (`.claude/worktrees/<name>`, the Claude desktop app's default), in that
+worktree, which is then `<WT>` too. The app lets such a session write nowhere else.
 
 ## 1a — The intent, confirmed before anyone researches
 
@@ -44,19 +46,34 @@ question. So the requester confirms it first.
      elsewhere. Every slug needs a branch of its own.
    - **Base.** `dev` for superapp.
 4. **STOP** until the requester says yes to the paragraph and the settings. Then write the paragraph,
-   verbatim, to `<S>/research/issue.md`, and start `<S>/brief.md` from
+   verbatim, to `<S>/research/issue.md` (the first two lines of any block below print `<S>`), and
+   start `<S>/brief.md` from
    `<H>/briefs/TEMPLATE.md` with its header filled in: `Branch:`, `Base:`, `Linear:`, `Depth:` and
    `Date:`, one per line, plain values with no backticks or bold.
 
 Then create the worktree. It pins the tree that both sweeps read, that GPT plans against, and that
-Opus builds in, so research, plan and code all describe the same commit:
+Opus builds in, so research, plan and code all describe the same commit. In a session with a
+worktree of its own, the block moves that worktree onto the branch instead of adding one. It must be
+clean (step 1's files do not count: `specs/` is gitignored), and the app's own `claude/…` branch
+stays behind, unused:
 
 ```bash
 H=$(d=$PWD; while [ "$d" != / ] && [ ! -f "$d/harness/prompts/reviewer.md" ]; do d=$(dirname "$d"); done; [ "$d" != / ] && echo "$d/harness")
 . "${H:?no harness/ at or above this directory}/bin/codev-env.sh" "$1" "$2" || exit 1
 codev_need_header || exit 1
 mkdir -p "$S/research" "$S/reviews" "$S/runs"
-if [ -d "$WT" ]; then
+if [ "$WT" = "$R" ]; then   # the session's own worktree (see codev-env.sh): move it onto the branch
+  if [ "$(git -C "$WT" branch --show-current)" != "$BR" ]; then
+    [ -z "$(git -C "$WT" status --porcelain)" ] || { echo "codev: $WT has uncommitted changes - commit or move them, then re-run"; exit 1; }
+    git -C "$M" fetch origin "$BASE" --quiet || { echo "codev: cannot fetch origin/$BASE"; exit 1; }
+    git -C "$M" fetch origin "refs/heads/$BR:refs/remotes/origin/$BR" --quiet 2>/dev/null   # the branch, if it already exists on origin
+    if git -C "$M" show-ref --verify --quiet "refs/heads/$BR" || git -C "$M" show-ref --verify --quiet "refs/remotes/origin/$BR"; then
+      git -C "$WT" switch "$BR" || exit 1                                          # existing branch: attach to it
+    else
+      git -C "$WT" switch --no-track -c "$BR" "origin/$BASE" || exit 1             # new branch from the remote tip
+    fi
+  fi
+elif [ -d "$WT" ]; then
   echo "worktree exists on $(git -C "$WT" branch --show-current)"
 else
   git -C "$M" fetch origin "$BASE" --quiet || { echo "codev: cannot fetch origin/$BASE"; exit 1; }
@@ -77,7 +94,9 @@ Add `Pinned: <sha>` from that last line to the brief's header.
 Start GPT first, then sweep yourself while it runs. **Do not open `<S>/research/codex.md` until
 `<S>/research/opus.md` is written**: reading GPT first anchors you on it, and the union stops being
 two views. The block writes GPT's output to files and prints only its exit status, so nothing of
-the sweep reaches you early.
+the sweep reaches you early. The wall runs the other way too: in a session with a worktree of its
+own, `<S>` sits inside GPT's working directory, so keep your sweep in the scratchpad until GPT's run
+has exited, and only then write `opus.md`.
 
 **GPT**: read-only, in the worktree, web search on, the prompt read from a file and the final
 message written by `-o`. Replace `<quick|full>` with the agreed depth. Run it **in the background**

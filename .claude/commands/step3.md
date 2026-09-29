@@ -42,7 +42,10 @@ remember that GPT's release pass will run in a tree that holds it.
 ## 3a — build one slice, GPT reviews it
 
 **Doer = Opus (you).** Best in the session that ran step 1: it holds the requester's context. The
-plan still governs.
+plan still governs. In a session with a worktree of its own it is the only choice: `<WT>` and `<S>`
+live in that worktree, and no other session may write there. Never let the app sync that branch with
+its base: the app's base for the session is `main`, and merging it would drag main-only history into
+a PR for `<BASE>`.
 
 - Read `<S>/brief.md`, `<S>/plan.md` and `<H>/checklists/ponytail.md` (the ladder, and what is *not*
   over-engineering in superapp).
@@ -196,12 +199,15 @@ The requester merges. After PM QA on `dev`, promotion to `main` follows superapp
 cherry-pick the feature commits onto `<branch>-main` and open a PR into `main`.
 
 **After the merge, remove the worktree** (the branch stays). Removing it deletes its gitignored
-files, so the block refuses while a `.env` is still inside; the results are safe in `<S>`:
+files, so the block refuses while a `.env` is still inside; the results are safe in `<S>`. A
+session's own worktree is left alone: the app removes it with the session, and `<S>` goes with it,
+so copy out first whatever must outlive the session:
 
 ```bash
 H=$(d=$PWD; while [ "$d" != / ] && [ ! -f "$d/harness/prompts/reviewer.md" ]; do d=$(dirname "$d"); done; [ "$d" != / ] && echo "$d/harness")
 . "${H:?no harness/ at or above this directory}/bin/codev-env.sh" "$1" "$2" || exit 1
 [ -d "$WT" ] || { echo "codev: no worktree at $WT"; exit 0; }
+[ "$WT" != "$R" ] || { echo "codev: $WT is this session's own worktree - the app removes it with the session"; exit 0; }
 E=$(git -C "$WT" status --ignored --porcelain | grep -E '^!! (.*/)?\.env')
 [ -z "$E" ] || { echo "codev: $WT still holds these - keep what you need, delete them, re-run:"; echo "$E"; exit 1; }
 git -C "$M" worktree remove ".worktrees/$SLUG" && echo "worktree removed; branch $BR kept"

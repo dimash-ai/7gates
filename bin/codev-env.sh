@@ -12,6 +12,8 @@
 #   M     the code repo's MAIN checkout, even when run from inside a worktree
 #   S     M/specs/<slug>      every result of the flow (gitignored in superapp)
 #   WT    M/.worktrees/<slug> the one tree steps 1-3 read, plan against and build in
+#         A session that runs in a worktree of its own (R under M/.claude/worktrees/, the Claude
+#         desktop app's default) keeps both in that worktree instead: S=R/specs/<slug>, WT=R.
 #   BR    the brief's Branch: line, BASE its Base: line (empty until the brief header exists)
 # and defines the codev_need_* checks the blocks call before acting.
 
@@ -25,10 +27,17 @@ M=$(git -C "$R" rev-parse --path-format=absolute --git-common-dir 2>/dev/null) &
 # deletes its gitignored files along with it.
 S="$M/specs/$SLUG"
 WT="$M/.worktrees/$SLUG"
+# Except in a session that runs in a worktree of its own: the app lets that session write only
+# inside its worktree, so the flow keeps its results there and builds in the worktree itself.
+case "$R/" in "$M/.claude/worktrees/"*) S="$R/specs/$SLUG"; WT="$R";; esac
 BR=""; BASE=""
 if [ -f "$S/brief.md" ]; then
   BR=$(sed -n 's/^Branch:[[:space:]]*//p' "$S/brief.md" | head -1 | tr -d '`*' | awk '{print $1}')
   BASE=$(sed -n 's/^Base:[[:space:]]*//p' "$S/brief.md" | head -1 | tr -d '`*' | awk '{print $1}')
+else   # a later step run from another session: name the checkout that holds this slug's brief
+  git -C "$M" worktree list --porcelain | sed -n 's/^worktree //p' | while IFS= read -r d; do
+    [ -f "$d/specs/$SLUG/brief.md" ] && echo "codev: the brief for $SLUG is in $d/specs/$SLUG - run the steps from the session that works there" >&2
+  done
 fi
 echo "codev: slug=$SLUG  results=$S  worktree=$WT${BR:+  branch=$BR}${BASE:+  base=$BASE}"
 

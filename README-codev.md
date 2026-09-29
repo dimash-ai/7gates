@@ -21,8 +21,9 @@ it.
 Why this shape:
 
 - **One tree for all three steps.** Step 1 creates the worktree from the remote tip of the base
-  (`origin/dev`). Both sweeps read it, GPT plans against it, Opus builds in it, so the research, the
-  plan's citations and the code describe the same commit, recorded as `Pinned:` in the brief.
+  (`origin/dev`), or moves the session's own worktree there (below). Both sweeps read it, GPT plans
+  against it, Opus builds in it, so the research, the plan's citations and the code describe the
+  same commit, recorded as `Pinned:` in the brief.
 - **GPT plans cold.** A plan that has to stand on the brief alone exposes a brief that does not
   stand, and that is why step 1 exists: whatever the planner needs has to be written down.
 - **Opus builds where the context lives**, ideally in the session that ran step 1. The plan still
@@ -32,7 +33,8 @@ Why this shape:
 
 ## Where the results go
 
-Everything for one slug lives in one folder of the code repo's **main** checkout:
+Everything for one slug lives in one folder of the code repo's **main** checkout, or of the
+session's own worktree (the last bullet below):
 
 ```
 superapp/specs/<slug>/          gitignored: stays on this machine
@@ -58,6 +60,14 @@ superapp/specs/<slug>/          gitignored: stays on this machine
 - Nothing here is committed. What should outlive the ticket, a research dossier say, is copied by
   hand into the repo's `docs/`, the way the native-mobile research reached `docs/research/`.
 - The charters, rubric and templates stay in this repo's `harness/`; only results move.
+- **A session that runs in a worktree of its own** (`.claude/worktrees/<name>`: the Claude desktop
+  app's default, its composer's "worktree" box) is the exception. The app lets such a session write
+  only inside that worktree, so `codev-env.sh` keeps the results in it (`<worktree>/specs/<slug>/`)
+  and uses the worktree itself as the flow's tree: step 1 moves it onto the brief's branch instead
+  of adding `.worktrees/<slug>`. The flow then belongs to that session: run all three steps in it
+  (a step run from another session names the checkout that holds the brief). The results go when
+  the app removes the worktree, so copy out what must outlive the session. Unticking the box runs
+  the session in the main checkout, and the rules above apply unchanged.
 
 ## Ponytail
 
@@ -93,7 +103,8 @@ deliberate act: read the changelog, carry the change over, bump the pin.
 
 ## Running a feature
 
-From `superapp`, one of its worktrees, or the harness itself (`superapp/harness`).
+From `superapp`, one of its worktrees, or the harness itself (`superapp/harness`). In a session that
+runs in a worktree of its own, run all three in that same session.
 
 ```
 /step1 ALL-646     # brief: you + Opus; the worktree is pinned; Opus and GPT sweep; you approve brief.md
@@ -128,7 +139,8 @@ Set up once:
   project it has open, nowhere else. A link in `superapp/.claude/commands/` works too, but only when
   Claude Code is opened in superapp.
 
-Abandoning a slug: remove its worktree with the last block of `/step3`, then delete its branch.
+Abandoning a slug: remove its worktree with the last block of `/step3`, then delete its branch. In
+a session with a worktree of its own, delete the session instead, then the branch.
 
 ## Where it stops
 
@@ -156,6 +168,10 @@ Abandoning a slug: remove its worktree with the last block of `/step3`, then del
 - **A guard around `.env`.** If you copy a `.env` into the worktree to run the app, the release pass
   runs where it is. GPT is told never to open it; that is an instruction, not a sandbox rule. The
   checks do not need a `.env` (CI runs them without one), so keep it out when you can.
+- **A wall between GPT and `<S>`, in a session with a worktree of its own.** `<S>` then sits inside
+  GPT's working directory: the planner can read the raw sweeps, and the release pass's write sandbox
+  reaches `specs/`, which `git status` does not show because it is gitignored. Step 1 keeps Opus's
+  sweep out of `research/` until GPT's run exits; the rest is an instruction, not a sandbox rule.
 - **The feature-dev machinery**: spec normalization, the qa scans, three Claude review lenses with
   Triage, automatic Linear moves. What carries over are the superapp checks in the plan review and
   the release pass. On tickets that touch auth, tokens or RLS, run `/security-review` on the

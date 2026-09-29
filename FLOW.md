@@ -4,7 +4,8 @@
 > the GPT gates. Our own tasks run the [3-step co-dev flow](README-codev.md) (brief / plan / build),
 > whose results land in the code repo's `specs/<slug>/`. Part 1 (breaking an epic down) applies to
 > both. Part 2 does not: the co-dev flow creates its own worktree in step 1, at
-> `<code repo>/.worktrees/<slug>`, from the remote tip of the base.
+> `<code repo>/.worktrees/<slug>`, from the remote tip of the base (a session that runs in a
+> worktree of its own moves that worktree there instead).
 
 The end-to-end procedure. Three actors appear throughout, and keeping them straight is the
 whole discipline:
