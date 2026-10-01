@@ -11,7 +11,7 @@
 #   R     the code repo (run inside the harness itself, R is the harness's parent: superapp)
 #   M     the code repo's MAIN checkout, even when run from inside a worktree
 #   S     M/specs/<slug>      every result of the flow (gitignored in superapp)
-#   WT    M/.worktrees/<slug> the one tree steps 1-3 read, plan against and build in
+#   WT    M/.worktrees/<slug> the one tree steps 2 and 3 research, plan against and build in
 #         A session that runs in a worktree of its own (R under M/.claude/worktrees/, the Claude
 #         desktop app's default) keeps both in that worktree instead: S=R/specs/<slug>, WT=R.
 #   BR    the brief's Branch: line, BASE its Base: line (empty until the brief header exists)
@@ -49,7 +49,7 @@ codev_need_header() {
 
 # The worktree must exist and be on the brief's branch, so nothing is built or committed elsewhere.
 codev_need_worktree() {
-  [ -d "$WT" ] || { echo "codev: no worktree at $WT - /step1 $SLUG creates it" >&2; return 1; }
+  [ -d "$WT" ] || { echo "codev: no worktree at $WT - /step2 $SLUG creates it (2a)" >&2; return 1; }
   [ "$(git -C "$WT" branch --show-current)" = "$BR" ] || { echo "codev: $WT is not on $BR" >&2; return 1; }
 }
 

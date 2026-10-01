@@ -4,10 +4,11 @@ App: <focal, prima, sura, the assistant, or several>
 Linear: <ALL-id — url, or none>
 Date: YYYY-MM-DD
 
-<!-- Step 1a of the co-dev flow (/step1). The request rewritten from the user's side, before anyone
-     reads the code: what we want to achieve, for whom, and why. Both researchers start from it, the
-     brief carries it verbatim, and its user stories' criteria are the acceptance criteria the plan,
-     the build and the release pass are held to.
+<!-- Step 1 of the co-dev flow (/step1). The request rewritten from the user's side, before anyone
+     reads the code: what we want to achieve, for whom, and why. Opus and GPT each draft one from the
+     request alone (product/opus.md, product/codex.md), and Opus merges the two by union into the
+     product part of brief.md, which step 2 researches and plans from. Its user stories' criteria
+     are the acceptance criteria the plan, the build and the release pass are held to.
      Product, not engineering: no modules, endpoints, tables or designs. Screens, flows and the words
      a user sees are product. Whatever was inferred rather than read or heard is marked (assumed),
      so the requester can strike it.
@@ -62,8 +63,10 @@ Priority: must
      requester excluded. -->
 
 ## Questions and answers
-<!-- Every product question asked in step 1, its answer, who gave it and when. None stays open at a
-     stop: an unanswered question becomes an (assumed) the requester accepted. -->
+<!-- In a draft: the questions only the requester can answer, each with the answer you would
+     assume. In the brief: every question asked in step 1 or step 2, its answer, who gave it and
+     when. None stays open at a stop: an unanswered question becomes an (assumed) the requester
+     accepted. -->
 
 ## Sources
 <!-- What this rests on, as paths or URLs: the Linear issue, the design handoff or prototype,

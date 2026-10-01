@@ -8,16 +8,17 @@ By default every feature flows through three steps — **brief / plan / build** 
 different role in each. Every Codex run is a separate `codex exec` process whose final message is
 written to a file by `-o`; results land in the code repo's `specs/<slug>/`, never in this repo.
 
-- **Step 1, brief — Codex researches.** Read-only, independently, from scratch: it never looks for
-  or defers to another model's findings. Its question is the product brief the requester confirmed:
-  what users should get, as user stories. It sweeps the code repo for what a planner needs
-  (Territory by story, Prior art by ladder rung, Constraints, Scars, Tests, Absences), cites every
-  item, may use web search for facts outside the repo, and proposes no design. Not scored, so no
-  verdict block.
-- **Step 2, plan — Codex is the doer.** Read-only: it plans cold from the brief alone and returns
-  the plan as its final message. If the brief is ambiguous in a way that would change the plan, it
-  returns QUESTIONS instead of planning around the ambiguity. Opus reviews it from a fresh,
-  clean-context subagent.
+- **Step 1, brief — Codex drafts the product brief.** Read-only, independently, from the request
+  alone: it never looks for or defers to another model's draft. It states the problem from the
+  user's side (who it is for, what changes for them, whether they are better off, user stories with
+  numbered criteria, the business side), reads product docs rather than code, may use web search
+  for facts outside the repo, and names no design. Not scored, so no verdict block.
+- **Step 2, plan — Codex researches, then is the doer.** First a read-only sweep, independent like
+  the draft, of what a planner needs for the brief's stories (Territory by story, Prior art by
+  ladder rung, Constraints, Scars, Tests, Absences), every item cited, no design. Then, read-only,
+  it plans cold from the brief alone and returns the plan as its final message. If the brief is
+  ambiguous in a way that would change the plan, it returns QUESTIONS instead of planning around the
+  ambiguity. Opus reviews it from a fresh, clean-context subagent.
 - **Step 3, build — Codex reviews.** Read-only on each slice Opus builds; write-enabled on the
   release pass for one reason only, to **run the checks itself** and report the counts it observed.
   It never creates, edits or deletes a file. Both reviews apply the over-engineering lens in

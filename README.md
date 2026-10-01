@@ -17,8 +17,8 @@ fixes the cited *Must Fix* items and resubmits.
 
 | # | Step | Does | Checks | Result |
 |---|------|------|--------|--------|
-| 1 | brief | **you + Opus**: the product brief (who it is for, user stories); then **Opus and GPT**, independently: research it; Opus merges | **you** | `specs/<slug>/product.md`, `brief.md` |
-| 2 | plan  | **GPT**, cold, from the brief | Opus, blind | `specs/<slug>/plan.md` |
+| 1 | brief | **Opus and GPT**, independently: draft the product brief (the problem, who it is for, user stories, the business side); Opus merges | **you** | `specs/<slug>/brief.md` |
+| 2 | plan  | **Opus and GPT**, independently: research the brief; Opus merges; then **GPT** plans, cold, from the brief | Opus, blind | `specs/<slug>/plan.md` |
 | 3 | build | **Opus**, one slice at a time | GPT per slice, then GPT runs the checks itself | code + PR |
 
 Results land in the code repo's gitignored `specs/<slug>/` (for superapp, `superapp/specs/`), never
@@ -53,8 +53,8 @@ All work — by humans or agents — holds to four principles (full text in [`CL
 In Claude Code, from superapp, one of its worktrees, or the harness itself (`superapp/harness`):
 
 ```
-/step1 <slug>    # brief — you + Opus: product brief; Opus and GPT research; you approve the brief
-/step2 <slug>    # plan  — GPT plans; a blind Opus scores it
+/step1 <slug>    # brief — Opus and GPT draft the product brief; you approve it
+/step2 <slug>    # plan  — Opus and GPT research the brief; GPT plans; a blind Opus scores it
 /step3 <slug>    # build — once per slice; the last run does the release pass and opens the PR
 ```
 
@@ -68,12 +68,12 @@ cycle. The 3-gate and 7-step commands were removed on 2026-09-24.
 
 ## Prerequisites
 
-- **Claude Code** (Opus) — writes the product brief with you, researches and writes the brief in
-  step 1, blind plan reviewer (a fresh subagent) in step 2, builder in step 3.
-- **Codex CLI**, authenticated — GPT runs as `codex exec`: researcher in step 1 (read-only, with
-  web search), planner in step 2 (read-only), reviewer in step 3 (read-only per slice;
-  write-enabled for the release pass only so it can run the checks).
-- **Git ≥ 2.31** and **`gh`** — step 1 pins a worktree of the code repo, step 3 builds in it and
+- **Claude Code** (Opus) — drafter and author of the brief in step 1, researcher and blind plan
+  reviewer (a fresh subagent) in step 2, builder in step 3.
+- **Codex CLI**, authenticated — GPT runs as `codex exec`: drafter in step 1 (read-only, with web
+  search), researcher (read-only, with web search) and planner (read-only) in step 2, reviewer in
+  step 3 (read-only per slice; write-enabled for the release pass only so it can run the checks).
+- **Git ≥ 2.31** and **`gh`** — step 2 pins a worktree of the code repo, step 3 builds in it and
   opens the PR.
 - **Make** — `make verify` is the umbrella verification gate for code repos that use it. The
   targets ship as stubs; superapp's checks come from its CI workflows

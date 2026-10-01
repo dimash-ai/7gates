@@ -12,7 +12,7 @@ runs the release pass itself before anything ships.
 `$1` is the slug; `$2` is the code repo, optional. Every bash block sources
 `harness/bin/codev-env.sh`, which prints `codev: slug=… results=<S> worktree=<WT> branch=… base=…`;
 in the prose, `<S>`, `<WT>` and `<H>` (the `harness/` directory) mean those literal paths. The
-branch and base come from the brief's header, and the worktree is the one step 1 created: the plan
+branch and base come from the brief's header, and the worktree is the one step 2 created: the plan
 was written against this tree.
 
 Run this command **once per slice**. Each run does **3a**; the run whose verdict completes the last
@@ -41,11 +41,11 @@ remember that GPT's release pass will run in a tree that holds it.
 
 ## 3a — build one slice, GPT reviews it
 
-**Doer = Opus (you).** Best in the session that ran step 1: it holds the requester's context. The
-plan still governs. In a session with a worktree of its own it is the only choice: `<WT>` and `<S>`
-live in that worktree, and no other session may write there. Never let the app sync that branch with
-its base: the app's base for the session is `main`, and merging it would drag main-only history into
-a PR for `<BASE>`.
+**Doer = Opus (you).** Best in the session that ran steps 1 and 2: it holds the requester's
+context. The plan still governs. In a session with a worktree of its own it is the only choice:
+`<WT>` and `<S>` live in that worktree, and no other session may write there. Never let the app
+sync that branch with its base: the app's base for the session is `main`, and merging it would drag
+main-only history into a PR for `<BASE>`.
 
 - Read `<S>/brief.md`, `<S>/plan.md` and `<H>/checklists/ponytail.md` (the ladder, and what is *not*
   over-engineering in superapp).
@@ -108,7 +108,7 @@ Read the verdict and report **Score** and **Status**:
 - **BLOCKED** (< 9.0): fix only the cited Must Fix items in this slice and review again. **The same
   slice BLOCKED twice after fixes: STOP** and take it to the requester. Findings that keep coming
   back mean the plan is wrong for this slice: put the finding into the brief, and re-plan with
-  `/step2` from 2a, which restarts the round count. A plan changed mid-build is reviewed like a new
+  `/step2` from 2d, which restarts the round count. A plan changed mid-build is reviewed like a new
   one.
 
 ---

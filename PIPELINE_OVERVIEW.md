@@ -26,17 +26,17 @@ Simplicity First, Surgical Changes, Goal-Driven Execution.
 
 ## 1 · The 3-step co-dev flow — **the default**
 
-A request becomes a researched brief, the brief becomes a plan, the plan becomes code.
+A request becomes a brief, the brief is researched and becomes a plan, the plan becomes code.
 
 | Step | Produces | Does | Checks |
 |------|----------|------|--------|
-| **1 — brief** | A product brief from the user's side (in short, user stories, who benefits, the business side), then one document the planner works from alone: that product brief, acceptance criteria, merged findings, open questions | **you + Opus** write the product brief; **Opus and GPT** research it independently; Opus merges | **you** |
-| **2 — plan**  | The complete plan: slices, new surface by ladder rung, architecture, test strategy | **GPT**, cold | Opus |
+| **1 — brief** | One document stating the problem and the business task from the user's side: in short, user stories with numbered criteria, who benefits, the business side | **Opus and GPT** draft it independently; Opus merges | **you** |
+| **2 — plan**  | The research merged into that brief, then the complete plan: slices, new surface by ladder rung, architecture, test strategy | **Opus and GPT** research independently, Opus merges; then **GPT** plans, cold | Opus |
 | **3 — build** | The implementation, one slice at a time, then a release pass and the PR | **Opus** | GPT |
 
-Step 1 is not scored. It opens with a product brief you confirm before any research; the two
-independent sweeps that follow buy **coverage**, so they merge as a union, and the only judge of an
-intent is the person who has it. Every result lands in the code repo's gitignored
+Step 1 and the research of step 2 are not scored: two independent drafts, then two independent
+sweeps, buy **coverage**, so each pair merges as a union, and the only judge of an intent is the
+person who has it. Every result lands in the code repo's gitignored
 `specs/<slug>/`. [ponytail](https://github.com/DietrichGebert/ponytail)'s ladder and
 over-engineering review run through all three steps from
 [`harness/checklists/ponytail.md`](checklists/ponytail.md). Full detail:
@@ -49,8 +49,8 @@ over-engineering review run through all three steps from
 **Not a build flow, and deliberately not scored.** Two models sweep the codebase independently for
 what a planner needs to know before designing anything (Territory, Prior art, Constraints, Scars,
 Tests, Absences), and the union becomes one dossier, with contradictions and gaps flagged. Reach
-for it on its own for an epic or an open question; for a single task, step 1 of the co-dev flow runs
-the same kind of sweep and turns it into the brief. Command:
+for it on its own for an epic or an open question; for a single task, step 2 of the co-dev flow runs
+the same kind of sweep and merges it into the brief. Command:
 [`/gate-explore`](.claude/commands/gate-explore.md).
 
 ---

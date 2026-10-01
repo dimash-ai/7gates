@@ -1,38 +1,41 @@
 # The 3-step co-dev flow
 
 **Status: live, the default for our own work (since 2026-09-24).** It grew out of the
-[2-gate flow](README-2gate.md): the same two cross-model gates, now preceded by a researched brief,
-with every result written into the code repo's `specs/`. Tickets that run through the CTO's
+[2-gate flow](README-2gate.md): the same two cross-model gates, now preceded by a product brief
+both models draft and a research phase both models run, with every result written into the code
+repo's `specs/`. Tickets that run through the CTO's
 feature-dev cycle keep the [GPT gates](README-gpt-gates.md).
 
 ## The three steps
 
 | step | command | does | checks | result in `superapp/specs/<slug>/` |
 |------|---------|------|--------|------------------------------------|
-| 1 · brief | `/step1 <slug>` | you and Opus write the product brief (who it is for, user stories); pins a worktree; Opus and GPT research it there independently; Opus merges | **you**: the product brief before any research, the brief when you say yes | `product.md`, `brief.md`, `research/` |
-| 2 · plan  | `/step2 <slug>` | GPT, cold, from the brief alone, in the same worktree | a blind Opus subagent, ≥ 9.0, three rounds at most | `plan.md`, `reviews/plan-N.md` |
+| 1 · brief | `/step1 <slug>` | Opus and GPT each draft the product brief from your request (the problem, who it is for, user stories, the business side); Opus merges them into `brief.md` | **you**: the brief is done when you say yes | `brief.md`, `product/` |
+| 2 · plan  | `/step2 <slug>` | pins a worktree; Opus and GPT research the brief in it independently and Opus merges the findings into it; then GPT plans, cold, from the brief alone | **you** answer what the research asks; a blind Opus subagent scores the plan, ≥ 9.0, three rounds at most | `research/`, `plan.md`, `reviews/plan-N.md` |
 | 3 · build | `/step3 <slug>` | Opus, one slice per run, in the same worktree | GPT per slice, then GPT runs the checks itself (release pass), ≥ 9.0 | code and a PR into `dev`; `reviews/build-N.md`, `reviews/release-N.md`, `handoff.md` |
 
 The invariant is the pipeline's own: **no model grades its own work.** Opus scores GPT's plan; GPT
-scores Opus's build. The two researchers in step 1 are not graded at all: independence there buys
-coverage, so their findings merge as a union, and the only judge of an intent is the person who has
-it.
+scores Opus's build. The two drafters in step 1 and the two researchers in step 2 are not graded at
+all: independence there buys coverage, so each pair merges as a union, and the only judge of an
+intent is the person who has it.
 
 Why this shape:
 
-- **The user's side first.** Step 1 opens with a product brief, written before anyone reads the
-  code: what we want to achieve, for whom, whether they are better off, and the user stories that
-  say so, each criterion numbered. The sweeps research those stories, and their criteria are the
-  acceptance criteria the plan and the release pass are held to, so a change nobody benefits from
-  is caught before it costs a sweep.
-- **One tree for all three steps.** Step 1 creates the worktree from the remote tip of the base
-  (`origin/dev`), or moves the session's own worktree there (below). Both sweeps read it, GPT plans
-  against it, Opus builds in it, so the research, the plan's citations and the code describe the
-  same commit, recorded as `Pinned:` in the brief.
+- **The user's side first.** Step 1 states the problem and the business task before anyone reads
+  the code: what we want to achieve, for whom, whether they are better off, and the user stories
+  that say so, each criterion numbered. Both models draft it from the request alone, so where they
+  read the request differently, the ambiguity reaches you as a question instead of reaching the plan
+  as a guess. Step 2 researches those stories, and their criteria are the acceptance criteria the
+  plan and the release pass are held to, so a change nobody benefits from is caught before it costs
+  a sweep.
+- **One tree for research, plan and build.** Step 2 creates the worktree from the remote tip of
+  the base (`origin/dev`), or moves the session's own worktree there (below). Both sweeps read it,
+  GPT plans against it, Opus builds in it, so the research, the plan's citations and the code
+  describe the same commit, recorded as `Pinned:` in the brief.
 - **GPT plans cold.** A plan that has to stand on the brief alone exposes a brief that does not
-  stand, and that is why step 1 exists: whatever the planner needs has to be written down.
-- **Opus builds where the context lives**, ideally in the session that ran step 1. The plan still
-  governs, and every departure from it is recorded in the build log.
+  stand, and that is why the brief exists: whatever the planner needs has to be written down.
+- **Opus builds where the context lives**, ideally in the session that ran steps 1 and 2. The plan
+  still governs, and every departure from it is recorded in the build log.
 - **The release pass executes.** Everything upstream reads; GPT runs the checks itself, so for every
   check its sandbox can run, the approval rests on counts GPT observed, not on the builder's claim.
 
@@ -43,9 +46,10 @@ session's own worktree (the last bullet below):
 
 ```
 superapp/specs/<slug>/          gitignored: stays on this machine
-  product.md                    1 · the product brief: who it is for, user stories, the business side
-  brief.md                      1 · the planner's brief: the product brief, criteria, findings, open questions
-  research/opus.md, codex.md    1 · the raw sweeps, never pasted into the brief
+  brief.md                      1-2 · the one document: product part (step 1), research part (step 2)
+  product/request.md            1 · the request both drafters got, verbatim
+  product/opus.md, codex.md     1 · the two product drafts, never pasted into the brief
+  research/opus.md, codex.md    2 · the raw sweeps, never pasted into the brief
   plan.md, plan.prev.md         2 · GPT's plan, and the version the last review scored
   reviews/plan-N.md             2 · Opus verdicts (older rounds move to reviews/archive-<date>/)
   reviews/build-N.md            3 · GPT verdicts, per slice and per re-review
@@ -68,7 +72,7 @@ superapp/specs/<slug>/          gitignored: stays on this machine
 - **A session that runs in a worktree of its own** (`.claude/worktrees/<name>`: the Claude desktop
   app's default, its composer's "worktree" box) is the exception. The app lets such a session write
   only inside that worktree, so `codev-env.sh` keeps the results in it (`<worktree>/specs/<slug>/`)
-  and uses the worktree itself as the flow's tree: step 1 moves it onto the brief's branch instead
+  and uses the worktree itself as the flow's tree: step 2 moves it onto the brief's branch instead
   of adding `.worktrees/<slug>`. The flow then belongs to that session: run all three steps in it
   (a step run from another session names the checkout that holds the brief). The results go when
   the app removes the worktree, so copy out what must outlive the session. Unticking the box runs
@@ -79,10 +83,10 @@ superapp/specs/<slug>/          gitignored: stays on this machine
 [ponytail](https://github.com/DietrichGebert/ponytail) runs through all three steps from one pinned
 file, [`checklists/ponytail.md`](checklists/ponytail.md) (v4.10.0), which every step reads:
 
-- **Brief.** A product brief in which nobody is better off is rung 1: does this need to exist at
-  all? Both sweeps record prior art by rung number (2 this codebase, 3 the standard library,
-  4 the platform, 5 an installed dependency). Prior art that already covers the whole intent becomes
-  a question for you: "X already does this. Still build?"
+- **Brief.** A brief in which nobody is better off is rung 1: does this need to exist at all?
+- **Research.** Both sweeps record prior art by rung number (2 this codebase, 3 the standard
+  library, 4 the platform, 5 an installed dependency). Prior art that already covers the whole
+  intent becomes a question for you: "X already does this. Still build?"
 - **Plan.** Every new file, module, dependency or abstraction names the rung it stopped at, in the
   plan template's `New surface` table, and the Opus reviewer checks it.
 - **Build.** Opus climbs the ladder before each slice. GPT's slice review and release pass carry the
@@ -113,20 +117,21 @@ From `superapp`, one of its worktrees, or the harness itself (`superapp/harness`
 runs in a worktree of its own, run all three in that same session.
 
 ```
-/step1 ALL-646     # brief: product.md with you; worktree pinned; Opus and GPT sweep; you approve brief.md
-/step2 ALL-646     # plan:  GPT plans; a blind Opus scores it; up to three rounds
+/step1 ALL-646     # brief: Opus and GPT draft the product brief; Opus merges; you approve brief.md
+/step2 ALL-646     # plan:  worktree pinned; Opus and GPT sweep; GPT plans; a blind Opus scores it
 /step3 ALL-646     # build: once per slice; the last run does the release pass and opens the PR
 ```
 
-Every Codex call runs in the background: a sweep, a plan or a release pass outlasts the Bash tool's
-timeout. Each prompt is written to `runs/` first and fed to `codex exec` on stdin, so a large brief
-and plan never hit the command-line length limit, and what Codex was asked stays on record.
+Every Codex call runs in the background: a draft, a sweep, a plan or a release pass outlasts the
+Bash tool's timeout. Each prompt is written to `runs/` first and fed to `codex exec` on stdin, so a
+large brief and plan never hit the command-line length limit, and what Codex was asked stays on
+record.
 
 Set up once:
 
 - **Codex CLI**, logged in. Check that your version accepts
-  `codex exec --config 'web_search="live"'`: step 1 uses it so GPT can research outside the repo too.
-  If it does not, step 1 still runs, and external facts rest on Opus alone.
+  `codex exec --config 'web_search="live"'`: steps 1 and 2 use it so GPT can look outside the repo
+  too. If it does not, both still run, and external facts rest on Opus alone.
 - **git ≥ 2.31** (for `rev-parse --path-format`), and **`gh`**, authenticated, for the PR.
 - **The commands** live in this repo's `.claude/commands/`, and `~/.claude/commands` is a symlink to
   that directory, so Claude Code lists them as user commands in every project and a pull here
@@ -152,13 +157,13 @@ a session with a worktree of its own, delete the session instead, then the branc
 
 | where | stop | why |
 |-------|------|-----|
-| 1a | you confirm the product brief, the depth, the branch and the base | both sweeps read the product brief and nothing else, and its stories become the acceptance criteria; the branch and base pin the tree |
-| 1d | you confirm the brief; no contradiction left open | it is the planner's whole world |
+| 1d | you answer the drafts' questions and confirm the brief, the depth, the branch and the base | the research and the plan aim at it, and its stories become the acceptance criteria; the branch and base pin the tree in step 2 |
+| 2c | the research raised questions: you answer them before the plan; one that changes the In short sends the work back to step 1 | the brief is the planner's whole world; no contradiction may reach it |
 | 2 | GPT returns QUESTIONS instead of a plan: back to the brief | a plan built around an ambiguity is wrong from its first line |
 | 2 | the third review is still BLOCKED: back to the brief, sharpen or split | rounds that do not converge point at the task, not the plan |
 | 2 | APPROVED: you skim the slice table | the last cheap moment to change course |
 | 3 | no APPROVED plan verdict: the build refuses to start | a plan nobody approved is not a plan |
-| 3 | the same slice BLOCKED twice after fixes: re-plan with `/step2` from 2a | findings that keep coming back are a plan defect |
+| 3 | the same slice BLOCKED twice after fixes: re-plan with `/step2` from 2d | findings that keep coming back are a plan defect |
 | 3 | the release pass must leave the tree untouched; whatever it left is stashed, not deleted | a verdict made while editing the code is not a review |
 | ship | you merge; PM QA on `dev`; promotion to `main` per superapp's `CLAUDE.md` | agents open PRs and stop |
 
@@ -174,10 +179,12 @@ a session with a worktree of its own, delete the session instead, then the branc
 - **A guard around `.env`.** If you copy a `.env` into the worktree to run the app, the release pass
   runs where it is. GPT is told never to open it; that is an instruction, not a sandbox rule. The
   checks do not need a `.env` (CI runs them without one), so keep it out when you can.
-- **A wall between GPT and `<S>`, in a session with a worktree of its own.** `<S>` then sits inside
-  GPT's working directory: the planner can read the raw sweeps, and the release pass's write sandbox
-  reaches `specs/`, which `git status` does not show because it is gitignored. Step 1 keeps Opus's
-  sweep out of `research/` until GPT's run exits; the rest is an instruction, not a sandbox rule.
+- **A wall between GPT and `<S>`.** In step 1 GPT drafts in the code repo itself, and in a session
+  with a worktree of its own every step runs there, so `<S>` sits inside GPT's working directory: the
+  drafter and the planner can read what is already in it, and the release pass's write sandbox
+  reaches `specs/`, which `git status` does not show because it is gitignored. Steps 1 and 2 keep
+  Opus's draft and sweep out of `<S>` until GPT's run exits; the rest is an instruction, not a
+  sandbox rule.
 - **The feature-dev machinery**: spec normalization, the qa scans, three Claude review lenses with
   Triage, automatic Linear moves. What carries over are the superapp checks in the plan review and
   the release pass. On tickets that touch auth, tokens or RLS, run `/security-review` on the
@@ -186,7 +193,7 @@ a session with a worktree of its own, delete the session instead, then the branc
 ## Beside the other flows
 
 - [`/gate-explore`](.claude/commands/gate-explore.md): standalone reconnaissance for an epic;
-  step 1 runs the same kind of sweep for one task.
+  step 2 runs the same kind of sweep for one task.
 - [GPT gates](README-gpt-gates.md): for tickets that run through the CTO's feature-dev cycle.
 - [2-gate](README-2gate.md): the record of the design this flow grew from; its two commands were
   rewritten here.
