@@ -17,7 +17,7 @@ fixes the cited *Must Fix* items and resubmits.
 
 | # | Step | Does | Checks | Result |
 |---|------|------|--------|--------|
-| 1 | brief | **Opus and GPT**, independently: research the intent; Opus merges | **you** | `specs/<slug>/brief.md` |
+| 1 | brief | **you + Opus**: the product brief (who it is for, user stories); then **Opus and GPT**, independently: research it; Opus merges | **you** | `specs/<slug>/product.md`, `brief.md` |
 | 2 | plan  | **GPT**, cold, from the brief | Opus, blind | `specs/<slug>/plan.md` |
 | 3 | build | **Opus**, one slice at a time | GPT per slice, then GPT runs the checks itself | code + PR |
 
@@ -53,7 +53,7 @@ All work — by humans or agents — holds to four principles (full text in [`CL
 In Claude Code, from superapp, one of its worktrees, or the harness itself (`superapp/harness`):
 
 ```
-/step1 <slug>    # brief — you + Opus; Opus and GPT research; you approve the brief
+/step1 <slug>    # brief — you + Opus: product brief; Opus and GPT research; you approve the brief
 /step2 <slug>    # plan  — GPT plans; a blind Opus scores it
 /step3 <slug>    # build — once per slice; the last run does the release pass and opens the PR
 ```
@@ -68,8 +68,8 @@ cycle. The 3-gate and 7-step commands were removed on 2026-09-24.
 
 ## Prerequisites
 
-- **Claude Code** (Opus) — researcher and brief author in step 1, blind plan reviewer (a fresh
-  subagent) in step 2, builder in step 3.
+- **Claude Code** (Opus) — writes the product brief with you, researches and writes the brief in
+  step 1, blind plan reviewer (a fresh subagent) in step 2, builder in step 3.
 - **Codex CLI**, authenticated — GPT runs as `codex exec`: researcher in step 1 (read-only, with
   web search), planner in step 2 (read-only), reviewer in step 3 (read-only per slice;
   write-enabled for the release pass only so it can run the checks).

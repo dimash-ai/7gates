@@ -16,7 +16,7 @@ Work advances only at **Score >= 9.0** ([`checklists/scoring-rubric.md`](checkli
 
 | Flow | Status | Gates | Who does / who reviews | Entry |
 |---|---|---|---|---|
-| **[3-step co-dev](README-codev.md)** | **live — default** | brief · plan · build | Opus and GPT research independently, you approve the brief; GPT plans → Opus reviews; Opus builds → GPT reviews | `/step1` · `/step2` · `/step3` |
+| **[3-step co-dev](README-codev.md)** | **live — default** | brief · plan · build | you and Opus write the product brief, Opus and GPT research it independently, you approve the brief; GPT plans → Opus reviews; Opus builds → GPT reviews | `/step1` · `/step2` · `/step3` |
 | **[GPT gates](README-gpt-gates.md)** | live, for feature-dev tickets | 2, spliced into the CTO's feature-dev cycle | Claude `architect → coder → qa` builds; **Codex** scores the plan and runs the release suite | `/gpt-gate-plan` · `/gpt-gate-release` |
 | **[2-gate](README-2gate.md)** | superseded by 3-step co-dev | plan · build | GPT plans → Opus reviews; Opus builds → GPT reviews | its commands were rewritten as 3-step co-dev's `/step2` and `/step3` |
 | **[3-gate](README-3gate.md)** | removed 2026-09-24 | design · build · verify | Opus does A+B, GPT does C; each scored by the other | commands removed; README kept as the record |
@@ -27,9 +27,10 @@ and rubric are still the ones the live flows call, and their READMEs stay as the
 
 ## Which one to reach for
 
-- **Default — 3-step co-dev.** Our own tasks: the intent is researched by both models and written
-  down as a brief you approve, GPT plans from it cold, Opus builds, GPT reviews every slice and runs
-  the checks itself before the PR. Results land in the code repo's `specs/<slug>/`.
+- **Default — 3-step co-dev.** Our own tasks: the request becomes a product brief with user
+  stories, both models research it, and it is written down as a brief you approve; GPT plans from it
+  cold, Opus builds, GPT reviews every slice and runs the checks itself before the PR. Results land
+  in the code repo's `specs/<slug>/`.
 - **A ticket that runs through the CTO's feature-dev cycle** (Linear ticket → spec → architect →
   coder → qa → review session → ship) — the GPT gates, which bolt Codex onto it at the only two
   places where a second vendor changes the outcome: **before any code exists**, and **when the

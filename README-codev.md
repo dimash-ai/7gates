@@ -9,7 +9,7 @@ feature-dev cycle keep the [GPT gates](README-gpt-gates.md).
 
 | step | command | does | checks | result in `superapp/specs/<slug>/` |
 |------|---------|------|--------|------------------------------------|
-| 1 · brief | `/step1 <slug>` | pins a worktree; Opus and GPT research the intent in it independently; Opus merges | **you**: the brief is done when you say yes | `brief.md`, `research/` |
+| 1 · brief | `/step1 <slug>` | you and Opus write the product brief (who it is for, user stories); pins a worktree; Opus and GPT research it there independently; Opus merges | **you**: the product brief before any research, the brief when you say yes | `product.md`, `brief.md`, `research/` |
 | 2 · plan  | `/step2 <slug>` | GPT, cold, from the brief alone, in the same worktree | a blind Opus subagent, ≥ 9.0, three rounds at most | `plan.md`, `reviews/plan-N.md` |
 | 3 · build | `/step3 <slug>` | Opus, one slice per run, in the same worktree | GPT per slice, then GPT runs the checks itself (release pass), ≥ 9.0 | code and a PR into `dev`; `reviews/build-N.md`, `reviews/release-N.md`, `handoff.md` |
 
@@ -20,6 +20,11 @@ it.
 
 Why this shape:
 
+- **The user's side first.** Step 1 opens with a product brief, written before anyone reads the
+  code: what we want to achieve, for whom, whether they are better off, and the user stories that
+  say so, each criterion numbered. The sweeps research those stories, and their criteria are the
+  acceptance criteria the plan and the release pass are held to, so a change nobody benefits from
+  is caught before it costs a sweep.
 - **One tree for all three steps.** Step 1 creates the worktree from the remote tip of the base
   (`origin/dev`), or moves the session's own worktree there (below). Both sweeps read it, GPT plans
   against it, Opus builds in it, so the research, the plan's citations and the code describe the
@@ -38,8 +43,8 @@ session's own worktree (the last bullet below):
 
 ```
 superapp/specs/<slug>/          gitignored: stays on this machine
-  brief.md                      1 · the planner's brief: header, intent, criteria, findings, open questions
-  research/issue.md             1 · the paragraph both researchers got, as you confirmed it
+  product.md                    1 · the product brief: who it is for, user stories, the business side
+  brief.md                      1 · the planner's brief: the product brief, criteria, findings, open questions
   research/opus.md, codex.md    1 · the raw sweeps, never pasted into the brief
   plan.md, plan.prev.md         2 · GPT's plan, and the version the last review scored
   reviews/plan-N.md             2 · Opus verdicts (older rounds move to reviews/archive-<date>/)
@@ -74,7 +79,8 @@ superapp/specs/<slug>/          gitignored: stays on this machine
 [ponytail](https://github.com/DietrichGebert/ponytail) runs through all three steps from one pinned
 file, [`checklists/ponytail.md`](checklists/ponytail.md) (v4.10.0), which every step reads:
 
-- **Brief.** Both sweeps record prior art by rung number (2 this codebase, 3 the standard library,
+- **Brief.** A product brief in which nobody is better off is rung 1: does this need to exist at
+  all? Both sweeps record prior art by rung number (2 this codebase, 3 the standard library,
   4 the platform, 5 an installed dependency). Prior art that already covers the whole intent becomes
   a question for you: "X already does this. Still build?"
 - **Plan.** Every new file, module, dependency or abstraction names the rung it stopped at, in the
@@ -107,7 +113,7 @@ From `superapp`, one of its worktrees, or the harness itself (`superapp/harness`
 runs in a worktree of its own, run all three in that same session.
 
 ```
-/step1 ALL-646     # brief: you + Opus; the worktree is pinned; Opus and GPT sweep; you approve brief.md
+/step1 ALL-646     # brief: product.md with you; worktree pinned; Opus and GPT sweep; you approve brief.md
 /step2 ALL-646     # plan:  GPT plans; a blind Opus scores it; up to three rounds
 /step3 ALL-646     # build: once per slice; the last run does the release pass and opens the PR
 ```
@@ -146,7 +152,7 @@ a session with a worktree of its own, delete the session instead, then the branc
 
 | where | stop | why |
 |-------|------|-----|
-| 1a | you confirm the one-paragraph intent, the depth, the branch and the base | both sweeps read that paragraph and nothing else; the branch and base pin the tree |
+| 1a | you confirm the product brief, the depth, the branch and the base | both sweeps read the product brief and nothing else, and its stories become the acceptance criteria; the branch and base pin the tree |
 | 1d | you confirm the brief; no contradiction left open | it is the planner's whole world |
 | 2 | GPT returns QUESTIONS instead of a plan: back to the brief | a plan built around an ambiguity is wrong from its first line |
 | 2 | the third review is still BLOCKED: back to the brief, sharpen or split | rounds that do not converge point at the task, not the plan |

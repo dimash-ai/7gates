@@ -20,27 +20,25 @@ Pinned: <the sha the step-1 worktree block printed>
      its own. -->
 
 
-## Intent
-
-### In the requester's words
-<!-- Verbatim, plus the Linear issue title and description if there is one. -->
-
-### The issue both researchers were given
-<!-- Verbatim copy of research/issue.md, the paragraph the requester confirmed. -->
-
-## Goal
-<!-- One or two sentences: what becomes possible, for whom, where in the product. -->
+## Product brief
+<!-- product.md below its header, pasted verbatim: the In short, the user stories, who it is for,
+     the benefit, the unhappy paths, the business side, the out of scope, the questions and answers,
+     the sources and the requester's own words. Its sections follow this comment as they are. Both
+     researchers were given it as the requester confirmed it in 1a; the answers of 1d amend it. -->
 
 ## Acceptance criteria
-<!-- Observable and testable. They are the contract for the plan (every one traces to a slice) and
-     for the release pass (every one names a test). "Works correctly" is not a criterion. -->
+<!-- The contract for the plan (every one traces to a slice) and for the release pass (every one
+     names a test). Every criterion of the user stories above, by its id (US-1.1 ...), then any
+     criterion the research added that no story covers (R-1 ...), each naming the finding it came
+     from. Observable and testable: "works correctly" is not a criterion. -->
 - [ ]
 
 ## Scope
-<!-- What IS included, specific to modules, screens, endpoints. -->
+<!-- What IS included, by story (US-n), specific to modules, screens, endpoints. -->
 
 ## Out of scope
-<!-- What is explicitly NOT included, including tempting neighbours. -->
+<!-- What is explicitly NOT included beyond the product brief's Out of scope, including tempting
+     neighbours the research found. -->
 
 ## Decided — do not reopen
 <!-- Decisions already made, who made them, and when. The planner builds on these, not around them. -->

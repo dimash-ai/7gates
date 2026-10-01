@@ -30,12 +30,13 @@ A request becomes a researched brief, the brief becomes a plan, the plan becomes
 
 | Step | Produces | Does | Checks |
 |------|----------|------|--------|
-| **1 — brief** | One document the planner works from alone: intent, acceptance criteria, merged findings, open questions | **Opus and GPT**, independently; Opus merges | **you** |
+| **1 — brief** | A product brief from the user's side (in short, user stories, who benefits, the business side), then one document the planner works from alone: that product brief, acceptance criteria, merged findings, open questions | **you + Opus** write the product brief; **Opus and GPT** research it independently; Opus merges | **you** |
 | **2 — plan**  | The complete plan: slices, new surface by ladder rung, architecture, test strategy | **GPT**, cold | Opus |
 | **3 — build** | The implementation, one slice at a time, then a release pass and the PR | **Opus** | GPT |
 
-Step 1 is not scored: two independent sweeps buy **coverage**, so they merge as a union, and the only
-judge of an intent is the person who has it. Every result lands in the code repo's gitignored
+Step 1 is not scored. It opens with a product brief you confirm before any research; the two
+independent sweeps that follow buy **coverage**, so they merge as a union, and the only judge of an
+intent is the person who has it. Every result lands in the code repo's gitignored
 `specs/<slug>/`. [ponytail](https://github.com/DietrichGebert/ponytail)'s ladder and
 over-engineering review run through all three steps from
 [`harness/checklists/ponytail.md`](checklists/ponytail.md). Full detail:
