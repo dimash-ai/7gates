@@ -1,5 +1,5 @@
 ---
-description: "Step 1 (brief): Opus and GPT each draft the product brief from your request (the problem, who it is for, user stories, the business side); the union, confirmed by you, goes to step 2"
+description: "Step 1 (brief): Opus and GPT each draft the product brief from your request (the problem, the hypothesis, who it is for, user stories, the business side); the union, confirmed by you, goes to step 2"
 argument-hint: <slug> [repo-path]
 ---
 
@@ -7,7 +7,9 @@ argument-hint: <slug> [repo-path]
 
 The first step of the **3-step co-dev flow** (`harness/README-codev.md`). It states the problem and
 the business task from the user's side: what we want to achieve, for whom, whether they are better
-off, and the user stories that say so. **Opus and GPT each draft it from the request alone**, Opus
+off, the user stories that say so, and the **hypothesis**: the bet this change makes, and the signal
+that will show after release whether it paid off (`/learn` checks it every week). **Opus and GPT
+each draft it from the request alone**, Opus
 merges the two drafts into **one document, `brief.md`**, and the requester confirms it. That
 document goes to step 2, which researches the code against it and plans. Nothing technical happens
 here: no code is read and no branch is made. The brief says *what* and *why*; step 2 finds out
@@ -28,6 +30,12 @@ those literal paths. Results land in `<S>` = the code repo's `specs/$1/`, gitign
 the **main** checkout, or, when this session runs in a worktree of its own
 (`.claude/worktrees/<name>`, the Claude desktop app's default), in that worktree. The app lets such
 a session write nowhere else.
+
+**Links.** When you point the requester at a file of the flow (the brief above all, the request,
+a draft), write a markdown link whose target is the file's path relative to the session's working
+directory, usually `[brief.md](specs/$1/brief.md)`; never a bare path in backticks. In the Claude
+desktop app a click on that link opens the file. The card an edit leaves in the chat opens the
+diff pane instead, and `specs/` is gitignored, so the file never shows there.
 
 ## 1a — The request, verbatim
 
@@ -73,7 +81,7 @@ P="$S/runs/product-codex.prompt.md"
   cat <<'EOF'
 
 You are GPT Codex, drafting the product brief for the request above, INDEPENDENTLY and from scratch: do not look for, assume, or defer to any other model's draft. Your working directory is the code repo. This is product work, not engineering: the problem, who the change is for, what changes for them, whether they are better off, and why the business wants it. Read the product, not the code: the sources the request names, the app's product docs (apps/<app>/docs/), the words its screens show users today (apps/<app>/client/src/i18n/locales/ru.json), and who gets what (docs/ENTITLEMENTS.md). Use web search only for facts outside the repo, such as how comparable products handle this, and cite the URL; if you have no web access, say so, and never invent a URL.
-Write the brief in the structure of the template, filling its sections in order. In short comes first: the request as the prompt the requester meant to write, for a reader who never saw it. Then the user stories, one per distinct thing a user can do or get, each with a priority, every criterion observable from the user's side and numbered (US-1.1). Then who it is for and what changes for them, whether they benefit and who could be worse off, the unhappy paths, the business and marketing lines (the release note in Russian), what is out of scope, the questions only the requester can answer (each with the answer you would assume), the sources you read, and the requester's words verbatim. The requester often dictates: read through speech-to-text slips, but never turn a word into a different requirement; where a word can mean two things, make it a question. Mark everything you inferred rather than read in the request or a source (assumed). If no end user is better off (a refactor, infrastructure), say so and write the stories for whoever is; never invent a story for a user who does not care. Name no modules, endpoints, tables or designs: step 2 researches the code. Do not open or quote any .env file. You are read-only and must NEVER edit any file. Your FINAL message must be the complete product brief in Markdown and nothing else.
+Write the brief in the structure of the template, filling its sections in order. In short comes first: the request as the prompt the requester meant to write, for a reader who never saw it. Then the hypothesis: what we believe this change will do for whom, the signal in product analytics that would show it (an event, a screen's weekly users, a funnel step), its baseline if a source states it, the target and its window after release, the result that would mean we were wrong and what to do then, and the riskiest assumption; with about a hundred weekly users, count people rather than rates. A fix or a chore with no bet in it says Hypothesis: none, and why. Then the user stories, one per distinct thing a user can do or get, each with a priority, every criterion observable from the user's side and numbered (US-1.1). Then who it is for and what changes for them, whether they benefit and who could be worse off, the unhappy paths, the business and marketing lines (the release note in Russian), what is out of scope, the questions only the requester can answer (each with the answer you would assume), the sources you read, and the requester's words verbatim. The requester often dictates: read through speech-to-text slips, but never turn a word into a different requirement; where a word can mean two things, make it a question. Mark everything you inferred rather than read in the request or a source (assumed). If no end user is better off (a refactor, infrastructure), say so and write the stories for whoever is; never invent a story for a user who does not care. Name no modules, endpoints, tables or designs: step 2 researches the code. Do not open or quote any .env file. You are read-only and must NEVER edit any file. Your FINAL message must be the complete product brief in Markdown and nothing else.
 EOF
 } > "$P"
 cd "$R" && codex exec --sandbox read-only --config 'web_search="live"' -o "$S/product/codex.md" - < "$P" > "$S/runs/product-codex.log" 2>&1
@@ -88,7 +96,10 @@ echo "codex exit=$?  draft bytes=$(wc -c < "$S/product/codex.md" 2>/dev/null || 
 **Opus (you)**: the same request, the same template and the same rules as GPT's prompt, written to
 `<S>/product/opus.md`. Read the product, not the code: the sources in the request, the app's product
 docs, what its screens say today (`apps/<app>/client/src/i18n/locales/ru.json`), who gets what
-(`docs/ENTITLEMENTS.md`), and PostHog when how many people use something would change a story.
+(`docs/ENTITLEMENTS.md`), and PostHog when how many people use something would change a story. You
+read PostHog through its MCP, read-only, and GPT cannot: put the signal's value today in the
+Hypothesis baseline when PostHog has it. Never a database: superapp's rule against agents touching
+dev or prod holds here too.
 
 ## 1c — Merge by union into the brief
 
@@ -105,6 +116,8 @@ appends it.
   the request's ambiguity, and it is a question for the requester.
 - **Contradictions** (who it is for, whether they benefit, what is in or out of scope, who gets it)
   are questions for the requester, never settled by the more confident draft.
+- **One hypothesis.** Where the drafts bet on different outcomes or signals, keep both candidates
+  in the brief and ask: the requester chooses the bet, its target and its window.
 - **`(assumed)` stays marked** until the requester confirms or strikes it.
 - **Re-check GPT's sources.** A path that does not exist, or does not say what the draft claims, is
   fixed or dropped, and the brief says so.
@@ -125,11 +138,11 @@ step 2 needs:
   elsewhere. Every slug needs a branch of its own.
 - **Base.** `dev` for superapp.
 
-**STOP** until the requester says yes. Show In short, the stories with their criteria, the questions
-and the settings in the chat; the whole document is `<S>/brief.md`. Their answers go into the stories
-and under Questions and answers, with the date; the settings go into the header as `Branch:`,
-`Base:` and `Depth:`, one per line, plain values with no backticks or bold. Their yes ends step 1.
-Next: `/step2 $1`.
+**STOP** until the requester says yes. Show In short, the Hypothesis, the stories with their
+criteria, the questions and the settings in the chat, with a link to the whole document,
+`<S>/brief.md` (see **Links**). Their answers go into the stories and under Questions and answers,
+with the date; the settings go into the header as `Branch:`, `Base:` and `Depth:`, one per line,
+plain values with no backticks or bold. Their yes ends step 1. Next: `/step2 $1`.
 
 If they only wanted the product brief, it stands on its own, and step 2 can follow at any time. If
 they reject the In short itself (a different request), start step 1 over from their new words.

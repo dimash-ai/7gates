@@ -37,7 +37,8 @@ Pinned: <the sha the step-2 worktree block printed>
 <!-- The contract for the plan (every one traces to a slice) and for the release pass (every one
      names a test). Every criterion of the user stories above, by its id (US-1.1 ...), then any
      criterion the research added that no story covers (R-1 ...), each naming the finding it came
-     from. Observable and testable: "works correctly" is not a criterion. -->
+     from, and M-1 when the Hypothesis signal does not exist yet: the change emits it, as
+     Measurement names it. Observable and testable: "works correctly" is not a criterion. -->
 - [ ]
 
 ## Scope
@@ -50,8 +51,8 @@ Pinned: <the sha the step-2 worktree block printed>
 ## Findings
 <!-- Merged from research/opus.md and research/codex.md by UNION. Tag every item [O] Opus only,
      [G] GPT only, or [both]. Sweep wide, report narrow: an item earns its place only if the planner
-     could make a DIFFERENT decision because of it. Quick depth fills Territory, Prior art, Tests and
-     Scars; full depth fills all six. -->
+     could make a DIFFERENT decision because of it. Quick depth fills Territory, Prior art, Tests,
+     Scars and Measurement; full depth fills all seven. -->
 
 ### Territory
 <!-- What this touches: modules, routes, tables, migrations, config, tests. A candidate blast radius. -->
@@ -75,6 +76,12 @@ Pinned: <the sha the step-2 worktree block printed>
 
 ### Absences
 <!-- What is missing rather than wrong: invariants enforced nowhere, untested paths, dangerous defaults. -->
+
+### Measurement
+<!-- How the Hypothesis signal is measured today: the analytics events and properties the code emits
+     for it (file:line, and the helper that sends them), what PostHog holds for it and its value now
+     (Opus reads it through the PostHog MCP; GPT cannot), and what is missing. Empty for a brief
+     whose Hypothesis is none. -->
 
 ## Open questions
 <!-- What neither sweep could establish, each marked UNVERIFIED with what would close it. The plan

@@ -19,7 +19,8 @@ fixes the cited *Must Fix* items and resubmits.
 |---|------|------|--------|--------|
 | 1 | brief | **Opus and GPT**, independently: draft the product brief (the problem, who it is for, user stories, the business side); Opus merges | **you** | `specs/<slug>/brief.md` |
 | 2 | plan  | **Opus and GPT**, independently: research the brief; Opus merges; then **GPT** plans, cold, from the brief | Opus, blind | `specs/<slug>/plan.md` |
-| 3 | build | **Opus**, one slice at a time | GPT per slice, then GPT runs the checks itself | code + PR |
+| 3 | build | **Opus**, one slice at a time; registers the hypothesis in PostHog | GPT per slice, then GPT runs the checks itself | code + PR |
+| — | learn, weekly | **Opus** measures every shipped hypothesis in PostHog; **Opus and GPT** judge independently | **you** | verdicts in PostHog |
 
 Results land in the code repo's gitignored `specs/<slug>/` (for superapp, `superapp/specs/`), never
 in this repo. [ponytail](https://github.com/DietrichGebert/ponytail)'s reuse-first ladder and
@@ -43,7 +44,7 @@ All work — by humans or agents — holds to four principles (full text in [`CL
 | Path | Holds |
 |------|-------|
 | [`harness/`](./)         | The pipeline: charters, checklists, templates, and the manuals for every flow |
-| `.claude/`             | Slash commands (`/step1`, `/step2`, `/step3`, and the older flows') and local settings |
+| `.claude/`             | Slash commands (`/step1`, `/step2`, `/step3`, `/learn`, and the older flows') and local settings |
 | [`CLAUDE.md`](CLAUDE.md) | House rules — the always-on quality bar |
 | [`AGENTS.md`](AGENTS.md) | Codex's roles and verdict conventions |
 | `Makefile`             | Verification gates — `make verify` runs test, lint, typecheck, build |
@@ -56,6 +57,7 @@ In Claude Code, from superapp, one of its worktrees, or the harness itself (`sup
 /step1 <slug>    # brief — Opus and GPT draft the product brief; you approve it
 /step2 <slug>    # plan  — Opus and GPT research the brief; GPT plans; a blind Opus scores it
 /step3 <slug>    # build — once per slice; the last run does the release pass and opens the PR
+/learn           # learn — weekly: checks every shipped hypothesis against what users did
 ```
 
 `<slug>` is the Linear id when there is an issue (`ALL-646`). Each scored command saves its verdict

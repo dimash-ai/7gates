@@ -15,6 +15,12 @@ in the prose, `<S>`, `<WT>` and `<H>` (the `harness/` directory) mean those lite
 branch and base come from the brief's header, and the worktree is the one step 2 created: the plan
 was written against this tree.
 
+**Links.** When you point the requester at a file of the flow (the brief, the plan, a verdict, the
+drafted PR body), write a markdown link whose target is the file's path relative to the session's
+working directory, usually `[brief.md](specs/$1/brief.md)`; never a bare path in backticks. In the
+Claude desktop app a click on that link opens the file. The card an edit leaves in the chat opens
+the diff pane instead, and `specs/` is gitignored, so the file never shows there.
+
 Run this command **once per slice**. Each run does **3a**; the run whose verdict completes the last
 slice of the plan continues into **3b**. Every Codex run goes **in the background** (Bash
 `run_in_background`): a review that runs the suites outlasts the Bash tool's timeout.
@@ -194,6 +200,20 @@ H=$(d=$PWD; while [ "$d" != / ] && [ ! -f "$d/harness/prompts/reviewer.md" ]; do
 codev_need_header && codev_need_worktree || exit 1
 git -C "$WT" push -u origin "$BR" && cd "$WT" && gh pr create --base "$BASE" --head "$BR" --title "<type>(<scope>): <subject> (ALL-<id>)" --body-file "$S/handoff.md"
 ```
+
+**Register the bet** (skip it when the brief says Hypothesis: none). Once the PR is open, record the
+brief's Hypothesis in PostHog through its MCP, in the project that holds the app's events, so that
+`/learn` can check it after release:
+
+1. Save the signal as an insight named `<slug> · <signal>` and add it to the dashboard
+   «Hypotheses — bets and demand» (`dashboards-get-all` with `search: "Hypotheses"`): the signal over
+   time, prod only, filtered to the app the way that board's demand tables are.
+2. Create the notebook `Hypothesis · <slug> · <title>` from `<H>/briefs/HYPOTHESIS.md`: Status
+   `building`, the branch, the PR and its date, the Hypothesis and In short verbatim from the brief,
+   and the insight embedded.
+
+Give the requester both links. Nothing else changes in PostHog until `/learn`, which notices the
+release to `main` and starts the window.
 
 The requester merges. After PM QA on `dev`, promotion to `main` follows superapp's `CLAUDE.md`:
 cherry-pick the feature commits onto `<branch>-main` and open a PR into `main`.

@@ -15,6 +15,12 @@ written until the score clears 9.0.
 `harness/bin/codev-env.sh`, which prints `codev: slug=… results=<S> worktree=<WT> …`; in the prose,
 `<S>`, `<WT>` and `<H>` (the `harness/` directory) mean those literal paths.
 
+**Links.** When you point the requester at a file of the flow (the brief above all, the plan, a
+verdict), write a markdown link whose target is the file's path relative to the session's working
+directory, usually `[brief.md](specs/$1/brief.md)`; never a bare path in backticks. In the Claude
+desktop app a click on that link opens the file. The card an edit leaves in the chat opens the
+diff pane instead, and `specs/` is gitignored, so the file never shows there.
+
 All of it happens in `<WT>`, the tree 2a pins: both sweeps read it and GPT plans against it, so the
 research, the plan's citations and the code the build will change describe the same commit. Every
 Codex run below goes **in the background** (Bash `run_in_background`): a sweep or a plan over a
@@ -99,10 +105,10 @@ P="$S/runs/brief-codex.prompt.md"
   printf '\n\nTHE BRIEF, as the requester confirmed it in step 1. It says what users should get and why; it is the question, not a design:\n\n'; cat "$S/brief.md"
   cat <<EOF
 
-DEPTH: <quick|full>. quick means sections 1, 2, 4 and 5 only, and only around the screens and flows the brief names. full means all six sections.
+DEPTH: <quick|full>. quick means sections 1, 2, 4, 5 and 7 only, and only around the screens and flows the brief names. full means all seven sections.
 
 You are GPT Codex on a reconnaissance sweep of the code repo in your working directory. You are NOT solving this request and NOT proposing a design: you are finding everything a planner would need to know before designing one. Work INDEPENDENTLY and from scratch: do not look for, assume, or defer to any other model's findings.
-Sweep for: (1) TERRITORY - every module, route, table, migration, config and test the user stories plausibly touch, naming the story (US-n) each item serves, and every other place a user meets the same data or flow (another screen, another app's mount), since the change reaches it too. (2) PRIOR ART - code that already does part of this and should be reused instead of reinvented. Walk the ladder in the lens above and record each item with its rung number: 2 existing code in this repo, 3 the standard library, 4 a native platform or framework feature, 5 an already-installed dependency. If something already covers the whole intent, say so first. (3) CONSTRAINTS - pinned versions read from pyproject.toml, package.json and the lockfiles (name the file), contracts and interfaces this must not break, and the rules that govern this surface: read CLAUDE.md, AGENTS.md and the CLAUDE.md of the app involved, and state whether the change is AI-track code (semantic exoskeleton and LDD), needs a migration (sandbox proof), adds user-facing strings (i18next, ru and en), or crosses a tenant-isolation or RLS boundary; name the CI workflow (.github/workflows/ci-<app>.yml) whose jobs verify it. (4) SCARS - BUG_FIX_CONTEXT comments, recorded deviations, TODOs, ponytail: markers and past workarounds in the code this touches: what was already tried and why it failed. (5) TESTS - what covers this surface today, and what each test actually asserts versus what its name claims. (6) ABSENCES - invariants stated only in a comment with nothing enforcing them, configurable values whose worst legal setting is materially worse than the default, two concerns sharing one credential or limit, code paths with no test.
+Sweep for: (1) TERRITORY - every module, route, table, migration, config and test the user stories plausibly touch, naming the story (US-n) each item serves, and every other place a user meets the same data or flow (another screen, another app's mount), since the change reaches it too. (2) PRIOR ART - code that already does part of this and should be reused instead of reinvented. Walk the ladder in the lens above and record each item with its rung number: 2 existing code in this repo, 3 the standard library, 4 a native platform or framework feature, 5 an already-installed dependency. If something already covers the whole intent, say so first. (3) CONSTRAINTS - pinned versions read from pyproject.toml, package.json and the lockfiles (name the file), contracts and interfaces this must not break, and the rules that govern this surface: read CLAUDE.md, AGENTS.md and the CLAUDE.md of the app involved, and state whether the change is AI-track code (semantic exoskeleton and LDD), needs a migration (sandbox proof), adds user-facing strings (i18next, ru and en), or crosses a tenant-isolation or RLS boundary; name the CI workflow (.github/workflows/ci-<app>.yml) whose jobs verify it. (4) SCARS - BUG_FIX_CONTEXT comments, recorded deviations, TODOs, ponytail: markers and past workarounds in the code this touches: what was already tried and why it failed. (5) TESTS - what covers this surface today, and what each test actually asserts versus what its name claims. (6) ABSENCES - invariants stated only in a comment with nothing enforcing them, configurable values whose worst legal setting is materially worse than the default, two concerns sharing one credential or limit, code paths with no test. (7) MEASUREMENT - how the brief's Hypothesis signal is measured today: the analytics events and properties the code emits for it, and the helper that sends them, or that nothing emits it yet. Skip it when the brief says Hypothesis: none.
 Cite EVERY item as file:line. An item you cannot cite is not evidence: drop it, or mark it explicitly as a hunch. For facts outside this repo (library behaviour at the pinned version, platform features) use your web search tool and cite the URL; if you have no web access, say so, and never invent a URL, version or API detail. Do not open or quote any .env file. Sweep WIDE, report NARROW: include an item only if a planner could plausibly make a different decision because of it. Do not propose a solution, a design or an implementation order. You are read-only and must NEVER edit any file. Your FINAL message must be the complete sweep in Markdown, one section per category, and nothing else.
 EOF
 } > "$P"
@@ -145,15 +151,21 @@ part of `<H>/briefs/TEMPLATE.md` below the brief's product part, and fill it:
 - **Sweep wide, report narrow.** A finding earns a place in the brief only if the planner could
   decide differently because of it. The raw sweeps stay in `research/` and are not pasted in.
 
+**Measurement** (skip it when the brief says Hypothesis: none). Read the Hypothesis signal in PostHog
+through its MCP, read-only: whether the event arrives, and its value today. Put that under
+Measurement next to what the sweeps found in the code; when the signal does not exist yet, the brief
+gets the acceptance criterion `M-1`: the change emits it, with the event and its properties named.
+
 Its Acceptance criteria are every story criterion by id, then any criterion the research added that
-no story covers (`R-1` …), each naming the finding it came from. Its Verification section names the
-jobs of `.github/workflows/ci-<app>.yml` for each app the change touches: that is where superapp's
-real checks live.
+no story covers (`R-1` …), each naming the finding it came from, then `M-1` if there is one. Its
+Verification section names the jobs of `.github/workflows/ci-<app>.yml` for each app the change
+touches: that is where superapp's real checks live.
 
 **If the merge raised questions for the requester, STOP** and ask them in one round, each with the
-answer you would assume. Their answers go under Questions and answers and into the stories they
-change; no contradiction may stay open. If an answer changes the brief's In short or who it is for,
-go back to `/step1`: the research answered a different question. Without questions, go on to 2d.
+answer you would assume, and link the brief so they can read what the merge added. Their answers go
+under Questions and answers and into the stories they change; no contradiction may stay open. If an
+answer changes the brief's In short or who it is for, go back to `/step1`: the research answered a
+different question. Without questions, go on to 2d.
 
 ## 2d — GPT plans, cold and read-only
 
@@ -172,7 +184,7 @@ P="$S/runs/plan-codex.prompt.md"
   printf '\n\nTHE PLAN TEMPLATE:\n\n'; cat "$H/design/TEMPLATE-3gate.md"
   cat <<EOF
 
-You are GPT Codex, the doer for the PLAN step of $SLUG. Your working directory is the code repo, at the commit the brief was researched against. The brief above is your whole task, and nobody will answer questions during this run. The repo's own CLAUDE.md, AGENTS.md and the CLAUDE.md of the app the brief names are binding: read them. Then study the code until you can plan against what is actually there, and write the complete plan in the structure of the template: the problem and the decision, with the alternatives you rejected; assumptions marked confirmed or UNVERIFIED; scope; success criteria, where every acceptance criterion of the brief traces to a slice and to the test that proves it; the build as independently shippable slices, each with its files, its main failure mode and what its test proves; the new-surface table, where every new file, module, dependency or abstraction names the ladder rung it stopped at and why the earlier rungs did not hold; architecture and contracts; the happy AND unhappy flow; the test strategy, security and rollback. Close every open question in the brief, or carry it forward as an explicit UNVERIFIED assumption. Build on what the brief records as answered or decided; do not reopen it. Cite every claim about existing code as file:line.
+You are GPT Codex, the doer for the PLAN step of $SLUG. Your working directory is the code repo, at the commit the brief was researched against. The brief above is your whole task, and nobody will answer questions during this run. The repo's own CLAUDE.md, AGENTS.md and the CLAUDE.md of the app the brief names are binding: read them. Then study the code until you can plan against what is actually there, and write the complete plan in the structure of the template: the problem and the decision, with the alternatives you rejected; assumptions marked confirmed or UNVERIFIED; scope; success criteria, where every acceptance criterion of the brief traces to a slice and to the test that proves it; the build as independently shippable slices, each with its files, its main failure mode and what its test proves; the new-surface table, where every new file, module, dependency or abstraction names the ladder rung it stopped at and why the earlier rungs did not hold; architecture and contracts; the happy AND unhappy flow; the test strategy, security and rollback. Close every open question in the brief, or carry it forward as an explicit UNVERIFIED assumption. Build on what the brief records as answered or decided; do not reopen it. The brief's Hypothesis must be measurable after release: when its signal does not exist yet, one slice adds it (the event and its properties, sent through the app's own analytics helper so that app and env are stamped), and its M- criterion traces to that slice like any other. Cite every claim about existing code as file:line.
 The superapp rules the plan must carry wherever they apply. AI-track code: read the rule headed AI-track code in the repo's CLAUDE.md and apply it as written. It covers Python only, in services/assistant and in the agent-API, agent-token and MCP modules of apps/focal/server and apps/prima/server. A new module, and a new test module covering those paths, carries the full semantic exoskeleton and LDD as structlog fields. In a pre-existing module, a new function gets a FUNC_ region and full LDD, an edited function gets LDD on the control flow the change adds, a trivial edit gets nothing, and nothing is added at module level. Frontend code and Alembic revisions are exempt. A schema change ships its Alembic revision with RLS and grants written in, and the sandbox proof (scripts/migration-sandbox.sh with the app's server dir and schema, plus an assertion that the policies exist) is one of its acceptance checks; nothing is ever applied to a shared database. DB-backed behaviour is tested by the app's real-DB suite against that sandbox. User-facing strings go through i18next with ru and en. The verification commands are the jobs of .github/workflows/ci-<app>.yml for each app the change touches.
 For anything version-sensitive the brief does not settle, name the pinned version you read from the lockfile and mark it UNVERIFIED. Do not open or quote any .env file. IF the brief is ambiguous in a way that would change the plan, do not plan around the ambiguity: make your final message a section titled QUESTIONS that lists each ambiguity and what you would need to know, and nothing else. You are read-only and must NEVER edit any file. Your FINAL message must be the complete plan in Markdown, or the QUESTIONS section, and nothing else.
 EOF
@@ -213,15 +225,18 @@ brief being written. Spawn a clean-context reviewer with the **Agent tool** (`su
 > sound, independently shippable steps, each with a named failure mode and a test that proves
 > something; is the architecture coherent (coupling, data model, interfaces, the unhappy path)?
 > **Traceability:** every acceptance criterion of the brief maps to a slice and a test; one that does
-> not is a Must Fix, and so is a slice that serves no criterion. **The ladder:** every new file,
-> module, dependency or abstraction names its rung and why the earlier rungs did not hold; a new
-> surface with no rung, or one an earlier rung obviously covers, is a Must Fix. **superapp's
-> rules:** the AI-track rule in `<WT>/CLAUDE.md`, applied as written (full markup for new modules,
-> FUNC_ region and LDD for new functions in pre-existing ones, nothing at module level there, and
-> nothing for frontend or Alembic); a schema change carries RLS, grants and the sandbox proof, and
-> DB-backed behaviour is tested against the sandbox; user-facing strings use i18next with ru and
-> en; the verification commands match `.github/workflows/ci-<app>.yml`. **Citations:** verify the
-> plan's `file:line` claims against `<WT>`; a plan built on code that is not there is a Must Fix.
+> not is a Must Fix, and so is a slice that serves no criterion. **Measurement:** the brief's
+> Hypothesis signal is captured after release, by an event that already arrives or a slice that adds
+> it; an unmeasurable hypothesis is a Must Fix (a brief that says Hypothesis: none is exempt).
+> **The ladder:** every new file, module, dependency or abstraction names its rung and why the
+> earlier rungs did not hold; a new surface with no rung, or one an earlier rung obviously covers, is
+> a Must Fix. **superapp's rules:** the AI-track rule in `<WT>/CLAUDE.md`, applied as written (full
+> markup for new modules, FUNC_ region and LDD for new functions in pre-existing ones, nothing at
+> module level there, and nothing for frontend or Alembic); a schema change carries RLS, grants and
+> the sandbox proof, and DB-backed behaviour is tested against the sandbox; user-facing strings use
+> i18next with ru and en; the verification commands match `.github/workflows/ci-<app>.yml`.
+> **Citations:** verify the plan's `file:line` claims against `<WT>`; a plan built on code that is
+> not there is a Must Fix.
 > **Versions:** you own every version-sensitive claim; check it against the lockfiles and, where the
 > API matters, the docs for that version (Context7 or WebSearch). A stale API or wrong version is a
 > Must Fix. You are read-only. Output only the verdict block (Reviewer: Opus, Step: plan). Status is
@@ -231,8 +246,8 @@ Save **only the verdict block**, from the `# Review Verdict` line to the end, to
 `<S>/reviews/plan-<N>.md`, where `<N>` is this round (1, 2 or 3). STOP; write no code. Report
 **Score** and **Status**:
 
-- **APPROVED** (>= 9.0): tell the requester to skim the slice table (two minutes, the last cheap
-  moment to change course). Next: `/step3 $1`.
+- **APPROVED** (>= 9.0): tell the requester to skim the slice table, with a link to `<S>/plan.md`
+  (two minutes, the last cheap moment to change course). Next: `/step3 $1`.
 - **BLOCKED** (< 9.0) in round 1 or 2: list every Must Fix, run the revision (2f), and review again
   with a fresh subagent.
 - **BLOCKED in round 3**: STOP. Three rounds that do not converge mean the brief is too broad or too

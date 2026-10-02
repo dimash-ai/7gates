@@ -16,7 +16,7 @@ Work advances only at **Score >= 9.0** ([`checklists/scoring-rubric.md`](checkli
 
 | Flow | Status | Gates | Who does / who reviews | Entry |
 |---|---|---|---|---|
-| **[3-step co-dev](README-codev.md)** | **live — default** | brief · plan · build | Opus and GPT draft the product brief independently, you approve it; both research it, GPT plans → Opus reviews; Opus builds → GPT reviews | `/step1` · `/step2` · `/step3` |
+| **[3-step co-dev](README-codev.md)** | **live — default** | brief · plan · build | Opus and GPT draft the product brief with its hypothesis independently, you approve it; both research it, GPT plans → Opus reviews; Opus builds → GPT reviews; weekly, both judge every shipped hypothesis | `/step1` · `/step2` · `/step3` · `/learn` |
 | **[GPT gates](README-gpt-gates.md)** | live, for feature-dev tickets | 2, spliced into the CTO's feature-dev cycle | Claude `architect → coder → qa` builds; **Codex** scores the plan and runs the release suite | `/gpt-gate-plan` · `/gpt-gate-release` |
 | **[2-gate](README-2gate.md)** | superseded by 3-step co-dev | plan · build | GPT plans → Opus reviews; Opus builds → GPT reviews | its commands were rewritten as 3-step co-dev's `/step2` and `/step3` |
 | **[3-gate](README-3gate.md)** | removed 2026-09-24 | design · build · verify | Opus does A+B, GPT does C; each scored by the other | commands removed; README kept as the record |

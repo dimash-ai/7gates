@@ -3,16 +3,17 @@
 **Status: live, the default for our own work (since 2026-09-24).** It grew out of the
 [2-gate flow](README-2gate.md): the same two cross-model gates, now preceded by a product brief
 both models draft and a research phase both models run, with every result written into the code
-repo's `specs/`. Tickets that run through the CTO's
-feature-dev cycle keep the [GPT gates](README-gpt-gates.md).
+repo's `specs/`, and followed by a weekly review that checks every shipped bet against what users
+did. Tickets that run through the CTO's feature-dev cycle keep the [GPT gates](README-gpt-gates.md).
 
 ## The three steps
 
 | step | command | does | checks | result in `superapp/specs/<slug>/` |
 |------|---------|------|--------|------------------------------------|
-| 1 · brief | `/step1 <slug>` | Opus and GPT each draft the product brief from your request (the problem, who it is for, user stories, the business side); Opus merges them into `brief.md` | **you**: the brief is done when you say yes | `brief.md`, `product/` |
+| 1 · brief | `/step1 <slug>` | Opus and GPT each draft the product brief from your request (the problem, who it is for, the hypothesis, user stories, the business side); Opus merges them into `brief.md` | **you**: the brief is done when you say yes | `brief.md`, `product/` |
 | 2 · plan  | `/step2 <slug>` | pins a worktree; Opus and GPT research the brief in it independently and Opus merges the findings into it; then GPT plans, cold, from the brief alone | **you** answer what the research asks; a blind Opus subagent scores the plan, ≥ 9.0, three rounds at most | `research/`, `plan.md`, `reviews/plan-N.md` |
-| 3 · build | `/step3 <slug>` | Opus, one slice per run, in the same worktree | GPT per slice, then GPT runs the checks itself (release pass), ≥ 9.0 | code and a PR into `dev`; `reviews/build-N.md`, `reviews/release-N.md`, `handoff.md` |
+| 3 · build | `/step3 <slug>` | Opus, one slice per run, in the same worktree; with the PR, registers the hypothesis in PostHog | GPT per slice, then GPT runs the checks itself (release pass), ≥ 9.0 | code and a PR into `dev`; `reviews/build-N.md`, `reviews/release-N.md`, `handoff.md`; a PostHog notebook and insight |
+| learn · weekly | `/learn` | measures every registered hypothesis and the demand board in PostHog; Opus and GPT judge independently | **you** confirm the verdicts before anything is written back | `specs/learn-<date>/`; verdicts in the PostHog notebooks |
 
 The invariant is the pipeline's own: **no model grades its own work.** Opus scores GPT's plan; GPT
 scores Opus's build. The two drafters in step 1 and the two researchers in step 2 are not graded at
@@ -21,6 +22,12 @@ intent is the person who has it.
 
 Why this shape:
 
+- **A bet, then a check.** Every change states its hypothesis in step 1: what we believe it does
+  for whom, the signal that will show it, the target and the window. Step 2 makes the signal
+  measurable, step 3 registers the bet in PostHog, and `/learn` judges it every week against what
+  users did, next to a board of what is used and what is not. Features stop being shipped and
+  forgotten; each one ends as validated, invalidated or inconclusive, and the next bets come from
+  the data.
 - **The user's side first.** Step 1 states the problem and the business task before anyone reads
   the code: what we want to achieve, for whom, whether they are better off, and the user stories
   that say so, each criterion numbered. Both models draft it from the request alone, so where they
@@ -56,6 +63,7 @@ superapp/specs/<slug>/          gitignored: stays on this machine
   reviews/release-N.md          3 · the release pass, per run
   runs/                         the build log (build.txt), every Codex prompt as sent, every Codex log
   handoff.md                    3 · the PR body
+superapp/specs/learn-<date>/    one /learn run: data.md (the numbers), verdict-opus.md, verdict-codex.md, runs/
 ```
 
 - `<slug>` is the Linear id when there is an issue (`ALL-646`), otherwise a short name. Every slug
@@ -119,7 +127,8 @@ runs in a worktree of its own, run all three in that same session.
 ```
 /step1 ALL-646     # brief: Opus and GPT draft the product brief; Opus merges; you approve brief.md
 /step2 ALL-646     # plan:  worktree pinned; Opus and GPT sweep; GPT plans; a blind Opus scores it
-/step3 ALL-646     # build: once per slice; the last run does the release pass and opens the PR
+/step3 ALL-646     # build: once per slice; the last run does the release pass, opens the PR, registers the bet
+/learn             # weekly: checks every shipped bet in PostHog; a scheduled task runs it every Monday
 ```
 
 Every Codex call runs in the background: a draft, a sweep, a plan or a release pass outlasts the
@@ -166,6 +175,7 @@ a session with a worktree of its own, delete the session instead, then the branc
 | 3 | the same slice BLOCKED twice after fixes: re-plan with `/step2` from 2d | findings that keep coming back are a plan defect |
 | 3 | the release pass must leave the tree untouched; whatever it left is stashed, not deleted | a verdict made while editing the code is not a review |
 | ship | you merge; PM QA on `dev`; promotion to `main` per superapp's `CLAUDE.md` | agents open PRs and stop |
+| learn L5 | you confirm or change each verdict and decision | nothing is written to PostHog before your yes |
 
 ## What this flow does not give you
 

@@ -26,13 +26,15 @@ Simplicity First, Surgical Changes, Goal-Driven Execution.
 
 ## 1 · The 3-step co-dev flow — **the default**
 
-A request becomes a brief, the brief is researched and becomes a plan, the plan becomes code.
+A request becomes a brief with a hypothesis, the brief is researched and becomes a plan, the plan
+becomes code, and a weekly `/learn` checks every shipped hypothesis against what users did.
 
 | Step | Produces | Does | Checks |
 |------|----------|------|--------|
 | **1 — brief** | One document stating the problem and the business task from the user's side: in short, user stories with numbered criteria, who benefits, the business side | **Opus and GPT** draft it independently; Opus merges | **you** |
 | **2 — plan**  | The research merged into that brief, then the complete plan: slices, new surface by ladder rung, architecture, test strategy | **Opus and GPT** research independently, Opus merges; then **GPT** plans, cold | Opus |
-| **3 — build** | The implementation, one slice at a time, then a release pass and the PR | **Opus** | GPT |
+| **3 — build** | The implementation, one slice at a time, then a release pass, the PR and the hypothesis registered in PostHog | **Opus** | GPT |
+| **learn — weekly** | A verdict on every shipped hypothesis, and what is in demand | **Opus** measures in PostHog; **Opus and GPT** judge independently | **you** |
 
 Step 1 and the research of step 2 are not scored: two independent drafts, then two independent
 sweeps, buy **coverage**, so each pair merges as a union, and the only judge of an intent is the
@@ -84,6 +86,7 @@ The 3-gate and 7-step flows were the ones where GPT, not the builder, wrote the 
 ```
 open question or epic, no code yet    →  /gate-explore   (unscored dossier)
 a task of ours                        →  3-step co-dev   DEFAULT: brief / plan / build
+every week, after things ship         →  /learn          verdicts on the bets, demand board
 a ticket in the feature-dev cycle     →  GPT gates       α before code, γ before ship
 ```
 

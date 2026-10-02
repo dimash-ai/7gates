@@ -8,7 +8,8 @@ Date: YYYY-MM-DD
      reads the code: what we want to achieve, for whom, and why. Opus and GPT each draft one from the
      request alone (product/opus.md, product/codex.md), and Opus merges the two by union into the
      product part of brief.md, which step 2 researches and plans from. Its user stories' criteria
-     are the acceptance criteria the plan, the build and the release pass are held to.
+     are the acceptance criteria the plan, the build and the release pass are held to; its
+     Hypothesis is the bet, which /step3 registers in PostHog and /learn checks every week.
      Product, not engineering: no modules, endpoints, tables or designs. Screens, flows and the words
      a user sees are product. Whatever was inferred rather than read or heard is marked (assumed),
      so the requester can strike it.
@@ -20,6 +21,21 @@ Date: YYYY-MM-DD
 <!-- The request as the prompt the requester meant to write: three to five sentences that a reader
      who never saw the conversation understands. Where in the product, what becomes possible or stops
      going wrong, for whom, and why now. No requirement the requester did not state or confirm. -->
+
+## Hypothesis
+<!-- The bet this change makes, written so it can be checked after release. With about a hundred
+     weekly users, count people rather than rates, and give the window time to reach them. A fix or
+     a chore with no bet in it says "Hypothesis: none (fix)" or "(chore)", with one line on why, and
+     is not tracked. -->
+We believe that <this change> for <these users> will <this outcome>.
+We will know we are right when <signal> reaches <target> within <weeks> of the prod release.
+- Signal: <what measures it, in PostHog terms: an event, a screen's weekly users, a funnel step; or
+  "does not exist yet", which step 2 must add>
+- Baseline: <its value today and where it came from, or: unknown>
+- Target: <a number and a window, e.g. 15 weekly users within 4 weeks of release>
+- Wrong if: <the result that means we were wrong> → <then: roll back, rework, or keep it and stop
+  investing>
+- Riskiest assumption: <the belief that, if false, makes this worthless>
 
 ## User stories
 <!-- One story per distinct thing a user can do or get. Every criterion is observable from the
@@ -54,9 +70,6 @@ Priority: must
   load, a dependency>
 - Fit: <the part of the product's vision or roadmap this serves, with its doc, or: none found>
 - Who gets it: <everyone, internal only, a paid tier, behind a flag (docs/ENTITLEMENTS.md)>
-- How we will know it worked: <a PostHog event or funnel, a complaint that stops, a number that
-  moves; PM QA on dev for a small fix. Say so when the signal needs an event that does not exist
-  yet.>
 
 ## Out of scope
 <!-- What is not being asked, including tempting neighbours and whatever a design shows but the
