@@ -1,28 +1,60 @@
 # Brief: <slug>
 
-Branch: <the base name of the stage branches, without the Linear id (see below)>
+Branch: <the base name of the stage branches, without the Linear id: feat/focal-<name> for Focal, feature/<name> or fix/<name> elsewhere>
 Base: dev
 Linear: <ALL-id — url, or none>
 Deadline: <the milestone's target date or a promised date, or none>
-Ship: <ask, or auto: whether /step3 asks before it opens and merges a stage's PR into dev>
-Harness: <the harness commit this slug started on: git -C harness rev-parse --short HEAD>
+Ship: <set in step 2: ask or auto>
+Harness: <the harness commit step 1 ran on>
 Date: YYYY-MM-DD
 
-<!-- The ONE requirements document of the co-dev flow. Step 1 (/step1) writes it: the sections of
-     harness/briefs/PRODUCT.md below its header, merged from two independent drafts (union for
-     coverage, intersection for commitment: harness/checklists/mvp.md §3) and confirmed by the
-     requester. Step 2 (/step2) plans the stages from it, cold: the planner never saw the
-     conversation, so no "as discussed". Under about 150 lines.
-     Tag every story, criterion, stage and question that came from one draft only: [O] Opus or [G]
-     GPT; untagged means both, or the requester. Questions and answers records every answer the
-     requester gives, in any step, with its date: the planner builds on it and does not reopen it.
-     The header is machine-read: one key per line, a plain value with no backticks or bold. Step 1
-     fills it; step 2 sets Ship from the requester's answer. Harness pins the flow's version: a slug
-     finishes on the harness it started with (harness/checklists/mvp.md §6), so a later harness
-     change waits for the next ticket unless the requester moves this one over.
-     Branch is the BASE name of the stage branches: stage N is built on <Branch>-s<N>, cut from
-     origin/<Base> once stage N-1 has merged, and the promotion to main is <Branch>-main. Use the
-     app's convention WITHOUT the Linear id (feat/focal-<short-name> for Focal, feature/<short-name>
-     or fix/<short-name> elsewhere): Linear links a PR whose branch or title carries the id and
-     closes the issue when the last such PR merges, so the first stage's merge would close it. The
-     stage PRs reference the issue in their body instead (/step3). -->
+<!-- Step 1 of the co-dev flow (/step1): the requester's input, rephrased into the prompt step 2 plans
+     from. The planner never saw the conversation, so the brief stands on its own: no "as
+     discussed". It says WHAT and WHY in the user's terms, never HOW: no modules, endpoints, tables or
+     designs. Under about 80 lines. Written in English; the requester's words and every UI string stay
+     verbatim in their language.
+     The header is machine-read: one key per line, a plain value with no backticks or bold. Branch is
+     the base name of the stage branches (<Branch>-s1, <Branch>-s2, …, and <Branch>-main); it never
+     carries the Linear id, because a branch or PR title with the id makes Linear close the issue when
+     that PR merges (harness/checklists/mvp.md §8). Harness is the version of the flow this slug
+     finishes on. -->
+
+## In short
+<!-- The request as the prompt the requester meant to write: three to five sentences that a reader
+     who never saw the conversation understands. Where in the product, what becomes possible or stops
+     going wrong, for whom, and why now. -->
+
+## Problem
+<!-- What is wrong or missing today, for whom, and what it costs them. One short paragraph. -->
+
+## User stories
+<!-- One story per distinct thing a user can do or get, only the ones the request asks for. Every
+     criterion is observable from the user's side, numbered, and marked [MVP] or [later]. -->
+
+### US-1 — <title>
+As a <who>, I want <what>, so that <why>.
+- US-1.1 [MVP] Given <the situation>, when <the user does this>, then <what they see or get>.
+
+## MVP
+<!-- The least a user must see on dev to say "this is it" (harness/checklists/mvp.md §3), in one to
+     three lines, from the request's literal words. -->
+
+## Not now
+<!-- What the request or its design shows that the MVP leaves out, one line each: a later stage or a
+     follow-up ticket. -->
+
+## Hypothesis
+<!-- One line: "We believe <the change> for <these users> will <this outcome>; signal: <an event or a
+     screen's weekly users>." A fix or a chore says "none (fix)" or "none (chore)". Step 2 makes the
+     signal measurable; /learn checks it after the release to main. -->
+
+## Assumptions and questions
+<!-- Everything inferred rather than read, each marked (assumed): the requester's yes accepts it.
+     Then every question asked and its answer, with the date: the planner builds on it and does not
+     reopen it. -->
+
+## Sources
+<!-- The Linear issue, the design handoff or prototype, screenshots: paths or URLs. -->
+
+## In the requester's words
+<!-- Verbatim: what they said, the Linear title, description and comments, screenshots transcribed. -->

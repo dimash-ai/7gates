@@ -9,12 +9,8 @@ stage, each stage its own PR into dev (`harness/checklists/mvp.md`) — and Code
 in each. Every Codex run is a separate `codex exec` process whose final message is
 written to a file by `-o`; results land in the code repo's `specs/<slug>/`, never in this repo.
 
-- **Step 1, brief — Codex drafts the brief and its MVP cut.** Read-only, independently, from the
-  request alone: it never looks for or defers to another model's draft. It states the problem from
-  the user's side, the hypothesis, and the cut: stage 1 (the least a user must see on dev), the next
-  stages, Not now; at most five questions, smallest option first, each with its cost. It reads
-  product docs and may skim the code only to see what already exists; it may use web search for
-  facts outside the repo, and names no design. Not scored, so no verdict block.
+- **Step 1, brief — no Codex.** Opus rephrases the request into the brief in minutes; Codex's
+  independent reading comes in step 2.
 - **Step 2, plan — Codex is the doer.** Read-only, it plans cold from the brief and the code: the
   stage map and every stage's detail, so step 3 only implements, and returns the plan as its final
   message. If the brief is ambiguous in a way that would change stage 1, it returns QUESTIONS; an

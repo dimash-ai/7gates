@@ -1,7 +1,7 @@
 # MVP lens — stages that ship
 
 The delivery rules of the co-dev flow. Every step reads this file, the way it reads
-[`ponytail.md`](ponytail.md): step 1 cuts the MVP, step 2 plans it as stages, step 3 implements and
+[`ponytail.md`](ponytail.md): step 1 names the MVP, step 2 plans it as stages, step 3 implements and
 ships one stage at a time. Ponytail asks "does this code need to exist?"; this file asks "does it
 need to exist **before users can see something**?"
 
@@ -45,16 +45,17 @@ Code on a branch, an approved review or a green CI is not a delivered stage.
 - **A deadline decides the cut.** When the ticket has a target date (a Linear milestone, a promise),
   the stage map shows which stages land before it.
 
-## 3 · Cutting the MVP (step 1)
+## 3 · Naming the MVP
 
-- **Start from the ticket's literal words.** What the ticket names is in scope. What a design or a
-  prototype shows beyond it is a candidate for a later stage, not a requirement of stage 1.
-- **Reuse before build.** Name what already exists and covers part of the ask (an editor, a screen, an
-  endpoint): it is the cheapest stage there is.
-- **Union for coverage, intersection for commitment.** Two independent drafts read the request
-  differently, and that coverage is worth keeping: their union fills the later stages and Not now.
-  Stage 1 holds only what the ticket's words require or both drafts put there.
+- **Start from the ticket's literal words** (step 1). What the ticket names is in scope. What a
+  design or a prototype shows beyond it is a candidate for a later stage, not part of the MVP.
+- **The MVP is the least a user must see to say "this is it"**, and step 2's stage 1 delivers it. If
+  something smaller still serves the request, the planner says so.
+- **Reuse before build** (step 2). What already exists and covers part of the ask (an editor, a
+  screen, an endpoint) is the cheapest stage there is.
 - **Not now is a list of follow-up tickets**, one line each, never a silent drop.
+- **Fast, then checked.** Step 1 is one model rephrasing in minutes; the second model reads the
+  brief cold in step 2, so a brief that does not stand on its own comes back as questions there.
 
 ## 4 · Questions
 
@@ -110,7 +111,7 @@ Consider holds (`scoring-rubric.md`, Stage mode).
 
 ## 6 · Weight
 
-- **Short documents.** The brief stays under about 150 lines; the plan, the stage map with every
+- **Short documents.** The brief stays under about 80 lines; the plan, the stage map with every
   stage's detail, under about 300, stage 1's detail the fullest. Length is not rigour: the run above
   had an 88 KB brief and stage specs of up to 200 KB, and none of it reached a user sooner.
 - **Step 3 is implementation, nothing else.** No design phase, no builder waves, no verify agents,

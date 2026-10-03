@@ -4,10 +4,10 @@ Updated: <YYYY-MM-DD HH:MM>
 Deadline: <date or none>
 On dev: <bar> <N> of <M> stages verified on dev
 
-<!-- The progress board of the co-dev flow (harness/checklists/mvp.md §7). /step1 creates it from
-     the brief's stages, /step2 fills the budgets and demo scripts from the plan, /step3 moves one
-     stage through it per run. Every step prints it, and a "status?" is answered from it. Each stage
-     PR's body carries a copy, so GitHub keeps the record if the session's files are lost.
+<!-- The progress board of the co-dev flow (harness/checklists/mvp.md §7). /step2 creates it from
+     the plan's stage map, and /step3 moves one stage through it per run. Every step prints it, and a
+     "status?" is answered from it. Each stage PR's body carries a copy, so GitHub keeps the record if
+     the session's files are lost.
      The bar is one block per stage: █ verified on dev, ▒ in progress, ░ not started; for example
      "██▒░░ 2 of 5 stages verified on dev". -->
 

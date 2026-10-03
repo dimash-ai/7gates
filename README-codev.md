@@ -1,6 +1,6 @@
 # The co-dev flow — ship in stages
 
-**Status: live, the default for our own work.** Three steps: a brief that cuts the MVP, a plan of
+**Status: live, the default for our own work.** Three steps: a short brief with the MVP, a plan of
 **stages**, and a build that ships **one stage at a time to dev**, each as its own PR, merged,
 deployed and looked at on the dev environment before the next one starts. A weekly `/learn` checks
 every shipped bet against what users did. Tickets that run through the CTO's feature-dev cycle keep
@@ -17,15 +17,15 @@ rules that came out of it live in [`checklists/mvp.md`](checklists/mvp.md), whic
 
 | step | command | does | checks | result in `superapp/specs/<slug>/` |
 |------|---------|------|--------|------------------------------------|
-| 1 · brief | `/step1 <slug>` | Opus and GPT each draft a short brief from your request: the problem, the hypothesis, and **the MVP cut** (stage 1, the next stages, Not now); Opus merges, union for coverage, intersection for commitment | **you** confirm stage 1 and the stages | `brief.md`, `product/`, `progress.md` |
-| 2 · plan  | `/step2 <slug>` | pins a worktree on stage 1's branch; GPT plans cold from the brief and the code: the **stage map** (outcome on dev, demo, budget, risk, guard) and **every stage's detail** | a blind Opus, against the MVP lens, ship-blockers only, two rounds at most; then **you** confirm the stages and how stages ship | `plan.md`, `reviews/plan-N.md` |
+| 1 · brief | `/step1 <slug>` | Opus rephrases your input (your words or a Linear ticket) into a short brief for step 2: the problem, the user stories, **the MVP**, Not now; about ten minutes, no second model, no code | **you** confirm the brief | `brief.md` |
+| 2 · plan  | `/step2 <slug>` | pins a worktree on stage 1's branch; GPT plans cold from the brief and the code: the **stage map** (outcome on dev, demo, budget, risk, guard) and **every stage's detail** | a blind Opus, against the MVP lens, ship-blockers only, two rounds at most; then **you** confirm the stages and how stages ship | `plan.md`, `reviews/plan-N.md`, `progress.md` |
 | 3 · build | `/step3 <slug>`, once per stage | **pure implementation** of the next stage, no layers inside; its own PR into `dev`, merged, deployed, its demo walked on dev; registers the bet when the signal is measurable | your checks and CI; **GPT** once for a data or auth stage, and once as the release pass before main | one PR per stage into `dev`; `runs/build-sN.txt`, `reviews/stage-N-K.md`, `reviews/release-*.md`; a PR into `main` per release |
 | learn · weekly | `/learn` | measures every registered hypothesis and the demand board in PostHog; Opus and GPT judge independently | **you** confirm the verdicts before anything is written back | `specs/learn-<date>/`; verdicts in the PostHog notebooks |
 
 The invariant is the pipeline's own: **no model grades its own work.** Opus scores GPT's plan; GPT
-reviews what Opus built wherever a second model changes the outcome. The two drafters in step 1 are
-not graded: independence buys coverage, so their drafts merge as a union into the later stages, and
-only what the request requires goes into stage 1.
+reviews what Opus built wherever a second model changes the outcome. Step 1 is not graded: the only
+judge of an intent is the person who has it, and GPT's independent reading comes in step 2, where it
+plans cold from the brief, so a brief that does not stand on its own comes back as questions.
 
 ## Why this shape
 
@@ -33,10 +33,10 @@ only what the request requires goes into stage 1.
   at most about four hours of build. It is done when it is merged, deployed and its demo script
   passed on the dev environment, not when it is coded or approved. Stage 1, the MVP, aims to be on
   dev within a working day of the plan's yes, and value then arrives every few hours.
-- **The MVP is cut at the start, not discovered at the end.** Step 1 starts from the ticket's
-  literal words; what a design shows beyond them is a candidate for a later stage. Questions are few,
-  one decision each, smallest option first with its cost, and a safe default is assumed rather than
-  waited for.
+- **The MVP is named at the start, not discovered at the end.** Step 1 rephrases the request in
+  minutes and takes the MVP from its literal words; what a design shows beyond them waits for a later
+  stage. Questions are few, one decision each, smallest option first with its cost, and a safe
+  default is assumed rather than waited for.
 - **Planning happens in step 2, all of it.** The plan details every stage, so step 3 implements and
   nothing else: no design phase, no builder waves, no internal pre-reviews or fix workflows, even
   with ultracode on. When dev shows the map was wrong, `/step2` re-plans the stages not yet started.
@@ -60,10 +60,8 @@ session's own worktree (the last bullet below):
 
 ```
 superapp/specs/<slug>/          gitignored: stays on this machine
-  brief.md                      1 · the one requirements document, with the MVP cut and the stages
-  progress.md                   1-3 · the progress board: one row per stage, printed by every step
-  product/request.md            1 · the request both drafters got, verbatim
-  product/opus.md, codex.md     1 · the two drafts, never pasted into the brief
+  brief.md                      1 · the request rephrased: problem, user stories, MVP, Not now, its words verbatim
+  progress.md                   2-3 · the progress board: one row per stage, printed by every step
   plan.md, plan.prev.md         2 · GPT's stage plan, and the version the last review scored
   reviews/plan-N.md             2 · Opus verdicts
   reviews/stage-N-K.md          3 · GPT's review of a data or auth stage N, round K
@@ -125,27 +123,23 @@ From `superapp`, one of its worktrees, or the harness itself (`superapp/harness`
 runs in a worktree of its own, run all the steps in that same session.
 
 ```
-/step1 ALL-646     # brief: two drafts, the MVP cut; you confirm stage 1 and the stages
+/step1 ALL-646     # brief: your request rephrased for step 2, with the MVP; you confirm it
 /step2 ALL-646     # plan:  GPT plans every stage; a blind Opus reviews; you confirm, and say how stages ship
 /step3 ALL-646     # build: the next stage, its PR into dev, verified on dev; run it again for each stage
 /step3 ALL-646     #        … and again; when you say so, it releases the stages to main (3g)
 /learn             # weekly: checks every shipped bet in PostHog; a scheduled task runs it every Monday
 ```
 
-Every Codex call runs in the background: a draft, a plan or a review outlasts the Bash tool's
-timeout. Each prompt is written to `runs/` first and fed to `codex exec` on stdin, so what Codex
+Every Codex call runs in the background: a plan or a review outlasts the Bash tool's timeout. Each prompt is written to `runs/` first and fed to `codex exec` on stdin, so what Codex
 was asked stays on record.
 
-**The pace to expect.** Step 1 about 45 minutes of agent work plus your answers; step 2 about an
-hour; each stage up to about four hours of build plus about half an hour of fixed cost (CI, deploy,
+**The pace to expect.** Step 1 about ten minutes plus your yes; step 2 about an hour; each stage up to about four hours of build plus about half an hour of fixed cost (CI, deploy,
 the look on dev). Your answers are the other clock: the flow asks few questions, assumes safe
 defaults, and stops only where it needs you.
 
 Set up once:
 
-- **Codex CLI**, logged in. Check that your version accepts
-  `codex exec --config 'web_search="live"'`: step 1 uses it so GPT can look outside the repo. If it
-  does not, step 1 still runs, and external facts rest on Opus alone.
+- **Codex CLI**, logged in: GPT plans in step 2 and reviews in step 3.
 - **git ≥ 2.31** (for `rev-parse --path-format`), and **`gh`**, authenticated, for the PRs.
 - **The commands** live in this repo's `.claude/commands/`, and `~/.claude/commands` is a symlink to
   that directory, so Claude Code lists them as user commands in every project and a pull here
@@ -166,7 +160,7 @@ delete its branches. In a session with a worktree of its own, delete the session
 
 | where | stop | why |
 |-------|------|-----|
-| 1d | you confirm stage 1, the stages, Not now, the assumed answers, the branch and the base | stage 1 is what reaches you first; everything else is ordered behind it |
+| 1c | you confirm the brief: the MVP, the stories, Not now, the assumed answers, the branch and the base | the planner works from the brief alone |
 | 2b | GPT returns QUESTIONS that change stage 1 | a stage 1 built around an ambiguity is wrong from its first line; a later stage's ambiguity is planned as an assumption instead |
 | 2c | the plan is BLOCKED a second time: you decide each open Must Fix | two rounds that do not converge mean the stage is cut wrong |
 | 2e | you confirm the stages, and whether stages ship on your word (`Ship: ask`) or on their own (`Ship: auto`) | the last cheap moment to change course |
@@ -195,8 +189,8 @@ delete its branches. In a session with a worktree of its own, delete the session
   do not need a `.env`, so keep it out when you can.
 - **A wall between GPT and `<S>`.** In a session with a worktree of its own every step runs there,
   so `<S>` sits inside GPT's working directory and the write sandbox of its reviews reaches `specs/`,
-  which `git status` does not show because it is gitignored. Step 1 keeps Opus's draft out of `<S>`
-  until GPT's run exits; the rest is an instruction, not a sandbox rule.
+  which `git status` does not show because it is gitignored. That is an instruction, not a sandbox
+  rule.
 - **The feature-dev machinery**: spec normalization, the qa scans, three Claude review lenses with
   Triage, automatic Linear moves. On stages that touch auth, tokens or RLS, also run
   `/security-review` on the stage branch before its GPT review.

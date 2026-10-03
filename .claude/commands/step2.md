@@ -197,8 +197,9 @@ fi
 
 ## 2e — The stop: the requester confirms the stages
 
-Update `<S>/progress.md` from the stage map: one row per stage with its budget (stages already
-under way keep their status), and the review's Should Consider items under Follow-ups. Then **STOP** and show in the chat:
+Create `<S>/progress.md` from `<H>/briefs/PROGRESS.md` (on a re-plan, update it) from the stage map:
+one row per stage with its budget, stages already under way keeping their status, and the review's
+Should Consider items under Follow-ups. Then **STOP** and show in the chat:
 
 - the **stage map** as a table, with stage 1 first and the hours to its arrival on dev;
 - stage 1 in three lines: what users get, how to see it on dev, what it leaves to later stages;

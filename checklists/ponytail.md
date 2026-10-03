@@ -31,8 +31,8 @@ caller leaves its siblings broken.
 
 | step | who | how the ladder is applied |
 |------|-----|---------------------------|
-| 1 · brief | both drafters | What already exists and covers part of the ask (rungs 2–5: this codebase, the standard library, the platform, an installed dependency) is named, because it is the cheapest stage there is. Prior art that already covers the whole intent goes to the requester as a question, not as a footnote. |
-| 2 · plan | GPT plans, Opus reviews | Every new file, module, dependency or abstraction in the plan names the rung it stopped at and why the earlier rungs did not hold. A new surface with no rung, or a stage whose approach builds far more than its outcome needs, is a Must Fix ([`mvp.md`](mvp.md) §5). |
+| 1 · brief | Opus | Rung 1: does this need to exist at all? A request that leaves no user better off goes back to the requester before anything is planned. |
+| 2 · plan | GPT plans, Opus reviews | What already exists and covers part of the ask (rungs 2–5) is reused, and prior art that covers the whole intent goes to the requester as a question. Every new file, module, dependency or abstraction in the plan names the rung it stopped at and why the earlier rungs did not hold. A new surface with no rung, or a stage whose approach builds far more than its outcome needs, is a Must Fix ([`mvp.md`](mvp.md) §5). |
 | 3 · build | Opus implements | Opus climbs the ladder before each stage. |
 | 3 · review | GPT | Reviews a data or auth stage, and the release to main, with the tags in §2 as follow-ups, and lists the `ponytail:` markers the release adds (§3). |
 
