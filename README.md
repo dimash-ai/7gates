@@ -11,15 +11,16 @@ flows at a glance) → [`CLAUDE.md`](CLAUDE.md) (the quality bar) → [`harness/
 
 ## What this is
 
-Every feature flows through the **3-step co-dev flow**. The two models trade places, so no model
-ever grades its own work, and a scored step advances only at **≥ 9.0 / 10**; below that, the doer
-fixes the cited *Must Fix* items and resubmits.
+Every feature flows through the **co-dev flow**, which ships in **stages**: the smallest increments a
+user can see, each its own PR into `dev`, merged, deployed and looked at on the dev environment
+before the next one starts. The two models trade places, so no model ever grades its own work, and
+a review blocks only on ship-blockers; everything else becomes a follow-up you decide on.
 
 | # | Step | Does | Checks | Result |
 |---|------|------|--------|--------|
-| 1 | brief | **Opus and GPT**, independently: draft the product brief (the problem, who it is for, user stories, the business side); Opus merges | **you** | `specs/<slug>/brief.md` |
-| 2 | plan  | **Opus and GPT**, independently: research the brief; Opus merges; then **GPT** plans, cold, from the brief | Opus, blind | `specs/<slug>/plan.md` |
-| 3 | build | **Opus**, one slice at a time; registers the hypothesis in PostHog | GPT per slice, then GPT runs the checks itself | code + PR |
+| 1 | brief | **Opus and GPT**, independently: draft a short brief with **the MVP cut** (stage 1, the next stages, Not now); Opus merges | **you** | `specs/<slug>/brief.md`, `progress.md` |
+| 2 | plan  | **GPT** plans every stage, cold, from the brief and the code | Opus, blind; then **you** | `specs/<slug>/plan.md` |
+| 3 | build, once per stage | **Opus** implements the next stage, no layers inside; its own PR into `dev`, verified on dev; registers the hypothesis in PostHog | your checks and CI; **GPT** for a data or auth stage, and once before main | a PR per stage, verified on dev |
 | — | learn, weekly | **Opus** measures every shipped hypothesis in PostHog; **Opus and GPT** judge independently | **you** | verdicts in PostHog |
 
 Results land in the code repo's gitignored `specs/<slug>/` (for superapp, `superapp/specs/`), never
@@ -54,14 +55,15 @@ All work — by humans or agents — holds to four principles (full text in [`CL
 In Claude Code, from superapp, one of its worktrees, or the harness itself (`superapp/harness`):
 
 ```
-/step1 <slug>    # brief — Opus and GPT draft the product brief; you approve it
-/step2 <slug>    # plan  — Opus and GPT research the brief; GPT plans; a blind Opus scores it
-/step3 <slug>    # build — once per slice; the last run does the release pass and opens the PR
+/step1 <slug>    # brief — two drafts, the MVP cut; you confirm stage 1 and the stages
+/step2 <slug>    # plan  — GPT plans every stage; a blind Opus reviews; you confirm
+/step3 <slug>    # build — the next stage: implemented, its PR into dev, verified on dev; once per stage
 /learn           # learn — weekly: checks every shipped hypothesis against what users did
 ```
 
-`<slug>` is the Linear id when there is an issue (`ALL-646`). Each scored command saves its verdict
-under `specs/<slug>/reviews/` and **stops**. See [`harness/README-codev.md`](README-codev.md)
+`<slug>` is the Linear id when there is an issue (`ALL-646`). The stage rules every step follows are
+in [`harness/checklists/mvp.md`](checklists/mvp.md); each command prints the progress board and
+**stops** where you are needed. See [`harness/README-codev.md`](README-codev.md)
 for where it stops and why.
 
 The other flows are documented in [`PIPELINE_OVERVIEW.md`](PIPELINE_OVERVIEW.md): `/gate-explore`
@@ -70,13 +72,13 @@ cycle. The 3-gate and 7-step commands were removed on 2026-09-24.
 
 ## Prerequisites
 
-- **Claude Code** (Opus) — drafter and author of the brief in step 1, researcher and blind plan
-  reviewer (a fresh subagent) in step 2, builder in step 3.
+- **Claude Code** (Opus) — drafter and author of the brief in step 1, blind plan reviewer (a fresh
+  subagent) in step 2, builder in step 3.
 - **Codex CLI**, authenticated — GPT runs as `codex exec`: drafter in step 1 (read-only, with web
-  search), researcher (read-only, with web search) and planner (read-only) in step 2, reviewer in
-  step 3 (read-only per slice; write-enabled for the release pass only so it can run the checks).
-- **Git ≥ 2.31** and **`gh`** — step 2 pins a worktree of the code repo, step 3 builds in it and
-  opens the PR.
+  search), planner in step 2 (read-only), reviewer in step 3 of data and auth stages and of the
+  release to main (write-enabled only so it can run the checks).
+- **Git ≥ 2.31** and **`gh`** — step 2 pins a worktree of the code repo, step 3 builds each stage in
+  it and opens its PR.
 - **Make** — `make verify` is the umbrella verification gate for code repos that use it. The
   targets ship as stubs; superapp's checks come from its CI workflows
   (`.github/workflows/ci-<app>.yml`) instead.

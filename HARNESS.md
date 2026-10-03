@@ -11,14 +11,16 @@ The invariant every flow is built to protect:
 > Opus, so it never scores an artifact it watched being made.
 
 Work advances only at **Score >= 9.0** ([`checklists/scoring-rubric.md`](checklists/scoring-rubric.md)).
+In the co-dev flow's **stage mode**, only ship-blockers are Must Fix items, so a review with none is
+approved and everything else becomes a follow-up ([`checklists/mvp.md`](checklists/mvp.md) §5).
 
 ## The five flows
 
 | Flow | Status | Gates | Who does / who reviews | Entry |
 |---|---|---|---|---|
-| **[3-step co-dev](README-codev.md)** | **live — default** | brief · plan · build | Opus and GPT draft the product brief with its hypothesis independently, you approve it; both research it, GPT plans → Opus reviews; Opus builds → GPT reviews; weekly, both judge every shipped hypothesis | `/step1` · `/step2` · `/step3` · `/learn` |
+| **[co-dev, in stages](README-codev.md)** | **live — default** | brief · plan · build, once per stage | Opus and GPT draft the brief and its MVP cut independently, you confirm it; GPT plans every stage → a blind Opus reviews; Opus implements a stage, its PR goes into dev and is verified there; GPT reviews data/auth stages and the release to main; weekly, both judge every shipped hypothesis | `/step1` · `/step2` · `/step3` · `/learn` |
 | **[GPT gates](README-gpt-gates.md)** | live, for feature-dev tickets | 2, spliced into the CTO's feature-dev cycle | Claude `architect → coder → qa` builds; **Codex** scores the plan and runs the release suite | `/gpt-gate-plan` · `/gpt-gate-release` |
-| **[2-gate](README-2gate.md)** | superseded by 3-step co-dev | plan · build | GPT plans → Opus reviews; Opus builds → GPT reviews | its commands were rewritten as 3-step co-dev's `/step2` and `/step3` |
+| **[2-gate](README-2gate.md)** | superseded by co-dev | plan · build | GPT plans → Opus reviews; Opus builds → GPT reviews | its commands were rewritten as co-dev's `/step2` and `/step3` |
 | **[3-gate](README-3gate.md)** | removed 2026-09-24 | design · build · verify | Opus does A+B, GPT does C; each scored by the other | commands removed; README kept as the record |
 | **[7-step](README-7step.md)** | removed 2026-09-24 | think · plan · design · build · review · test · ship | strict alternation, Opus ⇄ GPT at every step | commands removed; README kept as the record |
 
@@ -27,10 +29,11 @@ and rubric are still the ones the live flows call, and their READMEs stay as the
 
 ## Which one to reach for
 
-- **Default — 3-step co-dev.** Our own tasks: both models draft the product brief from your request
-  and you approve the merge; both research it, GPT plans from it cold, Opus builds, GPT reviews
-  every slice and runs the checks itself before the PR. Results land in the code repo's
-  `specs/<slug>/`.
+- **Default — co-dev, in stages.** Our own tasks: both models draft the brief and its MVP cut from
+  your request and you confirm it; GPT plans every stage cold, a blind Opus reviews; Opus implements
+  one stage at a time, each its own PR into dev, verified on dev; GPT reviews the stages that touch
+  data or access and, once, the release to main, running the checks itself. Results land in the
+  code repo's `specs/<slug>/`.
 - **A ticket that runs through the CTO's feature-dev cycle** (Linear ticket → spec → architect →
   coder → qa → review session → ship) — the GPT gates, which bolt Codex onto it at the only two
   places where a second vendor changes the outcome: **before any code exists**, and **when the
@@ -71,8 +74,8 @@ harness/
 └── runs/ · scratch/ · archive/              raw transcripts (gitignored)
 ```
 
-The 3-step co-dev flow keeps nothing here but its charters and templates: every result it produces
-(brief, research, plan, verdicts, build log, PR body) lands in the code repo's gitignored
+The co-dev flow keeps nothing here but its charters and templates: every result it produces
+(brief, progress board, plan, verdicts, build logs, PR bodies) lands in the code repo's gitignored
 `specs/<slug>/`.
 
 `prompts/reviewer.md` carries a per-step lens (think / plan / design / build / review / test /

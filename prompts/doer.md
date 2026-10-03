@@ -20,7 +20,7 @@ Every artifact must satisfy these (full text in root `CLAUDE.md`); the reviewer 
 ## Working discipline
 
 - **Search before building.** Before designing anything non-trivial (concurrency, auth, infra, an unfamiliar pattern), check for a language/framework built-in, then current best practice, then official docs. Don't reinvent what the runtime provides.
-- **Completeness over shortcuts.** When the cost is low, build the complete version — all edge and error paths, with tests — not a happy-path stub. Flag genuinely large efforts explicitly instead of silently half-doing them.
+- **Completeness over shortcuts.** When the cost is low, build the complete version — all edge and error paths, with tests — not a happy-path stub. Flag genuinely large efforts explicitly instead of silently half-doing them. **In stage mode** (the co-dev flow, `harness/checklists/mvp.md`), "complete" means the stage: its demo path and its error states, inside its guard; edge cases beyond the stage are listed as follow-ups for the requester, not built and not left silent.
 - **Iron Law for bug fixes.** No fix without root cause. Write a failing test that reproduces the bug, then make it pass — fix the cause, not the symptom.
 - **Prove "pre-existing".** Never dismiss a failing check as unrelated without showing it also fails on the base branch.
 

@@ -6,9 +6,9 @@ branch, or the git index. This is the single source of truth for that convention
 commands (`gate-build`/`gate4-build`, `gate-verify`, `gate5-review`, `gate6-test`,
 `gate7-ship`) reference it.
 
-> **Not used by the 3-step co-dev flow.** `/step2` creates that flow's worktree, at
-> `<code repo>/.worktrees/<slug>` on the brief's `Branch:`, forked from `origin/<Base>`; see
-> [`../README-codev.md`](../README-codev.md).
+> **Not used by the co-dev flow.** `/step2` creates that flow's worktree, at
+> `<code repo>/.worktrees/<slug>` on stage 1's branch `<Branch>-s1`, forked from `origin/<Base>`, and
+> `/step3` moves it from stage branch to stage branch; see [`../README-codev.md`](../README-codev.md).
 
 ## Naming
 

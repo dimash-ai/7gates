@@ -47,9 +47,9 @@ bet has shipped yet: the review is the demand board alone.
 
 ## L2 — What reached users
 
-For every `building` hypothesis, find whether its change reached prod: the merged PR into `main`
-from `<branch>-main`, the promotion branch superapp's `CLAUDE.md` prescribes, or else one whose title
-carries the slug.
+For every `building` hypothesis, find whether its change reached prod: the first merged PR into
+`main` from `<branch>-main` (the promotion branch `/step3` 3g cuts; a later promotion of more stages
+is `<branch>-main-2`, and the window starts at the first), or else one whose title carries the slug.
 
 ```bash
 H=$(d=$PWD; while [ "$d" != / ] && [ ! -f "$d/harness/prompts/reviewer.md" ]; do d=$(dirname "$d"); done; [ "$d" != / ] && echo "$d/harness")

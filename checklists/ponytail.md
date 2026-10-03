@@ -31,10 +31,10 @@ caller leaves its siblings broken.
 
 | step | who | how the ladder is applied |
 |------|-----|---------------------------|
-| 1 · brief | both researchers | Prior art is recorded **by rung number**: 2 this codebase, 3 the standard library, 4 the platform, 5 an installed dependency. Prior art that already covers the whole intent goes to the requester as a question, not as a footnote. |
-| 2 · plan | GPT plans, Opus reviews | Every new file, module, dependency or abstraction in the plan names the rung it stopped at and why the earlier rungs did not hold. A new surface with no rung is a Must Fix. |
-| 3 · build | Opus builds, GPT reviews | Opus climbs the ladder before each slice; GPT reviews each slice with the tags in §2. |
-| 3 · release | GPT | Lists the `ponytail:` markers the change adds (§3). |
+| 1 · brief | both drafters | What already exists and covers part of the ask (rungs 2–5: this codebase, the standard library, the platform, an installed dependency) is named, because it is the cheapest stage there is. Prior art that already covers the whole intent goes to the requester as a question, not as a footnote. |
+| 2 · plan | GPT plans, Opus reviews | Every new file, module, dependency or abstraction in the plan names the rung it stopped at and why the earlier rungs did not hold. A new surface with no rung, or a stage whose approach builds far more than its outcome needs, is a Must Fix ([`mvp.md`](mvp.md) §5). |
+| 3 · build | Opus implements | Opus climbs the ladder before each stage. |
+| 3 · review | GPT | Reviews a data or auth stage, and the release to main, with the tags in §2 as follow-ups, and lists the `ponytail:` markers the release adds (§3). |
 
 ## 2 · Over-engineering review — the tags
 

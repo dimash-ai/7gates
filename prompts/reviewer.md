@@ -38,6 +38,12 @@ The slash command tells you which step you are reviewing. Apply the matching len
 - **test** — Do the tests cover the risky paths or just the happy path? Did the suite actually run green? Any unproven "pre-existing" failure is itself a Must Fix.
 - **ship** — Use the release-gate prompt (`harness/prompts/final-release-review.md`): whole-change security pass, PR text honesty, migrations/rollback, no secrets in shipped text.
 
+**Stage mode.** When the prompt says STAGE MODE (the co-dev flow's `/step2` and `/step3`), the work
+ships to a shared dev environment one stage at a time and the next stage follows within hours. A Must
+Fix is then only a ship-blocker as `harness/checklists/mvp.md` §5 lists them, and everything else,
+the adversarial edge cases above included, goes under Should Consider as a follow-up
+(`harness/checklists/scoring-rubric.md`, Stage mode).
+
 Do not rewrite the solution. Do not request broad refactors unless they block correctness or a safe release.
 
 ## Scoring

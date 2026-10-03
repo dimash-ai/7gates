@@ -45,6 +45,24 @@ The four house principles (root `CLAUDE.md`) are scored, not optional:
 - A failing or skipped check counts as "pre-existing" only when proven on the base branch; an unproven "not related to my change" claim is itself a **must-fix**.
 - A secret, credential, or PII that would ship in external text (PR body, handoff, issue) is a **security** issue → caps at **7.9** or lower.
 
+## Stage mode (the co-dev flow)
+
+The co-dev flow ships one stage at a time to dev ([`mvp.md`](mvp.md)). When the prompt says
+**STAGE MODE**, the reviews of `/step2` and `/step3` follow `mvp.md` §5 instead of the severity
+table above:
+
+- A **Must Fix is only a ship-blocker**: a regression, data loss or corruption (an unproven or
+  irreversible migration included), a security issue, a stage that does not do what its row says, a
+  failing CI check or a broken repo rule, unfinished work outside its guard; and, in a plan review,
+  the MVP rules `mvp.md` §5 lists.
+- **Everything else is Should Consider**, one line each, a follow-up the requester decides on:
+  edge cases beyond a demo path, races that need two people on a new screen at once, polish, more
+  tests, naming, the over-engineering tags.
+- **APPROVED exactly when there is no Must Fix**, with a score of 9.0 or higher. The hard caps above
+  still set the score of a ship-blocker of their kind.
+- The evidence rules of Findings discipline hold unchanged: every Must Fix cites `file:line` or the
+  failing command.
+
 ## The gate
 
 ```

@@ -11,10 +11,13 @@
 #   R     the code repo (run inside the harness itself, R is the harness's parent: superapp)
 #   M     the code repo's MAIN checkout, even when run from inside a worktree
 #   S     M/specs/<slug>      every result of the flow (gitignored in superapp)
-#   WT    M/.worktrees/<slug> the one tree steps 2 and 3 research, plan against and build in
+#   WT    M/.worktrees/<slug> the one tree step 2 plans against and step 3 builds in; it moves
+#         from stage branch to stage branch (<Branch>-s1, <Branch>-s2, ...), each cut from
+#         origin/<Base> once the stage before it has merged.
 #         A session that runs in a worktree of its own (R under M/.claude/worktrees/, the Claude
 #         desktop app's default) keeps both in that worktree instead: S=R/specs/<slug>, WT=R.
-#   BR    the brief's Branch: line, BASE its Base: line (empty until the brief header exists)
+#   BR    the brief's Branch: line (the base name of the stage branches), BASE its Base: line
+#         (both empty until the brief header exists)
 # and defines the codev_need_* checks the blocks call before acting.
 
 SLUG="$1"
@@ -47,10 +50,15 @@ codev_need_header() {
   case "$BASE" in ""|"<"*) echo "codev: $S/brief.md has no Base: line" >&2; return 1;; esac
 }
 
-# The worktree must exist and be on the brief's branch, so nothing is built or committed elsewhere.
+# The worktree must exist and be on one of the brief's branches, so nothing is built or committed
+# elsewhere: a stage branch <Branch>-s<N> (or its -fix), or a promotion branch <Branch>-main[-<n>].
+# A plain <Branch> is accepted for a slug planned before stages.
 codev_need_worktree() {
   [ -d "$WT" ] || { echo "codev: no worktree at $WT - /step2 $SLUG creates it (2a)" >&2; return 1; }
-  [ "$(git -C "$WT" branch --show-current)" = "$BR" ] || { echo "codev: $WT is not on $BR" >&2; return 1; }
+  case "$(git -C "$WT" branch --show-current)" in
+    "$BR"|"$BR"-s[0-9]*|"$BR"-main|"$BR"-main-[0-9]*) ;;
+    *) echo "codev: $WT is not on $BR-s<N> or $BR-main (it is on '$(git -C "$WT" branch --show-current)')" >&2; return 1;;
+  esac
 }
 
 # The newest plan verdict must be APPROVED.

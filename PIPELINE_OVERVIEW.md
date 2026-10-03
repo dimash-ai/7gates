@@ -2,7 +2,7 @@
 
 This repository is a **two-agent development pipeline**: every feature is built by one AI coding
 agent and checked by the other — **Opus** (Claude Code) and **GPT** (Codex) — so no model ever
-grades its own work. **One flow is live for our own work**, the 3-step co-dev flow. The others still
+grades its own work. **One flow is live for our own work**, the co-dev flow, which ships in stages. The others still
 run, for the cases named below. This page explains what each is and when to reach for it.
 
 ## The shared foundation
@@ -14,7 +14,9 @@ All of the build flows rest on the same three rules:
 - **The reviewer scores the artifact out of 10 — work advances only at ≥ 9.0.** Below that, the
   reviewer returns cited *Must Fix* items, the doer fixes exactly those (no scope creep), and
   resubmits for a re-score. Scoring is governed by
-  [`harness/checklists/scoring-rubric.md`](checklists/scoring-rubric.md).
+  [`harness/checklists/scoring-rubric.md`](checklists/scoring-rubric.md). In the co-dev flow's
+  **stage mode**, a Must Fix is only a ship-blocker
+  ([`harness/checklists/mvp.md`](checklists/mvp.md) §5); everything else becomes a follow-up.
 - **The reviewer always runs "blind."** GPT reviews in a separate `codex exec` process; Opus reviews
   from a fresh, clean-context subagent. The reviewer never grades an artifact it watched being
   built.
@@ -24,21 +26,22 @@ Simplicity First, Surgical Changes, Goal-Driven Execution.
 
 ---
 
-## 1 · The 3-step co-dev flow — **the default**
+## 1 · The co-dev flow, in stages — **the default**
 
-A request becomes a brief with a hypothesis, the brief is researched and becomes a plan, the plan
-becomes code, and a weekly `/learn` checks every shipped hypothesis against what users did.
+A request becomes a short brief with a hypothesis and an MVP cut, the brief becomes a plan of
+stages, and every stage becomes its own PR into dev, verified on the dev environment before the next
+one starts; a weekly `/learn` checks every shipped hypothesis against what users did.
 
 | Step | Produces | Does | Checks |
 |------|----------|------|--------|
-| **1 — brief** | One document stating the problem and the business task from the user's side: in short, user stories with numbered criteria, who benefits, the business side | **Opus and GPT** draft it independently; Opus merges | **you** |
-| **2 — plan**  | The research merged into that brief, then the complete plan: slices, new surface by ladder rung, architecture, test strategy | **Opus and GPT** research independently, Opus merges; then **GPT** plans, cold | Opus |
-| **3 — build** | The implementation, one slice at a time, then a release pass, the PR and the hypothesis registered in PostHog | **Opus** | GPT |
+| **1 — brief** | One short document: the problem from the user's side, the hypothesis, and the MVP cut (stage 1, the next stages, Not now) | **Opus and GPT** draft it independently; Opus merges | **you** |
+| **2 — plan**  | The stage map (outcome on dev, demo, budget, risk, guard) and every stage's detail | **GPT** plans, cold, from the brief and the code | Opus, blind; then **you** |
+| **3 — build, once per stage** | The stage, implemented with no layers inside, its PR merged into dev and verified there; the release to main when you say; the hypothesis registered in PostHog | **Opus** | CI; **GPT** for data/auth stages and the release to main |
 | **learn — weekly** | A verdict on every shipped hypothesis, and what is in demand | **Opus** measures in PostHog; **Opus and GPT** judge independently | **you** |
 
-Step 1 and the research of step 2 are not scored: two independent drafts, then two independent
-sweeps, buy **coverage**, so each pair merges as a union, and the only judge of an intent is the
-person who has it. Every result lands in the code repo's gitignored
+Step 1 is not scored: two independent drafts buy **coverage**, so they merge as a union into the
+later stages, while stage 1 holds only what the request requires, and the only judge of an intent is
+the person who has it. Every result lands in the code repo's gitignored
 `specs/<slug>/`. [ponytail](https://github.com/DietrichGebert/ponytail)'s ladder and
 over-engineering review run through all three steps from
 [`harness/checklists/ponytail.md`](checklists/ponytail.md). Full detail:
@@ -51,8 +54,8 @@ over-engineering review run through all three steps from
 **Not a build flow, and deliberately not scored.** Two models sweep the codebase independently for
 what a planner needs to know before designing anything (Territory, Prior art, Constraints, Scars,
 Tests, Absences), and the union becomes one dossier, with contradictions and gaps flagged. Reach
-for it on its own for an epic or an open question; for a single task, step 2 of the co-dev flow runs
-the same kind of sweep and merges it into the brief. Command:
+for it for an epic or an open question, before step 1 of the co-dev flow; a single task needs no
+sweep, because the co-dev planner reads the code it plans against. Command:
 [`/gate-explore`](.claude/commands/gate-explore.md).
 
 ---
@@ -85,7 +88,7 @@ The 3-gate and 7-step flows were the ones where GPT, not the builder, wrote the 
 
 ```
 open question or epic, no code yet    →  /gate-explore   (unscored dossier)
-a task of ours                        →  3-step co-dev   DEFAULT: brief / plan / build
+a task of ours                        →  co-dev          DEFAULT: brief / plan / build, in stages
 every week, after things ship         →  /learn          verdicts on the bets, demand board
 a ticket in the feature-dev cycle     →  GPT gates       α before code, γ before ship
 ```

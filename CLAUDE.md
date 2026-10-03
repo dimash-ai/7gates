@@ -4,11 +4,12 @@ House rules for Claude Code in this repository — the always-on quality bar. Th
 review pipeline in `harness/` enforces these same four principles at each gate, where the doer and
 reviewer alternate between Opus and GPT and the reviewer scores against them
 ([`harness/checklists/scoring-rubric.md`](checklists/scoring-rubric.md)). **By default a feature
-runs the 3-step co-dev flow** — brief / plan / build: Opus and GPT each draft the product brief
-(the problem, who it is for, the hypothesis, user stories) and you approve the merge, both research
-it and GPT plans while Opus reviews, Opus builds and GPT reviews, and a weekly `/learn` checks every
-shipped hypothesis against PostHog (see
-[`harness/README-codev.md`](README-codev.md)). Results land in the code repo's `specs/<slug>/`,
+runs the co-dev flow, which ships in stages** — brief / plan / build: Opus and GPT each draft a
+short brief that cuts the MVP and you confirm it, GPT plans every stage while a blind Opus reviews,
+Opus implements one stage at a time, each its own PR into dev, verified on dev, with GPT reviewing
+the stages that touch data or access and the release to main, and a weekly `/learn` checks every
+shipped hypothesis against PostHog (see [`harness/README-codev.md`](README-codev.md); its stage
+rules are [`harness/checklists/mvp.md`](checklists/mvp.md)). Results land in the code repo's `specs/<slug>/`,
 never in this repo. The other flows and when they still apply are in
 [`PIPELINE_OVERVIEW.md`](PIPELINE_OVERVIEW.md). `AGENTS.md` covers Codex's roles.
 
