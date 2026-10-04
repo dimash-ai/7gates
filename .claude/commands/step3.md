@@ -104,15 +104,20 @@ stage map and the board: rebuild `progress.md` from it, and take the plan's deta
   users have today that it touches; the repo's mandatory proofs. A schema change ships its Alembic
   revision with RLS and grants and is proven in the sandbox (superapp's `CLAUDE.md`, the migration
   row for the app: `scripts/migration-sandbox.sh <server-dir> <schema> --keep`, then assert the
-  policies exist over the printed DSN and tear it down). DB-backed behaviour runs the app's real-DB
-  suite against that sandbox (the pytest step of `.github/workflows/ci-<app>.yml` names its DSN
-  variable). Never a shared database. Edge cases beyond the demo path are follow-ups: list them, do
-  not build them.
+  policies exist over the printed DSN and tear it down). DB-backed behaviour is proven by its
+  real-DB tests in a throwaway sandbox, which `scripts/test-affected.sh` starts for them. Never a
+  shared database. Edge cases beyond the demo path are follow-ups: list them, do not build them.
 - A deliberate shortcut with a known ceiling gets a `ponytail:` marker naming the ceiling and the
   trigger to upgrade.
-- **Run the checks** the app's CI job runs for what the stage touched before you commit: lint,
-  format, types, tests; i18n and generated API types when they apply. They are part of implementing
-  the stage, not a step of their own.
+- **Run the checks** before you commit; they are part of implementing the stage, not a step of
+  their own. The static checks of the app's CI job, for what the stage touched: lint, format,
+  types; i18n and generated API types when they apply. And **only the tests the stage affects**:
+  `scripts/test-affected.sh` from the repo root runs the tests that import, are named after or
+  name what changed, the real-DB ones in a throwaway sandbox (`--list` shows what it picks and
+  why; on a branch cut before the script existed, pick those test files yourself). Do not run the
+  full suites locally: CI runs every suite on the stage's PR into dev and again after the merge,
+  and a red CI is fixed on the stage branch (3d). Run a test outside the selection by hand when
+  you know the change reaches it.
 - **Look at it.** When the stage changes a screen, bring the app up locally and walk the demo script
   in a browser, and keep a screenshot for the requester. Timebox this to about fifteen minutes: if
   the local environment fights you, say so and let the dev environment be the first look.
@@ -169,7 +174,7 @@ P="$S/runs/$TAG.prompt.md"
 
 You are GPT Codex, the reviewer for $SLUG, in STAGE MODE. Step: $STEP. Your working directory is the worktree. $TASK
 STAGE MODE: a Must Fix is ONLY a ship-blocker, as section 5 of the MVP lens lists them: a regression in something users have today; data loss or corruption, including a migration that is irreversible or not proven in the sandbox; security (authz, tenant isolation and RLS, secrets, injection); a stage that does not do what its row says (its demo script fails on the happy path, or nothing, test or recorded browser check, shows it passing); CI or a repo rule (read CLAUDE.md and the CLAUDE.md of each app involved: i18next with ru and en, the rule headed AI-track code applied exactly as written, migration rules with RLS, grants and the sandbox proof, no AI attribution); unfinished user-facing work outside its stage's guard. Every Must Fix names its file:line and the concrete failure. EVERYTHING ELSE goes under Should Consider as a follow-up, one line each, and never blocks: edge cases of the new feature beyond a demo path, races that need two people on the new screen at once, polish, more tests, naming, and the over-engineering tags of the lens above. A departure from the plan that the build log does not record is a Must Fix only when it changes what users get or breaks a guard.
-RUN THE CHECKS YOURSELF in this worktree: the jobs of .github/workflows/ci-<app>.yml for each app the diff touches (lint, format, types, tests, i18n, migration drift, generated API types), as far as this sandbox allows, and report the exact command lines and the counts you observed; the build log is a claim to verify, not evidence. A check that cannot run here because it needs a network, a database or credentials (the real-DB suites skip without their test DSN) is neither a pass nor a failure: list it under Should Consider as UNVERIFIED IN SANDBOX with what the build log claims for it, and set Release Risk to at least Medium. A check that rewrites a tracked file and leaves a diff has found drift: a Must Fix. You may run commands, but you must NOT create, edit or delete any file. Do not open, print or quote any .env file or environment variable: the worktree may hold real credentials. Your FINAL message must be the verdict block exactly as the charter specifies (Reviewer: GPT Codex, Step: $STEP) and nothing else. Status is APPROVED exactly when there is no Must Fix.
+RUN THE CHECKS YOURSELF in this worktree, as far as this sandbox allows, and report the exact command lines and the counts you observed; the build log is a claim to verify, not evidence. The checks: the static jobs of .github/workflows/ci-<app>.yml for each app the diff touches (lint, format, types, i18n, migration drift, generated API types), and of the tests only those the diff affects, with 'scripts/test-affected.sh --base $BASEREF --no-db' (its --list says why each runs; in a worktree without it, the test files of the changed modules). Do not run the full suites: the PR's CI runs every suite before the merge. A check that cannot run here because it needs a network, a database or credentials (the real-DB suites skip without their test DSN) is neither a pass nor a failure: list it under Should Consider as UNVERIFIED IN SANDBOX with what the build log claims for it, and set Release Risk to at least Medium. A check that rewrites a tracked file and leaves a diff has found drift: a Must Fix. You may run commands, but you must NOT create, edit or delete any file. Do not open, print or quote any .env file or environment variable: the worktree may hold real credentials. Your FINAL message must be the verdict block exactly as the charter specifies (Reviewer: GPT Codex, Step: $STEP) and nothing else. Status is APPROVED exactly when there is no Must Fix.
 EOF
 } > "$P"
 cd "$WT" && codex exec --sandbox workspace-write -o "$S/reviews/$TAG.md" - < "$P" > "$S/runs/$TAG.log" 2>&1
@@ -234,7 +239,8 @@ if it does not, the body's first line was not read as a reference: fix the body,
 re-evaluates it on save.
 
 Wait for the PR's CI (in the Claude desktop app, bind the PR with its PR tools and read its checks;
-never poll them in a loop). Red CI is fixed on the stage branch like a Must Fix. With CI green, merge
+never poll them in a loop). CI runs every suite, so it is where a breakage outside the local
+selection shows up. Red CI is fixed on the stage branch like a Must Fix. With CI green, merge
 into `<BASE>`: on the requester's word under `Ship: ask`, on your own under `Ship: auto`.
 
 ```bash
