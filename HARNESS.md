@@ -8,7 +8,8 @@ The invariant every flow is built to protect:
 
 > **No model grades its own work.** Not "a different agent" — a different *vendor*. The reviewer
 > always runs blind: a separate `codex exec` process for GPT, a fresh clean-context subagent for
-> Opus, so it never scores an artifact it watched being made.
+> Opus, so it never scores an artifact it watched being made. One exception, for speed: in the
+> co-dev flow Opus checks GPT's plan inline, and the requester's yes on the stages is the last word.
 
 Work advances only at **Score >= 9.0** ([`checklists/scoring-rubric.md`](checklists/scoring-rubric.md)).
 In the co-dev flow's **stage mode**, only ship-blockers are Must Fix items, so a review with none is
@@ -18,7 +19,7 @@ approved and everything else becomes a follow-up ([`checklists/mvp.md`](checklis
 
 | Flow | Status | Gates | Who does / who reviews | Entry |
 |---|---|---|---|---|
-| **[co-dev, in stages](README-codev.md)** | **live — default** | brief · plan · build, once per stage | Opus rephrases the request into a short brief with its MVP, you confirm it; GPT plans every stage → a blind Opus reviews; Opus implements a stage, its PR goes into dev and is verified there; GPT reviews data/auth stages and the release to main; weekly, both judge every shipped hypothesis | `/step1` · `/step2` · `/step3` · `/learn` |
+| **[co-dev, in stages](README-codev.md)** | **live — default** | brief · plan · build, once per stage | Opus rephrases the request into a short brief with its MVP, you confirm it; GPT plans every stage → Opus checks it inline; Opus implements a stage, its PR goes into dev and is verified there; GPT reviews data/auth stages and the release to main; weekly, both judge every shipped hypothesis | `/step1` · `/step2` · `/step3` · `/learn` |
 | **[GPT gates](README-gpt-gates.md)** | live, for feature-dev tickets | 2, spliced into the CTO's feature-dev cycle | Claude `architect → coder → qa` builds; **Codex** scores the plan and runs the release suite | `/gpt-gate-plan` · `/gpt-gate-release` |
 | **[2-gate](README-2gate.md)** | superseded by co-dev | plan · build | GPT plans → Opus reviews; Opus builds → GPT reviews | its commands were rewritten as co-dev's `/step2` and `/step3` |
 | **[3-gate](README-3gate.md)** | removed 2026-09-24 | design · build · verify | Opus does A+B, GPT does C; each scored by the other | commands removed; README kept as the record |
@@ -30,7 +31,7 @@ and rubric are still the ones the live flows call, and their READMEs stay as the
 ## Which one to reach for
 
 - **Default — co-dev, in stages.** Our own tasks: Opus rephrases your request into a short brief
-  with its MVP and you confirm it; GPT plans every stage cold, a blind Opus reviews; Opus implements
+  with its MVP and you confirm it; GPT plans every stage cold, Opus checks it inline; Opus implements
   one stage at a time, each its own PR into dev, verified on dev; GPT reviews the stages that touch
   data or access and, once, the release to main, running the checks itself. Results land in the
   code repo's `specs/<slug>/`.

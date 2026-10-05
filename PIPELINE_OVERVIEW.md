@@ -18,9 +18,10 @@ All of the build flows rest on the same three rules:
   [`harness/checklists/scoring-rubric.md`](checklists/scoring-rubric.md). In the co-dev flow's
   **stage mode**, a Must Fix is only a ship-blocker
   ([`harness/checklists/mvp.md`](checklists/mvp.md) §5); everything else becomes a follow-up.
-- **The reviewer always runs "blind."** GPT reviews in a separate `codex exec` process; Opus reviews
-  from a fresh, clean-context subagent. The reviewer never grades an artifact it watched being
-  built.
+- **The reviewer runs "blind"** (one exception: in the co-dev flow Opus checks GPT's plan inline,
+  for speed, and the requester's yes is the last word). GPT reviews in a separate `codex exec`
+  process; Opus reviews from a fresh, clean-context subagent. The reviewer never grades an artifact
+  it watched being built.
 
 Both roles work to the four house-rule principles in [`CLAUDE.md`](CLAUDE.md) — Think Before Coding,
 Simplicity First, Surgical Changes, Goal-Driven Execution.
@@ -36,7 +37,7 @@ one starts; a weekly `/learn` checks every shipped hypothesis against what users
 | Step | Produces | Does | Checks |
 |------|----------|------|--------|
 | **1 — brief** | One short document: the request rephrased for the planner, with the problem, the user stories, the MVP and Not now | **Opus**, in minutes | **you** |
-| **2 — plan**  | The stage map (outcome on dev, demo, budget, risk, guard) and every stage's detail | **GPT** plans, cold, from the brief and the code | Opus, blind; then **you** |
+| **2 — plan**  | The stage map (outcome on dev, demo, budget, risk, guard) and every stage's detail | **GPT** plans, cold, from the brief and the code | Opus, inline; then **you** |
 | **3 — build, once per stage** | The stage, implemented with no layers inside, its PR merged into dev and verified there; the release to main when you say; the hypothesis registered in PostHog | **Opus** | CI; **GPT** for data/auth stages and the release to main |
 | **learn — weekly** | A verdict on every shipped hypothesis, and what is in demand | **Opus** measures in PostHog; **Opus and GPT** judge independently | **you** |
 

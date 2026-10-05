@@ -5,7 +5,7 @@ MIT, notice in [`PONYTAIL-LICENSE`](PONYTAIL-LICENSE)), adapted to this pipeline
 constitution. The co-dev commands hand **this file** to every step, so a ponytail release cannot
 change what a gate checks between two runs of the same feature. That holds only while the ponytail
 **plugin** stays off during the flow: installed and on, its hooks inject the live ruleset into the
-builder's session, every Claude subagent (the blind plan reviewer included) and trusted Codex
+builder's session, every Claude subagent and trusted Codex
 sessions, and its test rule ("one runnable check, no frameworks, no fixtures") contradicts §4. Run
 the flow with `PONYTAIL_DEFAULT_MODE=off`. To take a newer release: read its changelog, carry what
 changed into this file by hand, bump the pin above.

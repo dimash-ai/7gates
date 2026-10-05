@@ -19,7 +19,7 @@ a review blocks only on ship-blockers; everything else becomes a follow-up you d
 | # | Step | Does | Checks | Result |
 |---|------|------|--------|--------|
 | 1 | brief | **Opus** rephrases your input (your words or a Linear ticket) into a short brief: the problem, the user stories, **the MVP**; minutes, not hours | **you** | `specs/<slug>/brief.md` |
-| 2 | plan  | **GPT** plans every stage, cold, from the brief and the code | Opus, blind; then **you** | `specs/<slug>/plan.md` |
+| 2 | plan  | **GPT** plans every stage, cold, from the brief and the code | Opus, inline; then **you** | `specs/<slug>/plan.md` |
 | 3 | build, once per stage | **Opus** implements the next stage, no layers inside; its own PR into `dev`, verified on dev; registers the hypothesis in PostHog | your checks and CI; **GPT** for a data or auth stage, and once before main | a PR per stage, verified on dev |
 | — | learn, weekly | **Opus** measures every shipped hypothesis in PostHog; **Opus and GPT** judge independently | **you** | verdicts in PostHog |
 
@@ -56,7 +56,7 @@ In Claude Code, from superapp, one of its worktrees, or the harness itself (`sup
 
 ```
 /step1 <slug>    # brief — your request rephrased for step 2, with the MVP; you confirm it
-/step2 <slug>    # plan  — GPT plans every stage; a blind Opus reviews; you confirm
+/step2 <slug>    # plan  — GPT plans every stage; Opus checks it; you confirm
 /step3 <slug>    # build — the next stage: implemented, its PR into dev, verified on dev; once per stage
 /learn           # learn — weekly: checks every shipped hypothesis against what users did
 ```
@@ -72,8 +72,8 @@ cycle. The 3-gate and 7-step commands were removed on 2026-09-24.
 
 ## Prerequisites
 
-- **Claude Code** (Opus) — author of the brief in step 1, blind plan reviewer (a fresh subagent) in
-  step 2, builder in step 3.
+- **Claude Code** (Opus) — author of the brief in step 1, checker of the plan in step 2, builder in
+  step 3.
 - **Codex CLI**, authenticated — GPT runs as `codex exec`: planner in step 2 (read-only), reviewer
   in step 3 of data and auth stages and of the release to main (write-enabled only so it can run the
   checks).

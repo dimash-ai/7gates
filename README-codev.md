@@ -18,7 +18,7 @@ rules that came out of it live in [`checklists/mvp.md`](checklists/mvp.md), whic
 | step | command | does | checks | result in `superapp/specs/<slug>/` |
 |------|---------|------|--------|------------------------------------|
 | 1 · brief | `/step1 <slug>` | Opus rephrases your input (your words or a Linear ticket) into a short brief for step 2: the problem, the user stories, **the MVP**, Not now; about ten minutes, no second model, no code | **you** confirm the brief | `brief.md` |
-| 2 · plan  | `/step2 <slug>` | pins a worktree on stage 1's branch; GPT plans cold from the brief and the code: the **stage map** (outcome on dev, demo, budget, risk, guard) and **every stage's detail** | a blind Opus, against the MVP lens, ship-blockers only, two rounds at most; then **you** confirm the stages and how stages ship | `plan.md`, `reviews/plan-N.md`, `progress.md` |
+| 2 · plan  | `/step2 <slug>` | pins a worktree on stage 1's branch; GPT plans cold from the brief and the code: the **stage map** (outcome on dev, demo, budget, risk, guard) and **every stage's detail** | Opus checks it inline (~5 min) against the MVP lens and fixes small things itself; a wrong stage 1 goes back to GPT once; then **you** confirm the stages and how stages ship | `plan.md`, `reviews/plan-N.md`, `progress.md` |
 | 3 · build | `/step3 <slug>`, once per stage | **pure implementation** of the next stage, no layers inside; its own PR into `dev`, merged, deployed, its demo walked on dev; registers the bet when the signal is measurable | your checks and CI; **GPT** once for a data or auth stage, and once as the release pass before main | one PR per stage into `dev`; `runs/build-sN.txt`, `reviews/stage-N-K.md`, `reviews/release-*.md`; a PR into `main` per release |
 | learn · weekly | `/learn` | measures every registered hypothesis and the demand board in PostHog; Opus and GPT judge independently | **you** confirm the verdicts before anything is written back | `specs/learn-<date>/`; verdicts in the PostHog notebooks |
 
@@ -40,8 +40,8 @@ plans cold from the brief, so a brief that does not stand on its own comes back 
 - **Planning happens in step 2, all of it.** The plan details every stage, so step 3 implements and
   nothing else: no design phase, no builder waves, no internal pre-reviews or fix workflows, even
   with ultracode on. When dev shows the map was wrong, `/step2` re-plans the stages not yet started.
-- **Reviews where they change the outcome.** A blind Opus reviews the plan, the cheapest place to
-  cut. A low-risk stage reaches dev on Opus's checks and CI. A stage that touches data or access gets
+- **Reviews where they change the outcome.** Opus checks GPT's plan inline, in minutes: the plan is
+  the cheapest place to cut, and your yes on the stages is the last word. A low-risk stage reaches dev on Opus's checks and CI. A stage that touches data or access gets
   one GPT review before it merges, and GPT runs the checks itself. Before anything reaches
   production, one GPT release pass reviews every stage being promoted. Every review blocks only on
   ship-blockers (a regression, data, security, a demo that fails, CI or a repo rule, unfinished work
@@ -124,16 +124,18 @@ runs in a worktree of its own, run all the steps in that same session.
 
 ```
 /step1 ALL-646     # brief: your request rephrased for step 2, with the MVP; you confirm it
-/step2 ALL-646     # plan:  GPT plans every stage; a blind Opus reviews; you confirm, and say how stages ship
+/step2 ALL-646     # plan:  GPT plans every stage; Opus checks it; you confirm, and say how stages ship
 /step3 ALL-646     # build: the next stage, its PR into dev, verified on dev; run it again for each stage
 /step3 ALL-646     #        … and again; when you say so, it releases the stages to main (3g)
 /learn             # weekly: checks every shipped bet in PostHog; a scheduled task runs it every Monday
 ```
 
 Every Codex call runs in the background: a plan or a review outlasts the Bash tool's timeout. Each prompt is written to `runs/` first and fed to `codex exec` on stdin, so what Codex
-was asked stays on record.
+was asked stays on record. Every call passes `--enable fast_mode -c service_tier="priority"`, Codex's Fast mode (about twice
+the speed, more usage), so the pace does not depend on `~/.codex/config.toml`, which the Codex desktop
+app rewrites.
 
-**The pace to expect.** Step 1 about ten minutes plus your yes; step 2 about an hour; each stage up to about four hours of build plus about half an hour of fixed cost (CI, deploy,
+**The pace to expect.** Step 1 about ten minutes plus your yes; step 2 about half an hour; each stage up to about four hours of build plus about half an hour of fixed cost (CI, deploy,
 the look on dev). Your answers are the other clock: the flow asks few questions, assumes safe
 defaults, and stops only where it needs you.
 
@@ -162,7 +164,7 @@ delete its branches. In a session with a worktree of its own, delete the session
 |-------|------|-----|
 | 1c | you confirm the brief: the MVP, the stories, Not now, the assumed answers, the branch and the base | the planner works from the brief alone |
 | 2b | GPT returns QUESTIONS that change stage 1 | a stage 1 built around an ambiguity is wrong from its first line; a later stage's ambiguity is planned as an assumption instead |
-| 2c | the plan is BLOCKED a second time: you decide each open Must Fix | two rounds that do not converge mean the stage is cut wrong |
+| 2c | the plan is still BLOCKED after one return to GPT: you decide each open item | a plan that does not converge in one return is cut wrong |
 | 2e | you confirm the stages, and whether stages ship on your word (`Ship: ask`) or on their own (`Ship: auto`) | the last cheap moment to change course |
 | 3a | the plan does not detail the stage, or dev showed it is wrong: back to `/step2` | step 3 implements; it does not design |
 | 3a/3b | a stage passes one and a half times its budget: you choose what ships and what moves on | the timebox is what keeps value arriving every few hours |

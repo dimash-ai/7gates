@@ -77,7 +77,7 @@ Code on a branch, an approved review or a green CI is not a delivered stage.
 
 ## 5 · Reviews block only on ship-blockers
 
-The flow has three reviews, each by the other model: the **plan** (step 2, a blind Opus), a stage
+The flow has three reviews, each by the other model: the **plan** (step 2, Opus inline), a stage
 whose risk is **data** or **auth** (step 3, GPT, before its merge into dev), and the **release to
 main** (step 3, GPT, once over all the stages being promoted). A low-risk stage reaches dev on the
 builder's checks and CI alone. Every review returns a **Must Fix only for a ship-blocker**:

@@ -94,7 +94,7 @@ Then read the demand data: what people use most, what they use less than before,
 Never claim a significance the numbers cannot carry; with about a hundred weekly users, say so. Your FINAL message must be the review in Markdown, one section per hypothesis and one for demand, and nothing else.
 EOF
 } > "$P"
-cd "$R" && codex exec --sandbox read-only -o "$S/verdict-codex.md" - < "$P" > "$S/runs/learn-codex.log" 2>&1
+cd "$R" && codex exec --enable fast_mode -c service_tier="priority" --sandbox read-only -o "$S/verdict-codex.md" - < "$P" > "$S/runs/learn-codex.log" 2>&1
 echo "codex exit=$?  verdict bytes=$(wc -c < "$S/verdict-codex.md" 2>/dev/null || echo 0)"
 ```
 

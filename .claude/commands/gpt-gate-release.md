@@ -50,7 +50,7 @@ H=$(d=$PWD; while [ "$d" != / ] && [ ! -f "$d/harness/prompts/reviewer.md" ]; do
 R=$(cd "${2:-$(git rev-parse --show-toplevel)}" && pwd) || exit 1
 [ -f "$R/prompts/reviewer.md" ] && R=$(dirname "$R")   # ran inside the harness -> the code repo is its parent
 mkdir -p $H/reviews/$1 $H/runs
-codex exec --sandbox workspace-write "$(cat $H/prompts/final-release-review.md)
+codex exec --enable fast_mode -c service_tier="priority" --sandbox workspace-write "$(cat $H/prompts/final-release-review.md)
 $(cat $H/checklists/release-gate.md)
 $(cat $H/checklists/scoring-rubric.md)
 You are GPT Codex performing the FINAL release gate for $1, built by Claude Code in $R. Work in $R. You are a REVIEWER: you may run commands, but you may NOT fix, refactor, or edit any source file, test, or config — if something is broken, report it, do not repair it. The one exception is the review hygiene below.

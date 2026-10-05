@@ -14,8 +14,8 @@ written to a file by `-o`; results land in the code repo's `specs/<slug>/`, neve
 - **Step 2, plan — Codex is the doer.** Read-only, it plans cold from the brief and the code: the
   stage map and every stage's detail, so step 3 only implements, and returns the plan as its final
   message. If the brief is ambiguous in a way that would change stage 1, it returns QUESTIONS; an
-  ambiguity that only touches a later stage is planned as an UNVERIFIED assumption. Opus reviews it
-  from a fresh, clean-context subagent, in stage mode.
+  ambiguity that only touches a later stage is planned as an UNVERIFIED assumption. Opus checks it
+  inline, in stage mode, and may send it back once with the reason.
 - **Step 3, build — Codex reviews where it changes the outcome.** Opus implements each stage with no
   review layers inside it. Codex reviews a stage whose risk is data or auth before it merges into
   dev (`Step: build`), and every release to main once (`Step: ship`), write-enabled for one reason

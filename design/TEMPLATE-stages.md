@@ -5,7 +5,7 @@ Base: <the brief's Base>
 Planned at: <the sha the plan was written against>
 
 <!-- Step 2 of the co-dev flow (/step2): the stage map and every stage's detail, so that step 3 is
-     implementation only. GPT writes it cold from the brief and the code; a blind Opus reviews it
+     implementation only. GPT writes it cold from the brief and the code; Opus checks it inline
      against harness/checklists/mvp.md. Under about 300 lines: stage 1's detail is the fullest, a
      later stage's detail is short, because the code will have moved by the time it is built and its
      builder records any departure. Re-planning (/step2 again, after the map changes) rewrites only

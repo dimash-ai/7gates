@@ -1,24 +1,24 @@
 ---
-description: "Step 2 (plan): GPT plans the stages from the brief and the code, every stage in detail so step 3 only implements; a blind Opus reviews it against the MVP lens; you confirm the stages"
+description: "Step 2 (plan): GPT plans the stages from the brief and the code, every stage in detail so step 3 only implements; Opus checks it inline against the MVP lens; you confirm the stages"
 argument-hint: <slug> [repo-path]
 ---
 
-# Step 2 — the stage plan  ·  GPT plans · a blind Opus reviews · you confirm
+# Step 2 — the stage plan  ·  GPT plans · Opus checks · you confirm
 
 The second step of the **co-dev flow** (`harness/README-codev.md`). It turns the brief the requester
 confirmed in step 1 into **the stage plan**: the **stage map** (every stage, one row: what users get
 on dev, its demo script, budget, risk, guard) and **every stage's detail**, stage 1's the fullest.
 All the planning happens here, so that step 3 is implementation and nothing else. **GPT plans, cold,
-from the brief and the code**; a blind Opus scores the plan against `<H>/checklists/mvp.md`; the
-requester confirms the stages. When the map changes later (dev showed something, the requester
+from the brief and the code**; Opus checks the plan inline against `<H>/checklists/mvp.md` and fixes
+small things itself; the requester confirms the stages. When the map changes later (dev showed something, the requester
 re-orders or adds), this step runs again and re-plans only the stages not yet started.
 
 There is no separate research phase: the planner reads the code it plans against, cites it as
-`file:line`, and the reviewer checks the citations. For an epic with large unknowns, run
+`file:line`, and Opus checks the citations. For an epic with large unknowns, run
 `/gate-explore` before step 1, not here.
 
-**Timebox: about an hour** to the stop: GPT's run, one review, at most one revision. The plan is
-under about 300 lines.
+**Timebox: about half an hour** to the stop: GPT's run (about fifteen minutes), Opus's check (about
+five), and at most one return to GPT. The plan is under about 300 lines.
 
 `$1` is the slug from step 1; `$2` is the code repo, optional. Every bash block sources
 `harness/bin/codev-env.sh`, which prints `codev: slug=… results=<S> worktree=<WT> …`; in the prose,
@@ -29,7 +29,7 @@ a markdown link whose target is the file's path relative to the session's workin
 `[plan.md](specs/$1/plan.md)`; never a bare path in backticks.
 
 **Speed rule.** If ultracode or a high effort is on, do not spend it here on extra planners, extra
-reviewers, research sweeps or longer documents (`mvp.md` §6). One planner, one blind reviewer.
+reviewers, research sweeps or longer documents (`mvp.md` §6). One planner, one inline check.
 
 ## Before you start — where this slug stands
 
@@ -40,7 +40,7 @@ codev_need_header || exit 1
 if [ -d "$WT" ]; then echo "worktree: on $(git -C "$WT" branch --show-current)"; else echo "worktree: not yet - start at 2a"; fi
 [ -s "$S/plan.md" ] && echo "plan: $(wc -l < "$S/plan.md") lines" || echo "plan: not yet"
 [ -s "$S/progress.md" ] && grep -E '^\| [0-9]+ ' "$S/progress.md"
-ls "$S/reviews" 2>/dev/null | grep '^plan-' || echo "no plan reviews yet: the next review is round 1"
+ls "$S/reviews" 2>/dev/null | grep '^plan-' || echo "no plan check yet"
 ```
 
 No brief header means step 1 is not finished. **A re-plan** (a plan exists and some stages are
@@ -110,7 +110,7 @@ The superapp rules the plan carries wherever they apply: the rule headed AI-trac
 For anything version-sensitive the brief does not settle, name the pinned version you read from the lockfile and mark it UNVERIFIED. Do not open or quote any .env file. IF the brief is ambiguous in a way that would change STAGE 1, do not plan around it: make your final message a section titled QUESTIONS listing each ambiguity, with the answer you would assume, and nothing else; an ambiguity that only touches a later stage goes into that stage's detail as an assumption marked UNVERIFIED. You are read-only and must NEVER edit any file. Your FINAL message must be the complete plan in Markdown, or the QUESTIONS section, and nothing else.
 EOF
 } > "$P"
-cd "$WT" && codex exec --sandbox read-only -o "$S/plan.new.md" - < "$P" > "$S/runs/plan-codex.log" 2>&1
+cd "$WT" && codex exec --enable fast_mode -c service_tier="priority" --sandbox read-only -o "$S/plan.new.md" - < "$P" > "$S/runs/plan-codex.log" 2>&1
 if [ -s "$S/plan.new.md" ]; then
   [ -f "$S/plan.md" ] && mv "$S/plan.md" "$S/plan.prev.md"
   mv "$S/plan.new.md" "$S/plan.md" && echo "plan written: $(wc -l < "$S/plan.md") lines"
@@ -125,50 +125,45 @@ fi
 - **If the plan is a QUESTIONS section**, ask the requester in one round, following `mvp.md` §4,
   put the answers into the brief, and re-run 2b. That is the brief failing, not the plan.
 
-## 2c — A blind Opus reviews
+## 2c — Opus checks the plan, inline
 
-**Reviewer = Opus, fresh context.** Do **not** review inline: you wrote the brief. Spawn a
-clean-context reviewer with the **Agent tool** (`subagent_type: "claude"`, `model: "opus"`), passing
-this prompt with the literal paths written in:
+**Checker = Opus (you), in this session**, about five minutes. GPT wrote the plan, so no model grades
+its own work; the check is not blind (you wrote the brief), which is the price of speed, and the
+requester's yes at 2e is the last word. Read `<S>/plan.md` against `<H>/checklists/mvp.md` §5 and
+the code in `<WT>`, with file reads, grep and git only (no `uv`, `pnpm` or installs: they stall in a
+fresh worktree). Look for the plan ship-blockers and nothing else:
 
-> You are Opus, the blind reviewer for the PLAN step of `$1`, in STAGE MODE. GPT Codex wrote this
-> plan; you did not, and you did not take part in the conversation behind the brief. Read, in this
-> order: `<H>/prompts/reviewer.md` (your charter and verdict format), `<H>/checklists/scoring-rubric.md`
-> (its Stage mode section governs this review), `<H>/checklists/mvp.md` (the stage rules; its §5 lists
-> the only grounds for a Must Fix), `<H>/checklists/ponytail.md`, the brief `<S>/brief.md`, the plan
-> `<S>/plan.md`, then `<WT>/CLAUDE.md`, the CLAUDE.md of the app involved, and the code stage 1
-> cites, in `<WT>`. **From round 2:** also read `<S>/plan.prev.md` and the previous verdict
-> `<S>/reviews/plan-<N-1>.md`; check that each Must Fix was fixed and nothing else changed.
-> Review stage 1 in depth and every later stage for ship-blockers only.
-> **Must Fix only for a plan ship-blocker:** stage 1 is not the smallest increment a user would
-> recognise (say what is smaller); a stage that is not user-visible on dev and is not a two-hour
-> foundation the next stage uses; a stage over about four hours; a stage with no guard or no demo
-> script; a literal ask of the request that no stage delivers and the requester did not defer;
-> a stage's approach is wrong against the code (verify the `file:line` citations in `<WT>`, all of
-> stage 1's and those later stages rest on), would break something users have today, or breaks a repo
-> rule (the AI-track rule as written, a migration
-> without RLS, grants and the sandbox proof, strings outside i18next, checks that do not match
-> `.github/workflows/ci-<app>.yml`); a migration, backfill or new contract placed ahead of the stage
-> that first needs it; a version-sensitive claim that is wrong (check the lockfiles, and the docs for
-> that version through Context7 or WebSearch); on a re-plan, any change to a stage that already
-> started. **Everything else** (edge cases beyond a stage's demo path, wording, nicer architectures,
-> more tests) goes under Should Consider, one line each: it never blocks. Verify with file reads, grep and git only:
-> no `uv`, `pnpm` or installs, which stall in a fresh worktree; find an Alembic head by grepping
-> `^revision` / `^down_revision`. You are read-only. Output only the verdict block (Reviewer: Opus,
-> Step: plan). Status is APPROVED exactly when there is no Must Fix.
+1. **Stage 1** is the brief's MVP or smaller, and something a user would recognise.
+2. **Every stage** is user-visible on dev (or a two-hour foundation the next stage uses), at most
+   about four hours, with a guard and a demo script; a migration, a backfill or a new contract sits in
+   the stage that first needs it, not ahead of it.
+3. **Every literal ask** of the brief is in some stage, or in Not now with the requester's yes.
+4. **Stage 1's approach is right against the code**: spot-check its `file:line` citations; nothing
+   breaks what users have today; no stage builds far more than its outcome needs.
+5. **Repo rules**: migrations with RLS, grants and the sandbox proof; strings through i18next; the
+   AI-track rule where it applies; checks that match `.github/workflows/ci-<app>.yml`; versions as
+   the lockfiles pin them. On a re-plan, no change to a stage that already started.
 
-Save **only the verdict block**, from the `# Review Verdict` line to the end, to
-`<S>/reviews/plan-<N>.md`, where `<N>` is this round (on a re-plan, the numbering continues). Then:
+**Small problems you fix yourself in `<S>/plan.md`**: a missing guard or demo, a stage to split or
+merge, a citation, a misplaced migration. **A wrong approach for stage 1, or a map that needs
+re-cutting, goes back to GPT once** (2d). Edge cases, wording, nicer designs and more tests are not
+blockers: list them as follow-ups.
+
+Then write the verdict to `<S>/reviews/plan-<N>.md` (`<N>` counts on from the last one), short, in
+the charter's format (`<H>/prompts/reviewer.md`, Reviewer: Opus, Step: plan, stage mode):
+`Status: APPROVED` when nothing blocks after your fixes, with every fix you made listed under Reason;
+`Status: BLOCKED` when it goes back to GPT, with the reason under Must Fix. Step 3 starts only on an
+APPROVED verdict.
 
 - **APPROVED**: go to 2e.
-- **BLOCKED the first time**: run the revision (2d), then review again with a fresh subagent.
-- **BLOCKED the second time**: STOP. Take the open Must Fix items to the requester, each with the options:
-  fix the plan, accept it as a follow-up, or change the stage. Two rounds that do not converge mean
-  the stage is cut wrong, not that the plan needs a third pass.
+- **BLOCKED**: run 2d, then check again.
+- **BLOCKED after 2d**: STOP. Take the open items to the requester, each with the options: fix the
+  plan, accept it as a follow-up, or change the stage. A plan that does not converge in one return is
+  cut wrong.
 
-## 2d — Revision (only on BLOCKED)
+## 2d — Back to GPT (only on BLOCKED)
 
-GPT revises its own plan against the latest verdict, fixing only the cited Must Fix items. Replace
+GPT revises its own plan against your verdict, fixing only the cited Must Fix items. Replace
 `<N>` with the number of that verdict:
 
 ```bash
@@ -184,10 +179,10 @@ P="$S/runs/plan-revision.prompt.md"
   printf '\n\nTHE REVIEWER VERDICT:\n\n'; cat "$V"
   cat <<EOF
 
-You are GPT Codex, the doer for the PLAN step of $SLUG, in STAGE MODE, revising your own plan after review. Your working directory is the code repo. Fix ONLY the Must Fix items in the verdict, checking each against the code; change nothing else, and do not act on Should Consider items. If a Must Fix is wrong, keep the plan as it is on that point and say why, with evidence, in one line under a heading REVIEWER DISAGREEMENTS at the end of the plan. Keep the plan under about 300 lines. Do not open or quote any .env file. You are read-only and must NEVER edit any file. Your FINAL message must be the complete revised plan in Markdown and nothing else.
+You are GPT Codex, the doer for the PLAN step of $SLUG, in STAGE MODE, revising your own plan after Opus's check. Your working directory is the code repo. Fix ONLY the Must Fix items in the verdict, checking each against the code; change nothing else, and do not act on Should Consider items. If a Must Fix is wrong, keep the plan as it is on that point and say why, with evidence, in one line under a heading REVIEWER DISAGREEMENTS at the end of the plan. Keep the plan under about 300 lines. Do not open or quote any .env file. You are read-only and must NEVER edit any file. Your FINAL message must be the complete revised plan in Markdown and nothing else.
 EOF
 } > "$P"
-cd "$WT" && codex exec --sandbox read-only -o "$S/plan.new.md" - < "$P" > "$S/runs/plan-revision.log" 2>&1
+cd "$WT" && codex exec --enable fast_mode -c service_tier="priority" --sandbox read-only -o "$S/plan.new.md" - < "$P" > "$S/runs/plan-revision.log" 2>&1
 if [ -s "$S/plan.new.md" ]; then
   mv "$S/plan.md" "$S/plan.prev.md" && mv "$S/plan.new.md" "$S/plan.md" && echo "revised plan written; the scored one is plan.prev.md"
 else
@@ -199,11 +194,11 @@ fi
 
 Create `<S>/progress.md` from `<H>/briefs/PROGRESS.md` (on a re-plan, update it) from the stage map:
 one row per stage with its budget, stages already under way keeping their status, and the review's
-Should Consider items under Follow-ups. Then **STOP** and show in the chat:
+follow-ups from 2c under Follow-ups. Then **STOP** and show in the chat:
 
 - the **stage map** as a table, with stage 1 first and the hours to its arrival on dev;
 - stage 1 in three lines: what users get, how to see it on dev, what it leaves to later stages;
-- the follow-ups the review raised, one line each;
+- the fixes you made and the follow-ups you found, one line each;
 - a link to `<S>/plan.md` and to the verdict (see **Links**).
 
 Ask in one round (AskUserQuestion):
@@ -217,6 +212,6 @@ Their yes ends step 2. Next: `/step3 $1`, once per stage.
 
 **When the brief or the map changes later**, nothing that shipped is redone and nothing restarts:
 put the change into the brief (the stages, Questions and answers), then run `/step2 $1` again. It
-re-plans only the stages not yet started (2b's re-plan), one blind review checks the result, and the
-stop shows the new map. A one-line change to a single not-yet-started stage (a budget, an order) can
+re-plans only the stages not yet started (2b's re-plan), you check the result (2c), and the stop shows
+the new map. A one-line change to a single not-yet-started stage (a budget, an order) can
 be edited into the map and the board directly, without a run.
