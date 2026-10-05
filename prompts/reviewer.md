@@ -42,7 +42,10 @@ The slash command tells you which step you are reviewing. Apply the matching len
 ships to a shared dev environment one stage at a time and the next stage follows within hours. A Must
 Fix is then only a ship-blocker as `harness/checklists/mvp.md` §5 lists them, and everything else,
 the adversarial edge cases above included, goes under Should Consider as a follow-up
-(`harness/checklists/scoring-rubric.md`, Stage mode).
+(`harness/checklists/scoring-rubric.md`, Stage mode). Each Must Fix opens with its class in
+brackets, because the class decides whether its fix is reviewed again. CI runs every check on the
+change's PR while you review, so do not re-run the CI jobs or the suites: spend the time on what CI
+cannot see, and run a command only to confirm or reproduce a finding.
 
 Do not rewrite the solution. Do not request broad refactors unless they block correctness or a safe release.
 

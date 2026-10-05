@@ -22,14 +22,16 @@ Planned at: <the sha the plan was written against>
      budget: hours of build, at most about four.
      risk: low (no schema change, no auth or tenant surface, no deletes), data (a migration, a
      backfill, deletes or rewrites of existing records), auth (authz, tokens, RLS, sharing). A data
-     or auth stage gets one GPT review before it merges into dev; a low one ships on the builder's
-     checks and CI.
+     or auth stage gets one GPT review on its open PR, while CI runs, before it merges into dev; a
+     low one ships on the builder's checks and CI.
      guard: how the stage stays safe on the shared dev environment until users are switched over:
      additive (nothing users have today changes), a hidden route, or a dev-only flag.
      demo: three to five steps a person follows on the dev environment to see the stage work; for a
      screen that also lives inside another app (Focal inside SURA) or on phones, the demo covers
      that place and that width too.
-     covers: the brief's criterion ids. -->
+     covers: the brief's criterion ids.
+     In the quick lane (mvp.md §9) the map has one row, risk low, a budget of at most about two
+     hours, and Opus writes the plan. -->
 
 | # | what users get on dev | demo on dev | budget | risk | guard | covers |
 |---|-----------------------|-------------|--------|------|-------|--------|

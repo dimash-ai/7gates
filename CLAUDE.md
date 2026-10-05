@@ -5,10 +5,11 @@ review pipeline in `harness/` enforces these same four principles at each gate, 
 reviewer alternate between Opus and GPT and the reviewer scores against them
 ([`harness/checklists/scoring-rubric.md`](checklists/scoring-rubric.md)). **By default a feature
 runs the co-dev flow, which ships in stages** — brief / plan / build: Opus rephrases your request
-into a short brief with its MVP and you confirm it, GPT plans every stage and Opus checks it,
-Opus implements one stage at a time, each its own PR into dev, verified on dev, with GPT reviewing
-the stages that touch data or access and the release to main, and a weekly `/learn` checks every
-shipped hypothesis against PostHog (see [`harness/README-codev.md`](README-codev.md); its stage
+into a short brief with its MVP, GPT plans every stage and Opus checks it, you confirm both at one
+stop, Opus implements one stage at a time, each its own PR into dev, verified on dev, with GPT
+reviewing the stages that touch data or access and a release to main that carries one, and a
+weekly `/learn` checks every shipped hypothesis against PostHog (see
+[`harness/README-codev.md`](README-codev.md); its stage
 rules are [`harness/checklists/mvp.md`](checklists/mvp.md)). Results land in the code repo's
 `specs/<slug>/`, never in this repo. The other flows and when they still apply are in
 [`PIPELINE_OVERVIEW.md`](PIPELINE_OVERVIEW.md). `AGENTS.md` covers Codex's roles.

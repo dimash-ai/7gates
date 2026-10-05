@@ -15,20 +15,26 @@ written to a file by `-o`; results land in the code repo's `specs/<slug>/`, neve
   stage map and every stage's detail, so step 3 only implements, and returns the plan as its final
   message. If the brief is ambiguous in a way that would change stage 1, it returns QUESTIONS; an
   ambiguity that only touches a later stage is planned as an UNVERIFIED assumption. Opus checks it
-  inline, in stage mode, and may send it back once with the reason.
+  inline, in stage mode, and may send it back once with the reason. In the quick lane (one low-risk
+  stage of about two hours) Codex does not plan: Opus does, and the requester's yes is the check.
 - **Step 3, build — Codex reviews where it changes the outcome.** Opus implements each stage with no
-  review layers inside it. Codex reviews a stage whose risk is data or auth before it merges into
-  dev (`Step: build`), and every release to main once (`Step: ship`), write-enabled for one reason
-  only, to **run the checks itself** and report the counts it observed. It never creates, edits or
-  deletes a file. In stage mode a Must Fix is only a ship-blocker (`harness/checklists/mvp.md` §5);
-  the over-engineering lens in `harness/checklists/ponytail.md` produces follow-ups.
+  review layers inside it. Codex reviews a stage whose risk is data or auth on its open PR, while CI
+  runs, before it merges into dev (`Step: build`), and a release to main that carries such a stage,
+  or a resolved cherry-pick, once (`Step: ship`). CI runs the checks, so Codex does not re-run them;
+  it may run one targeted command to reproduce a finding, the only reason its sandbox can write, and
+  it never creates, edits or deletes a file. In stage mode a Must Fix is only a ship-blocker
+  (`harness/checklists/mvp.md` §5), opened by its class, and a BLOCK is fixed and goes on, with one
+  re-review only for a security or data item; the over-engineering lens in
+  `harness/checklists/ponytail.md` produces follow-ups.
 - **Learn, weekly — Codex judges.** Read-only, from the data file Opus measured in PostHog and
   nothing else: no queries, no repo. A verdict per shipped hypothesis (validated, invalidated or
   inconclusive; on track, off track or too early inside its window), each with the number and the
   count of people it rests on, then a read of what is in demand. Independent of Opus's verdict; the
   requester decides. Not scored, so no verdict block.
 
-The doer fixes only the reviewer's cited Must Fix items on a BLOCK, then resubmits. Full flow:
+The doer fixes only the reviewer's cited Must Fix items on a BLOCK, then resubmits; in the co-dev
+flow's stage mode the fix goes on with CI as its proof, re-reviewed only for a security or data
+item. Full flow:
 `harness/README-codev.md`. The other flows, and Codex's roles in them, are in each flow's
 `harness/README-*.md`; `PIPELINE_OVERVIEW.md` says when each still applies.
 

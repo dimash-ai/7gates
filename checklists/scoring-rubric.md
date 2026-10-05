@@ -61,7 +61,14 @@ table above:
 - **APPROVED exactly when there is no Must Fix**, with a score of 9.0 or higher. The hard caps above
   still set the score of a ship-blocker of their kind.
 - The evidence rules of Findings discipline hold unchanged: every Must Fix cites `file:line` or the
-  failing command.
+  failing command. It also opens with its class in brackets, `[regression]`, `[data]`,
+  `[security]`, `[broken]`, `[ci-rule]` or `[unsafe-on-dev]` (`[mvp]` in a plan review), and says
+  what input or sequence leads to what wrong result.
+- **A BLOCK is fixed and goes on** (`mvp.md` §5): the doer fixes the cited items, and green CI on
+  the fix is the proof. There is no re-score, except for a `[security]` or `[data]` item, whose fix
+  gets one re-review. The BLOCKED verdict and its score stay on record.
+- CI runs the checks on the change's PR while the review runs, so a stage-mode review does not
+  re-run them and reports no pass or fail counts of its own.
 
 ## The gate
 
@@ -70,4 +77,5 @@ The doer produces the step's artifact.
 The reviewer (the other model) scores it.
 Score >= 9.0  → APPROVED → proceed.
 Score <  9.0  → BLOCKED  → the doer fixes the Must Fix items and resubmits for re-score.
+Stage mode: a BLOCK is fixed and goes on; only a [security] or [data] item is re-scored.
 ```

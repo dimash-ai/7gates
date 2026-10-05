@@ -13,13 +13,23 @@ the screens the ticket asked for on dev before it was handed off; 20 review Must
 which would have blocked a dev deploy of an MVP; and about 40 requests for a progress bar. The
 rules that came out of it live in [`checklists/mvp.md`](checklists/mvp.md), which every step reads.
 
+**Since 2026-10-05.** A measurement of the last seven runs showed where the time went. In the flow
+before stages, 56% of the wall-clock was waiting on the requester; in the stage flow, a 41-line
+change took 87 minutes, 17 of them in hand-offs between the steps and 9 in a release pass that
+found nothing. Of 141 BLOCKED verdicts scored 8.0–8.9, about 16 held a real ship-blocker, and since
+2026-09-25 the re-reviews that cleared the rest cost about 275 minutes. The 9.0 threshold stays;
+what changed is what follows a verdict, and where the waits were. The steps now chain on their own
+around one stop before code; a small, low-risk change takes a quick lane without GPT; a BLOCK is
+fixed and goes on with CI as its proof; and GPT reviews in parallel with CI, only where data or
+auth is at stake.
+
 ## The three steps
 
 | step | command | does | checks | result in `superapp/specs/<slug>/` |
 |------|---------|------|--------|------------------------------------|
-| 1 · brief | `/step1 <slug>` | Opus rephrases your input (your words or a Linear ticket) into a short brief for step 2: the problem, the user stories, **the MVP**, Not now; about ten minutes, no second model, no code | **you** confirm the brief | `brief.md` |
-| 2 · plan  | `/step2 <slug>` | pins a worktree on stage 1's branch; GPT plans cold from the brief and the code: the **stage map** (outcome on dev, demo, budget, risk, guard) and **every stage's detail** | Opus checks it inline (~5 min) against the MVP lens and fixes small things itself; a wrong stage 1 goes back to GPT once; then **you** confirm the stages and how stages ship | `plan.md`, `reviews/plan-N.md`, `progress.md` |
-| 3 · build | `/step3 <slug>`, once per stage | **pure implementation** of the next stage, no layers inside; its own PR into `dev`, merged, deployed, its demo walked on dev; registers the bet when the signal is measurable | your checks and CI; **GPT** once for a data or auth stage, and once as the release pass before main | one PR per stage into `dev`; `runs/build-sN.txt`, `reviews/stage-N-K.md`, `reviews/release-*.md`; a PR into `main` per release |
+| 1 · brief | `/step1 <slug>` | Opus rephrases your input (your words or a Linear ticket) into a short brief for step 2: the problem, the user stories, **the MVP**, Not now; about ten minutes, no second model, no code | no stop unless it must ask; **you** see the brief with the plan at step 2's stop | `brief.md` |
+| 2 · plan  | `/step2 <slug>` | pins a worktree on stage 1's branch; GPT plans cold from the brief and the code (Opus, in the quick lane): the **stage map** (outcome on dev, demo, budget, risk, guard) and **every stage's detail** | Opus checks it inline (~5 min) against the MVP lens and fixes small things itself; a wrong stage 1 goes back to GPT once; then **you** confirm the brief and the stages in one stop, and how stages ship; your yes starts step 3 | `plan.md`, `reviews/plan-N.md`, `progress.md` |
+| 3 · build | starts by itself after your yes; `/step3 <slug>` resumes | **pure implementation** of the next stage, no layers inside; its own PR into `dev`, merged, deployed, its demo walked on dev; registers the bet when the signal is measurable | your checks and CI; **GPT** once for a data or auth stage, on its open PR while CI runs, and once as the release pass when a release carries one; a BLOCK is fixed and goes on | one PR per stage into `dev`; `runs/build-sN.txt`, `reviews/stage-N-K.md`, `reviews/release-*.md`; a PR into `main` per release |
 | learn · weekly | `/learn` | measures every registered hypothesis and the demand board in PostHog; Opus and GPT judge independently | **you** confirm the verdicts before anything is written back | `specs/learn-<date>/`; verdicts in the PostHog notebooks |
 
 The invariant is the pipeline's own: **no model grades its own work.** Opus scores GPT's plan; GPT
@@ -41,11 +51,20 @@ plans cold from the brief, so a brief that does not stand on its own comes back 
   nothing else: no design phase, no builder waves, no internal pre-reviews or fix workflows, even
   with ultracode on. When dev shows the map was wrong, `/step2` re-plans the stages not yet started.
 - **Reviews where they change the outcome.** Opus checks GPT's plan inline, in minutes: the plan is
-  the cheapest place to cut, and your yes on the stages is the last word. A low-risk stage reaches dev on Opus's checks and CI. A stage that touches data or access gets
-  one GPT review before it merges, and GPT runs the checks itself. Before anything reaches
-  production, one GPT release pass reviews every stage being promoted. Every review blocks only on
+  the cheapest place to cut, and your yes on the brief and the stages is the last word. A low-risk
+  stage reaches dev on Opus's checks and CI. A stage that touches data or access gets one GPT review
+  on its open PR, while CI runs; a release to main that carries such a stage gets one GPT release
+  pass the same way, and a release of low-risk stages goes on CI and your merge. CI runs the checks,
+  so GPT does not repeat them: it looks for what CI cannot see. Every review blocks only on
   ship-blockers (a regression, data, security, a demo that fails, CI or a repo rule, unfinished work
-  outside its guard); everything else is a follow-up you decide on.
+  outside its guard); everything else is a follow-up you decide on. A BLOCK is fixed and goes on
+  with CI as its proof; only a security or data finding gets its fix reviewed again.
+- **Two lanes.** A request that is one low-risk stage of about two hours takes the quick lane: Opus
+  plans it alone, and no GPT plan or review runs. Everything else takes the stages lane
+  ([`checklists/mvp.md`](checklists/mvp.md) §9).
+- **One stop before code.** Step 1 goes straight on into step 2 unless it must ask; you see the
+  brief and the plan together at step 2's stop, your yes starts step 3, and each verified stage
+  starts the next. Nobody waits for a command to be typed.
 - **Safe on a shared dev.** PM and QA use dev. Every stage names its guard (additive only, a hidden
   route, a dev-only flag) until the stage that switches users over, and migrations stay additive.
 - **Progress means stages on dev.** `progress.md` counts stages verified on dev, not pipeline steps,
@@ -63,9 +82,9 @@ superapp/specs/<slug>/          gitignored: stays on this machine
   brief.md                      1 · the request rephrased: problem, user stories, MVP, Not now, its words verbatim
   progress.md                   2-3 · the progress board: one row per stage, printed by every step
   plan.md, plan.prev.md         2 · GPT's stage plan, and the version the last review scored
-  reviews/plan-N.md             2 · Opus verdicts
+  reviews/plan-N.md             2 · Opus verdicts; in the quick lane, the requester's recorded yes
   reviews/stage-N-K.md          3 · GPT's review of a data or auth stage N, round K
-  reviews/release-main.md       3 · GPT's release pass before a promotion to main (release-main-2 …)
+  reviews/release-main.md       3 · GPT's release pass, when the promotion carries a data or auth stage
   runs/build-sN.txt             3 · stage N's build log: commands, real counts, deviations, hours
   runs/                         every Codex prompt as sent, every Codex log
   pr-sN.md, pr-main.md          3 · the PR bodies
@@ -123,10 +142,11 @@ From `superapp`, one of its worktrees, or the harness itself (`superapp/harness`
 runs in a worktree of its own, run all the steps in that same session.
 
 ```
-/step1 ALL-646     # brief: your request rephrased for step 2, with the MVP; you confirm it
-/step2 ALL-646     # plan:  GPT plans every stage; Opus checks it; you confirm, and say how stages ship
-/step3 ALL-646     # build: the next stage, its PR into dev, verified on dev; run it again for each stage
-/step3 ALL-646     #        … and again; when you say so, it releases the stages to main (3g)
+/step1 ALL-646     # brief: your request rephrased, with the MVP; goes straight on unless it must ask
+                   # plan:  GPT plans every stage (Opus alone in the quick lane); ONE stop: you confirm
+                   #        the brief and the stages, and say how stages ship
+                   # build: your yes starts step 3, stage after stage, each verified on dev
+/step3 ALL-646     # resume a run; when you say so, it releases the stages to main (3g)
 /learn             # weekly: checks every shipped bet in PostHog; a scheduled task runs it every Monday
 ```
 
@@ -135,9 +155,10 @@ was asked stays on record. Every call passes `--enable fast_mode -c service_tier
 the speed, more usage), so the pace does not depend on `~/.codex/config.toml`, which the Codex desktop
 app rewrites.
 
-**The pace to expect.** Step 1 about ten minutes plus your yes; step 2 about half an hour; each stage up to about four hours of build plus about half an hour of fixed cost (CI, deploy,
-the look on dev). Your answers are the other clock: the flow asks few questions, assumes safe
-defaults, and stops only where it needs you.
+**The pace to expect.** Step 1 about ten minutes; step 2 about half an hour (about ten minutes in
+the quick lane) to the one stop and your yes; each stage up to about four hours of build plus about
+half an hour of fixed cost (CI, deploy, the look on dev). Your answers are the other clock: the flow
+asks few questions, assumes safe defaults, and stops only where it needs you.
 
 Set up once:
 
@@ -162,30 +183,31 @@ delete its branches. In a session with a worktree of its own, delete the session
 
 | where | stop | why |
 |-------|------|-----|
-| 1c | you confirm the brief: the MVP, the stories, Not now, the assumed answers, the branch and the base | the planner works from the brief alone |
+| 1c | a question that changes the MVP and has no safe default; with none, no stop | everything else is assumed and shown at 2e |
 | 2b | GPT returns QUESTIONS that change stage 1 | a stage 1 built around an ambiguity is wrong from its first line; a later stage's ambiguity is planned as an assumption instead |
 | 2c | the plan is still BLOCKED after one return to GPT: you decide each open item | a plan that does not converge in one return is cut wrong |
-| 2e | you confirm the stages, and whether stages ship on your word (`Ship: ask`) or on their own (`Ship: auto`) | the last cheap moment to change course |
+| 2e | the one stop before code: you confirm the brief and the stages, and whether stages ship on your word (`Ship: ask`) or on their own (`Ship: auto`) | the last cheap moment to change course |
 | 3a | the plan does not detail the stage, or dev showed it is wrong: back to `/step2` | step 3 implements; it does not design |
-| 3a/3b | a stage passes one and a half times its budget: you choose what ships and what moves on | the timebox is what keeps value arriving every few hours |
-| 3c | a data or auth stage is BLOCKED a second time: you choose fix, hide behind the guard, or cut | a finding that keeps coming back is a cutting problem |
-| 3d | `Ship: ask`: you look at the stage and say "ship" before its PR opens and merges | you see what goes to the shared dev environment |
+| 3a/3b | a stage passes one and a half times its budget, or a quick stage needs more than its lane allows: you choose what ships and what moves on | the timebox is what keeps value arriving every few hours |
+| 3c | `Ship: ask`: you look at the stage and say "ship" before its PR opens | you see what goes to the shared dev environment |
+| 3d | a fix that leaves CI red, or a security or data fix whose re-review blocks again: you choose fix, hide behind the guard, or cut; a review with no verdict in twenty minutes: re-run it or merge on CI | a finding that keeps coming back is a cutting problem |
 | 3e | a step of the demo writes to shared dev data: you say yes first | dev is shared with PM and QA |
-| 3g | you decide when stages go to main, and the release pass must approve | production is your call; the release is reviewed as a whole |
+| 3g | you decide when stages go to main; a release that carries a data or auth stage waits for its release pass | production is your call |
 
 ## What this flow does not give you
 
-- **An independent test author.** Opus writes the tests. GPT re-runs them on data and auth stages
-  and on the release to main, but never writes one. Where a wrong test is as dangerous as wrong code
-  (migrations, auth and tenant isolation, money), those stages are exactly the ones GPT reviews;
-  raise anything more with the requester before the stage.
+- **An independent test author.** Opus writes the tests. GPT reads them on data and auth stages
+  and on a release that carries one, and runs one only to reproduce a finding; it never writes one.
+  Where a wrong test is as dangerous as wrong code (migrations, auth and tenant isolation, money),
+  those stages are exactly the ones GPT reviews; raise anything more with the requester before the
+  stage.
 - **A cross-model review of every stage.** A low-risk stage reaches dev on Opus's checks, CI and the
-  look on dev; GPT sees it first in the release pass before main. That is deliberate: dev is the
+  look on dev; GPT sees it only in a release that carries a data or auth stage, and in the quick lane
+  no second model sees the change at all. That is deliberate: dev is the
   place where such a stage is checked by being used.
-- **A second run of the real-DB suites.** GPT's sandbox has no database and no network, so those
-  suites skip there. Opus runs them against the migration sandbox and logs the output; GPT's review
-  lists them as UNVERIFIED IN SANDBOX and raises the Release Risk. CI then runs them against its own
-  Postgres.
+- **A second run of the suites.** GPT does not re-run them. Opus runs the affected tests before the
+  push, the real-DB ones against the migration sandbox, and CI runs every suite on the PR, the
+  real-DB ones against its own Postgres.
 - **A guard around `.env`.** If you copy a `.env` into the worktree to run the app, GPT's reviews run
   where it is. GPT is told never to open it; that is an instruction, not a sandbox rule. The checks
   do not need a `.env`, so keep it out when you can.

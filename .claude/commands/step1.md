@@ -1,9 +1,9 @@
 ---
-description: "Step 1 (brief): your request — your words or a Linear ticket — rephrased in minutes into a short brief for step 2: the problem, the user stories, the MVP"
+description: "Step 1 (brief): your request — your words or a Linear ticket — rephrased in minutes into a short brief for step 2: the problem, the user stories, the MVP; goes straight on into step 2 unless it must ask"
 argument-hint: <slug> [repo-path]
 ---
 
-# Step 1 — brief  ·  Opus rephrases · you confirm
+# Step 1 — brief  ·  Opus rephrases · straight on to step 2
 
 The first step of the **co-dev flow** (`harness/README-codev.md`). It takes what the requester gives
 (their words, a problem, a Linear ticket, a screenshot, a design) and **rephrases it into a short
@@ -11,10 +11,12 @@ brief**: the prompt step 2 plans from. What we want to do, which problem it solv
 stories, and the **MVP**: the least a user must see on dev to say "this is it". Step 2 turns the
 brief into stages; step 3 ships them.
 
-**Fast by design: about ten minutes to the stop.** Opus alone, from the input alone: no second model,
-no research, no reading of the code, no subagents, no plan, no branch. The brief stays under about
-80 lines. If ultracode or a high effort is on, do not spend it here. GPT reads the brief cold in
-step 2, so an ambiguity this step misses comes back there as a question.
+**Fast by design: about ten minutes, and no stop unless it must ask.** Opus alone, from the input
+alone: no second model, no research, no reading of the code, no subagents, no plan, no branch. The
+brief stays under about 80 lines. If ultracode or a high effort is on, do not spend it here. In the
+stages lane GPT reads the brief cold in step 2, so an ambiguity this step misses comes back there as
+a question. The requester sees the brief together with the plan at step 2's stop, the flow's one
+stop before any code (`<H>/checklists/mvp.md` §4).
 
 `$1` is the slug: the Linear id when there is an issue (`ALL-646`), otherwise a short kebab-case
 name. `$2` is the code repo, optional. If the arguments carry anything else (a URL, a path, the
@@ -44,8 +46,8 @@ mkdir -p "$S" && echo "brief: $S/brief.md   harness: $(git -C "$H" rev-parse --s
 ## 1b — Rephrase it into the brief
 
 Write `<S>/brief.md` from `<H>/briefs/TEMPLATE.md`: the header (`Linear:`, `Deadline:`, `Date:`,
-`Harness:` from the block, and `Branch:` and `Base:` as proposed defaults) and its sections, each one
-short.
+`Harness:` from the block, `Branch:` and `Base:` as proposed defaults, and `Lane:`) and its
+sections, each one short.
 
 - **In short is the heart of it**: the request as the prompt the requester meant to write, for a
   reader who never saw the conversation.
@@ -56,14 +58,22 @@ short.
 - **Product terms only**: screens, flows, the words users see; never modules, endpoints or tables.
 - **Nobody better off**: if no user gains anything, say so. That is rung 1 of
   `<H>/checklists/ponytail.md`, and the requester decides whether to build it.
+- **The lane** (`<H>/checklists/mvp.md` §9), in the header as `Lane:`: `quick` when the request
+  reads as one stage of at most about two hours with low risk (no schema change or backfill, no
+  auth, tenant or RLS surface, no deletes or rewrites of existing records); otherwise, or when
+  unsure, `stages`. It is a guess from the input; step 2 checks it against the code.
 
-## 1c — The yes
+## 1c — Ask only what you must, then go straight on
 
-**STOP.** Show in the chat: In short, the MVP, the user stories with their criteria, Not now, the
-assumptions, and Branch and Base; link the brief. Ask **at most three questions**, and only those
-whose answer changes the MVP and has no safe default (`mvp.md` §4: one decision each, the smallest
-option first with what it costs, "Later" always offered). Everything with a safe default is already
-in the brief as `(assumed)`, and the requester's yes accepts it.
+Show in the chat, briefly: In short, the MVP, Not now, the assumptions, the lane, Branch and Base;
+link the brief.
 
-Their corrections go into the brief, their answers under Assumptions and questions with the date.
-Their yes ends step 1. Next: `/step2 $1`.
+**Stop only for a question** whose answer changes the MVP and has no safe default: at most three
+(`mvp.md` §4: one decision each, the smallest option first with what it costs, "Later" always
+offered). Everything with a safe default is already in the brief as `(assumed)`; the requester
+sees it with the plan at step 2's stop and can correct it there. Answers go under Assumptions and
+questions with the date.
+
+With nothing to ask, or once it is answered, **go straight on to step 2**: invoke `/step2 $1`
+yourself with the Skill tool, the slug as its only argument (never the requester's words or a URL).
+Do not wait for the requester to type it.

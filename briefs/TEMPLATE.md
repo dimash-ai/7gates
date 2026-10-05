@@ -5,6 +5,7 @@ Base: dev
 Linear: <ALL-id — url, or none>
 Deadline: <the milestone's target date or a promised date, or none>
 Ship: <set in step 2: ask or auto>
+Lane: <quick or stages: set in step 1, checked in step 2 (harness/checklists/mvp.md §9)>
 Harness: <the harness commit step 1 ran on>
 Date: YYYY-MM-DD
 

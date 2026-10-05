@@ -1,24 +1,28 @@
 ---
-description: "Step 2 (plan): GPT plans the stages from the brief and the code, every stage in detail so step 3 only implements; Opus checks it inline against the MVP lens; you confirm the stages"
+description: "Step 2 (plan): GPT plans the stages from the brief and the code (Opus alone in the quick lane), every stage in detail so step 3 only implements; Opus checks it inline; one stop where you confirm the brief and the stages, then step 3 starts"
 argument-hint: <slug> [repo-path]
 ---
 
 # Step 2 — the stage plan  ·  GPT plans · Opus checks · you confirm
 
-The second step of the **co-dev flow** (`harness/README-codev.md`). It turns the brief the requester
-confirmed in step 1 into **the stage plan**: the **stage map** (every stage, one row: what users get
-on dev, its demo script, budget, risk, guard) and **every stage's detail**, stage 1's the fullest.
-All the planning happens here, so that step 3 is implementation and nothing else. **GPT plans, cold,
-from the brief and the code**; Opus checks the plan inline against `<H>/checklists/mvp.md` and fixes
-small things itself; the requester confirms the stages. When the map changes later (dev showed something, the requester
-re-orders or adds), this step runs again and re-plans only the stages not yet started.
+The second step of the **co-dev flow** (`harness/README-codev.md`). It turns the brief from step 1
+into **the stage plan**: the **stage map** (every stage, one row: what users get on dev, its demo
+script, budget, risk, guard) and **every stage's detail**, stage 1's the fullest. All the planning
+happens here, so that step 3 is implementation and nothing else. **GPT plans, cold, from the brief
+and the code**; Opus checks the plan inline against `<H>/checklists/mvp.md` and fixes small things
+itself. In the **quick lane** (the brief's `Lane: quick`, `mvp.md` §9) Opus plans the one stage
+itself (2q), and 2b to 2d do not run. Step 2 ends at the flow's **one stop before code** (2e): the
+requester confirms the brief and the stages together, and their yes starts step 3 at once. When the
+map changes later (dev showed something, the requester re-orders or adds), this step runs again and
+re-plans only the stages not yet started.
 
 There is no separate research phase: the planner reads the code it plans against, cites it as
 `file:line`, and Opus checks the citations. For an epic with large unknowns, run
 `/gate-explore` before step 1, not here.
 
 **Timebox: about half an hour** to the stop: GPT's run (about fifteen minutes), Opus's check (about
-five), and at most one return to GPT. The plan is under about 300 lines.
+five), and at most one return to GPT; about ten minutes in the quick lane. The plan is under about
+300 lines.
 
 `$1` is the slug from step 1; `$2` is the code repo, optional. Every bash block sources
 `harness/bin/codev-env.sh`, which prints `codev: slug=… results=<S> worktree=<WT> …`; in the prose,
@@ -77,6 +81,19 @@ else
 fi
 echo "planning at: $(git -C "$WT" rev-parse --short HEAD) $(git -C "$WT" log -1 --format=%cs) on $(git -C "$WT" branch --show-current)"
 ```
+
+## 2q — Quick lane: Opus plans the one stage
+
+Only when the brief says `Lane: quick`; then 2b to 2d do not run. Read the code the request touches
+in `<WT>` (file reads, grep and git only), then write `<S>/plan.md` from
+`<H>/design/TEMPLATE-stages.md` with one stage: its row on the map (what users get on dev, the demo,
+a budget of at most about two hours, risk `low`, the guard) and its detail (the approach with the
+`file:line` it builds on, the files, the tests), under about 60 lines.
+
+If the code shows the stage is not quick (a migration or a backfill, an auth, tenant or RLS surface,
+deletes or rewrites of existing records, more than one stage, or more than about two hours), it
+leaves the lane: set `Lane: stages` in the brief, say why in one line, and run 2b. The plan is not
+graded by a model, because you wrote it: the requester's yes at 2e is its check. Go to 2e.
 
 ## 2b — GPT plans, cold and read-only
 
@@ -190,25 +207,43 @@ else
 fi
 ```
 
-## 2e — The stop: the requester confirms the stages
+## 2e — The one stop: the requester confirms the brief and the stages
 
-Create `<S>/progress.md` from `<H>/briefs/PROGRESS.md` (on a re-plan, update it) from the stage map:
-one row per stage with its budget, stages already under way keeping their status, and the review's
-follow-ups from 2c under Follow-ups. Then **STOP** and show in the chat:
+This is the flow's **one stop before code** (`mvp.md` §4). Create `<S>/progress.md` from
+`<H>/briefs/PROGRESS.md` (on a re-plan, update it) from the stage map: one row per stage with its
+budget, stages already under way keeping their status, and the review's follow-ups from 2c under
+Follow-ups. Then **STOP** and show in the chat:
 
+- **the brief in short**, since step 1 went on without stopping: In short, the MVP, Not now, the
+  lane, and the assumptions taken as defaults, with a link to `<S>/brief.md`;
 - the **stage map** as a table, with stage 1 first and the hours to its arrival on dev;
 - stage 1 in three lines: what users get, how to see it on dev, what it leaves to later stages;
 - the fixes you made and the follow-ups you found, one line each;
-- a link to `<S>/plan.md` and to the verdict (see **Links**).
+- a link to `<S>/plan.md` and to the verdict (see **Links**); the quick lane has none.
 
 Ask in one round (AskUserQuestion):
 
-1. **The stages**: confirm, re-order, cut or merge them. The smallest change is the default.
-2. **Shipping**: when a stage's review and CI are green, (a) show me the stage, then I say "ship"
-   and you open and merge its PR into dev (Recommended), or (b) open and merge it on your own, and
-   show me on dev. Record the answer as `Ship: ask` or `Ship: auto` in the brief's header.
+1. **The brief and the stages**: confirm, correct the brief, or re-order, cut or merge stages. The
+   smallest change is the default.
+2. **Shipping**: (a) show me each stage, then I say "ship", and you open its PR and merge it once
+   CI (and, for a data or auth stage, its review) is green (Recommended), or (b) open and merge it
+   on your own, and show me on dev. Record the answer as `Ship: ask` or `Ship: auto` in the brief's
+   header.
 
-Their yes ends step 2. Next: `/step3 $1`, once per stage.
+Corrections go into the brief and the plan; one that changes stage 1 re-runs 2b (2q in the quick
+lane) before step 3 starts. In the quick lane, record the requester's yes as the plan's approval,
+which step 3 checks before it builds:
+
+```bash
+H=$(d=$PWD; while [ "$d" != / ] && [ ! -f "$d/harness/prompts/reviewer.md" ]; do d=$(dirname "$d"); done; [ "$d" != / ] && echo "$d/harness")
+. "${H:?no harness/ at or above this directory}/bin/codev-env.sh" "$1" "$2" || exit 1
+codev_need_header || exit 1
+mkdir -p "$S/reviews"; V="$S/reviews/plan-$(( $(ls "$S"/reviews/plan-*.md 2>/dev/null | wc -l) + 1 )).md"
+printf '# Plan approval\n\nReviewer: the requester (quick lane: Opus wrote this plan, so no model graded it)\nStep: plan\nStatus: APPROVED\n\n## Reason\n%s: the requester confirmed the brief and the one-stage plan at the stop.\n' "$(date '+%Y-%m-%d %H:%M')" > "$V" && echo "recorded: $V"
+```
+
+Their yes ends step 2: **start step 3 at once** by invoking `/step3 $1` yourself with the Skill
+tool, the slug as its only argument. Do not wait for the requester to type it.
 
 **When the brief or the map changes later**, nothing that shipped is redone and nothing restarts:
 put the change into the brief (the stages, Questions and answers), then run `/step2 $1` again. It

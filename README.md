@@ -55,9 +55,10 @@ All work — by humans or agents — holds to four principles (full text in [`CL
 In Claude Code, from superapp, one of its worktrees, or the harness itself (`superapp/harness`):
 
 ```
-/step1 <slug>    # brief — your request rephrased for step 2, with the MVP; you confirm it
-/step2 <slug>    # plan  — GPT plans every stage; Opus checks it; you confirm
-/step3 <slug>    # build — the next stage: implemented, its PR into dev, verified on dev; once per stage
+/step1 <slug>    # brief — your request rephrased, with the MVP; no stop unless it must ask
+                 # plan  — GPT plans the stages (Opus alone in the quick lane); ONE stop: brief + stages
+                 # build — then stage after stage: implemented, its PR into dev, verified on dev
+/step3 <slug>    # resume a run, or release the stages to main when you say so
 /learn           # learn — weekly: checks every shipped hypothesis against what users did
 ```
 
@@ -75,8 +76,8 @@ cycle. The 3-gate and 7-step commands were removed on 2026-09-24.
 - **Claude Code** (Opus) — author of the brief in step 1, checker of the plan in step 2, builder in
   step 3.
 - **Codex CLI**, authenticated — GPT runs as `codex exec`: planner in step 2 (read-only), reviewer
-  in step 3 of data and auth stages and of the release to main (write-enabled only so it can run the
-  checks).
+  in step 3 of data and auth stages and of a release to main that carries one (write-enabled only so
+  it can reproduce a finding; CI runs the checks).
 - **Git ≥ 2.31** and **`gh`** — step 2 pins a worktree of the code repo, step 3 builds each stage in
   it and opens its PR.
 - **Make** — `make verify` is the umbrella verification gate for code repos that use it. The

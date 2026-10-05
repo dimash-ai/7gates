@@ -55,7 +55,8 @@ Code on a branch, an approved review or a green CI is not a delivered stage.
   screen, an endpoint) is the cheapest stage there is.
 - **Not now is a list of follow-up tickets**, one line each, never a silent drop.
 - **Fast, then checked.** Step 1 is one model rephrasing in minutes; the second model reads the
-  brief cold in step 2, so a brief that does not stand on its own comes back as questions there.
+  brief cold in step 2, so a brief that does not stand on its own comes back as questions there. In
+  the quick lane (§9) no second model reads it: the requester's yes at the one stop is the check.
 
 ## 4 · Questions
 
@@ -74,24 +75,34 @@ Code on a branch, an approved review or a green CI is not a delivered stage.
   request, a cost the requester must accept. In the run above, 17 of 25 answers were the recommended
   default, and waiting for them, overnight twice, took longer than all the agent work of steps 1
   and 2 together.
+- **One stop before any code.** Step 1 stops on its own only for a question that cannot be
+  assumed; otherwise it goes straight on into step 2, and the requester sees the brief and the plan
+  together at step 2's stop. Their yes there starts step 3 at once, and a verified stage starts the
+  next one: nobody waits for a command to be typed. The requester can stop the run, or re-order or
+  cut stages, at any time.
 
 ## 5 · Reviews block only on ship-blockers
 
-The flow has three reviews, each by the other model: the **plan** (step 2, Opus inline), a stage
-whose risk is **data** or **auth** (step 3, GPT, before its merge into dev), and the **release to
-main** (step 3, GPT, once over all the stages being promoted). A low-risk stage reaches dev on the
-builder's checks and CI alone. Every review returns a **Must Fix only for a ship-blocker**:
+The flow has three reviews, each by the other model: the **plan** (step 2, Opus inline; in the
+quick lane, §9, the requester's yes instead), a stage whose risk is **data** or **auth** (step 3,
+GPT, on its open PR while CI runs, before the merge into dev), and the **release to main** when it
+carries a data or auth stage or a cherry-pick that had to be resolved (step 3, GPT, once, while the
+main PR's CI runs). A low-risk stage reaches dev, and a release of low-risk stages reaches main, on
+the builder's checks, CI and the requester's merge. CI is the evidence for every mechanical check,
+so a review does not re-run it: it looks for what CI cannot see. Every review returns a **Must Fix
+only for a ship-blocker**, opened by its class in brackets:
 
-1. **Regression**: something users have today breaks, or changes without the plan saying so.
-2. **Data**: loss or corruption, including a migration that is not reversible or not proven in the
-   sandbox.
-3. **Security**: authz, tenant isolation and RLS, secrets, injection.
-4. **It does not do what it says**: a stage's demo script fails on the happy path (a crash, a 500,
-   the wrong thing on screen), or nothing, neither a test nor a recorded browser check, shows it
-   passing.
-5. **CI or a repo rule**: a check of `ci-<app>.yml` would fail, or a rule of the repo's `CLAUDE.md`
-   is broken (i18n ru and en, the AI-track markup, migration rules, no AI attribution).
-6. **Unsafe on dev**: unfinished user-facing work outside the stage's guard.
+1. **Regression** `[regression]`: something users have today breaks, or changes without the plan
+   saying so.
+2. **Data** `[data]`: loss or corruption, including a migration that is not reversible or not
+   proven in the sandbox.
+3. **Security** `[security]`: authz, tenant isolation and RLS, secrets, injection.
+4. **It does not do what it says** `[broken]`: a stage's demo script fails on the happy path (a
+   crash, a 500, the wrong thing on screen), or nothing, neither a test nor a recorded browser
+   check, shows it passing.
+5. **CI or a repo rule** `[ci-rule]`: a check of `ci-<app>.yml` would fail, or a rule of the repo's
+   `CLAUDE.md` is broken (i18n ru and en, the AI-track markup, migration rules, no AI attribution).
+6. **Unsafe on dev** `[unsafe-on-dev]`: unfinished user-facing work outside the stage's guard.
 
 The plan review adds the MVP rules as blockers, because a plan is the cheapest place to cut: stage
 1 is not the smallest visible increment; a stage that is neither user-visible nor covered by the
@@ -105,9 +116,15 @@ the slice that blocked every board.
 **Everything else is a follow-up**, never a block: edge cases of the new feature, races that need
 two people on the new screen at once, polish, more tests, naming, simplifications. It goes under
 Should Consider, onto the progress board, and the requester decides when, or whether, it is built.
-**One fix round.** A second BLOCK goes to the requester: fix now, hide behind the guard, or cut.
 With no ship-blocker, the verdict is APPROVED and its score is 9.0 or higher, whatever Should
 Consider holds (`scoring-rubric.md`, Stage mode).
+
+**Fix and go, one round.** A BLOCK does not buy a second review by default. The builder fixes the
+cited Must Fix items on the stage's branch, shows each fix with a test or a check where one can show
+it, and pushes; green CI on the fix is the proof, and the stage merges without another GPT run. Only
+a `[security]` or `[data]` item gets one re-review of its fix, because those are the findings a
+wrong fix turns into an incident. CI still red after the fix round, or a re-review that blocks
+again, goes to the requester: fix now, hide behind the guard, or cut.
 
 ## 6 · Weight
 
@@ -130,8 +147,8 @@ Consider holds (`scoring-rubric.md`, Stage mode).
 
 ## 7 · The progress board
 
-`<S>/progress.md` holds one row per stage: its outcome, its status (planned → building → review →
-PR → on dev → verified), its budget and the time spent, the PR, when it reached dev, and its
+`<S>/progress.md` holds one row per stage: its outcome, its status (planned → building → PR → review
+→ on dev → verified), its budget and the time spent, the PR, when it reached dev, and its
 follow-ups. Every step updates it and prints it, and a "status?" is answered from it. Each stage
 PR's body carries the board too, so GitHub keeps the record if the session's files are lost.
 
@@ -143,3 +160,17 @@ through its branch, its title or a closing word (`fixes`, `closes`, `resolves`, 
 `implements` and their forms) merges, whatever the base; `part of`, `refs` and `towards` link without
 closing ([Linear docs](https://linear.app/docs/github)). Only the PR the requester calls final
 carries `Closes <id>`: by the team's convention, the promotion to main that finishes the feature.
+
+## 9 · Two lanes
+
+Step 1 picks the lane from the request, step 2 checks it against the code, and the requester sees
+it at the one stop (§4) and can switch it.
+
+- **Quick**: one stage of at most about two hours of build, with low risk: no schema change or
+  backfill, no auth, tenant or RLS surface, no deletes or rewrites of existing records. Opus plans
+  the stage itself in step 2, from the code; there is no GPT plan, no plan check and no GPT review,
+  in step 3 or at the release. The requester's yes is the check of the plan; the builder's checks,
+  CI and the demo on dev are the checks of the build. A quick stage that turns out to need more (a
+  migration, an auth change, a second stage, over three hours of build) leaves the lane: stop, tell
+  the requester, and re-plan it with `/step2` in the stages lane.
+- **Stages**: everything else, as the rest of this file describes.

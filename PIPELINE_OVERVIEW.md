@@ -17,7 +17,8 @@ All of the build flows rest on the same three rules:
   resubmits for a re-score. Scoring is governed by
   [`harness/checklists/scoring-rubric.md`](checklists/scoring-rubric.md). In the co-dev flow's
   **stage mode**, a Must Fix is only a ship-blocker
-  ([`harness/checklists/mvp.md`](checklists/mvp.md) §5); everything else becomes a follow-up.
+  ([`harness/checklists/mvp.md`](checklists/mvp.md) §5), everything else becomes a follow-up, and
+  a BLOCK is fixed and goes on with CI as its proof, re-scored only for a security or data item.
 - **The reviewer runs "blind"** (one exception: in the co-dev flow Opus checks GPT's plan inline,
   for speed, and the requester's yes is the last word). GPT reviews in a separate `codex exec`
   process; Opus reviews from a fresh, clean-context subagent. The reviewer never grades an artifact
@@ -36,9 +37,9 @@ one starts; a weekly `/learn` checks every shipped hypothesis against what users
 
 | Step | Produces | Does | Checks |
 |------|----------|------|--------|
-| **1 — brief** | One short document: the request rephrased for the planner, with the problem, the user stories, the MVP and Not now | **Opus**, in minutes | **you** |
-| **2 — plan**  | The stage map (outcome on dev, demo, budget, risk, guard) and every stage's detail | **GPT** plans, cold, from the brief and the code | Opus, inline; then **you** |
-| **3 — build, once per stage** | The stage, implemented with no layers inside, its PR merged into dev and verified there; the release to main when you say; the hypothesis registered in PostHog | **Opus** | CI; **GPT** for data/auth stages and the release to main |
+| **1 — brief** | One short document: the request rephrased for the planner, with the problem, the user stories, the MVP and Not now | **Opus**, in minutes | **you**, at step 2's one stop |
+| **2 — plan**  | The stage map (outcome on dev, demo, budget, risk, guard) and every stage's detail | **GPT** plans, cold, from the brief and the code (**Opus** alone in the quick lane) | Opus, inline; then **you**, brief and plan in one stop |
+| **3 — build, once per stage** | The stage, implemented with no layers inside, its PR merged into dev and verified there; the release to main when you say; the hypothesis registered in PostHog | **Opus** | CI; **GPT** for data/auth stages and a release that carries one |
 | **learn — weekly** | A verdict on every shipped hypothesis, and what is in demand | **Opus** measures in PostHog; **Opus and GPT** judge independently | **you** |
 
 Step 1 is not scored: the only judge of an intent is the person who has it. GPT's independent

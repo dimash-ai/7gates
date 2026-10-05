@@ -15,7 +15,8 @@ On dev: <bar> <N> of <M> stages verified on dev
 |---|-----------------------|--------|--------|-------|----|--------|----------|
 | 1 |                       | planned | 4 h   | 0 h   | —  | —      | —        |
 
-<!-- status: planned → building → review → PR → on dev → verified, or cut / moved to <stage>.
+<!-- status: planned → building → PR → review (a data or auth stage) → on dev → verified, or cut /
+     moved to <stage>.
      spent: build and fix time, not waiting time. on dev: when the deploy finished. verified: when
      the demo script passed on the dev environment, and who looked. -->
 
