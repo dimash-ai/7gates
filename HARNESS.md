@@ -20,7 +20,7 @@ for a security or data item ([`checklists/mvp.md`](checklists/mvp.md) §5).
 
 | Flow | Status | Gates | Who does / who reviews | Entry |
 |---|---|---|---|---|
-| **[co-dev, in stages](README-codev.md)** | **live — default** | brief · plan · build, once per stage | Opus rephrases the request into a short brief with its MVP; GPT plans every stage → Opus checks it inline; you confirm both at one stop; Opus implements a stage with no checks while building, you test stage 1 by hand locally, the checks run once before the push, every stage's PR goes into dev on green CI and PM tests it there; GPT reviews data/auth stages and a release that carries one; weekly, both judge every shipped hypothesis | `/step1` · `/step2` · `/step3` · `/learn` |
+| **[co-dev, in stages](README-codev.md)** | **live — default** | brief · design · plan · build, once per stage | Opus rephrases the request into a short brief with its MVP and draws it as a hi-fi HTML prototype; you confirm the design locally, the one stop before code; GPT plans every stage against it → Opus checks it inline; Opus implements a stage with no checks while building, the checks run once before the push, every stage's PR is merged into dev on green CI without asking and PM tests it there; GPT reviews data/auth stages and a release that carries one; weekly, both judge every shipped hypothesis | `/step1` · `/design` · `/step2` · `/step3` · `/learn` |
 | **[GPT gates](README-gpt-gates.md)** | live, for feature-dev tickets | 2, spliced into the CTO's feature-dev cycle | Claude `architect → coder → qa` builds; **Codex** scores the plan and runs the release suite | `/gpt-gate-plan` · `/gpt-gate-release` |
 | **[2-gate](README-2gate.md)** | superseded by co-dev | plan · build | GPT plans → Opus reviews; Opus builds → GPT reviews | its commands were rewritten as co-dev's `/step2` and `/step3` |
 | **[3-gate](README-3gate.md)** | removed 2026-09-24 | design · build · verify | Opus does A+B, GPT does C; each scored by the other | commands removed; README kept as the record |
@@ -32,12 +32,13 @@ and rubric are still the ones the live flows call, and their READMEs stay as the
 ## Which one to reach for
 
 - **Default — co-dev, in stages.** Our own tasks: Opus rephrases your request into a short brief
-  with its MVP; GPT plans every stage cold and Opus checks it inline (in the quick lane, for one
-  small low-risk stage, Opus plans it alone); you confirm both at one stop; Opus implements one stage
-  at a time, checked once right before the push, each its own PR into dev on green CI (you test
-  stage 1 by hand locally first; PM tests every stage on dev); GPT reviews the stages that touch data or
-  access, on their open PR while CI runs, and a release to main that carries one. Results land in
-  the code repo's `specs/<slug>/`.
+  with its MVP and draws it as a hi-fi HTML prototype that you confirm locally, the one stop before
+  code (a task with nothing users see skips the design and stops at the plan instead); GPT plans
+  every stage cold against the design and Opus checks it inline (in the quick lane, for one small
+  low-risk stage, Opus plans it alone); Opus implements one stage at a time, as drawn, checked once
+  right before the push, each its own PR merged into dev on green CI without asking (PM tests every
+  stage on dev); GPT reviews the stages that touch data or access, on their open PR while CI runs,
+  and a release to main that carries one. Results land in the code repo's `specs/<slug>/`.
 - **A ticket that runs through the CTO's feature-dev cycle** (Linear ticket → spec → architect →
   coder → qa → review session → ship) — the GPT gates, which bolt Codex onto it at the only two
   places where a second vendor changes the outcome: **before any code exists**, and **when the

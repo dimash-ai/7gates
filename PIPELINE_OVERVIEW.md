@@ -31,14 +31,16 @@ Simplicity First, Surgical Changes, Goal-Driven Execution.
 
 ## 1 · The co-dev flow, in stages — **the default**
 
-A request becomes a short brief with a hypothesis and its MVP, the brief becomes a plan of
-stages, and every stage becomes its own PR into dev, verified on the dev environment before the next
-one starts; a weekly `/learn` checks every shipped hypothesis against what users did.
+A request becomes a short brief with a hypothesis and its MVP, the brief becomes a design the
+requester confirms locally before any code, the design becomes a plan of stages, and every stage
+becomes its own PR into dev, merged on green CI and checked on the dev environment; a weekly
+`/learn` checks every shipped hypothesis against what users did.
 
 | Step | Produces | Does | Checks |
 |------|----------|------|--------|
-| **1 — brief** | One short document: the request rephrased for the planner, with the problem, the user stories, the MVP and Not now | **Opus**, in minutes | **you**, at step 2's one stop |
-| **2 — plan**  | The stage map (outcome on dev, demo, budget, risk, guard) and every stage's detail | **GPT** plans, cold, from the brief and the code (**Opus** alone in the quick lane) | Opus, inline; then **you**, brief and plan in one stop |
+| **1 — brief** | One short document: the request rephrased for the planner, with the problem, the user stories, the MVP, Not now and whether there is something to draw | **Opus**, in minutes | **you**, with the design |
+| **design** | A hi-fi HTML prototype of what users will see, opened in your browser (a PM handoff shown instead; skipped when nothing users see changes) | **Opus**, in about half an hour | **you**: the one stop before code |
+| **2 — plan**  | The stage map (outcome on dev, demo, budget, risk, guard) and every stage's detail | **GPT** plans, cold, from the brief, the confirmed design and the code (**Opus** alone in the quick lane) | Opus, inline; with nothing to draw, then **you**, brief and plan in one stop |
 | **3 — build, once per stage** | The stage, implemented with no layers inside, its PR merged into dev and verified there; the release to main when you say; the hypothesis registered in PostHog | **Opus** | CI; **GPT** for data/auth stages and a release that carries one |
 | **learn — weekly** | A verdict on every shipped hypothesis, and what is in demand | **Opus** measures in PostHog; **Opus and GPT** judge independently | **you** |
 

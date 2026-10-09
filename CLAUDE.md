@@ -4,10 +4,11 @@ House rules for Claude Code in this repository — the always-on quality bar. Th
 review pipeline in `harness/` enforces these same four principles at each gate, where the doer and
 reviewer alternate between Opus and GPT and the reviewer scores against them
 ([`harness/checklists/scoring-rubric.md`](checklists/scoring-rubric.md)). **By default a feature
-runs the co-dev flow, which ships in stages** — brief / plan / build: Opus rephrases your request
-into a short brief with its MVP, GPT plans every stage and Opus checks it, you confirm both at one
-stop, Opus implements one stage at a time, checked once right before the push, each its own PR into
-dev on green CI (you test stage 1 by hand locally; PM tests on dev), with GPT
+runs the co-dev flow, which ships in stages** — brief / design / plan / build: Opus rephrases your
+request into a short brief with its MVP and draws it as a hi-fi HTML prototype that you confirm
+locally before any code (the one stop), GPT plans every stage against it and Opus checks it, Opus
+implements one stage at a time, checked once right before the push, each its own PR merged into dev
+on green CI without asking (PM tests on dev), with GPT
 reviewing the stages that touch data or access and a release to main that carries one, and a
 weekly `/learn` checks every shipped hypothesis against PostHog (see
 [`harness/README-codev.md`](README-codev.md); its stage

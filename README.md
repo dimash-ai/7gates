@@ -11,16 +11,18 @@ flows at a glance) → [`CLAUDE.md`](CLAUDE.md) (the quality bar) → [`harness/
 
 ## What this is
 
-Every feature flows through the **co-dev flow**, which ships in **stages**: the smallest increments a
-user can see, each its own PR into `dev`, merged, deployed and looked at on the dev environment
-before the next one starts. The two models trade places, so no model ever grades its own work, and
-a review blocks only on ship-blockers; everything else becomes a follow-up you decide on.
+Every feature flows through the **co-dev flow**: a brief, **a design you confirm locally before any
+code**, and a build that ships in **stages**, the smallest increments a user can see, each its own
+PR into `dev`, merged and deployed on the dev environment. The two models trade places, so no model
+ever grades its own work, and a review blocks only on ship-blockers; everything else becomes a
+follow-up you decide on.
 
 | # | Step | Does | Checks | Result |
 |---|------|------|--------|--------|
-| 1 | brief | **Opus** rephrases your input (your words or a Linear ticket) into a short brief: the problem, the user stories, **the MVP**; minutes, not hours | **you** | `specs/<slug>/brief.md` |
-| 2 | plan  | **GPT** plans every stage, cold, from the brief and the code | Opus, inline; then **you** | `specs/<slug>/plan.md` |
-| 3 | build, once per stage | **Opus** implements the next stage, no layers inside, no checks while building; you test stage 1 by hand on a local URL; the checks run once before each push; later stages go straight to their PR into `dev`, merged on green CI, tested on dev by PM; registers the hypothesis in PostHog | the local CI pass and CI; your test of stage 1; **GPT** for a data or auth stage, and once before main | a PR per stage, on dev |
+| 1 | brief | **Opus** rephrases your input (your words or a Linear ticket) into a short brief: the problem, the user stories, **the MVP**, and whether there is something to draw; minutes, not hours | **you**, with the design | `specs/<slug>/brief.md` |
+| — | design | **Opus** draws a hi-fi HTML prototype of what users will see and opens it in your browser (a PM handoff is shown instead; nothing users see changes: skipped) | **you**: the one stop before code; your ok starts development | `specs/<slug>/design/` |
+| 2 | plan  | **GPT** plans every stage, cold, from the brief, the confirmed design and the code | Opus, inline; with nothing to draw, then **you** | `specs/<slug>/plan.md` |
+| 3 | build, once per stage | **Opus** implements the next stage, as drawn, no layers inside, no checks while building; the checks run once before each push; PR, Auto-fix and merge into `dev` on green CI without asking, tested on dev by PM; registers the hypothesis in PostHog | the local CI pass and CI; with nothing to draw, your test of stage 1; **GPT** for a data or auth stage, and once before main | a PR per stage, on dev |
 | — | learn, weekly | **Opus** measures every shipped hypothesis in PostHog; **Opus and GPT** judge independently | **you** | verdicts in PostHog |
 
 Results land in the code repo's gitignored `specs/<slug>/` (for superapp, `superapp/specs/`), never
@@ -45,7 +47,7 @@ All work — by humans or agents — holds to four principles (full text in [`CL
 | Path | Holds |
 |------|-------|
 | [`harness/`](./)         | The pipeline: charters, checklists, templates, and the manuals for every flow |
-| `.claude/`             | Slash commands (`/step1`, `/step2`, `/step3`, `/learn`, and the older flows') and local settings |
+| `.claude/`             | Slash commands (`/step1`, `/design`, `/step2`, `/step3`, `/learn`, and the older flows') and local settings |
 | [`CLAUDE.md`](CLAUDE.md) | House rules — the always-on quality bar |
 | [`AGENTS.md`](AGENTS.md) | Codex's roles and verdict conventions |
 | `Makefile`             | Verification gates — `make verify` runs test, lint, typecheck, build |
@@ -56,8 +58,10 @@ In Claude Code, from superapp, one of its worktrees, or the harness itself (`sup
 
 ```
 /step1 <slug>    # brief — your request rephrased, with the MVP; no stop unless it must ask
-                 # plan  — GPT plans the stages (Opus alone in the quick lane); ONE stop: brief + stages
-                 # build — you test stage 1 by hand locally; checks once before each push; PRs into dev on green CI
+                 # design — a hi-fi HTML prototype in your browser; ONE stop: ok, or what to change
+                 # plan  — GPT plans the stages against the design (Opus alone in the quick lane)
+                 # build — checks once before each push; PRs merged into dev on green CI, no questions
+/design <slug>   # redraw the design
 /step3 <slug>    # resume a run, or release the stages to main when you say so
 /learn           # learn — weekly: checks every shipped hypothesis against what users did
 ```

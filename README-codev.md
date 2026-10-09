@@ -1,8 +1,8 @@
 # The co-dev flow — ship in stages
 
-**Status: live, the default for our own work.** Three steps: a short brief with the MVP, a plan of
-**stages**, and a build that ships **one stage at a time to dev**, each as its own PR, merged,
-deployed and looked at on the dev environment before the next one starts. A weekly `/learn` checks
+**Status: live, the default for our own work.** A short brief with the MVP, **a design you confirm
+locally before any code**, a plan of **stages**, and a build that ships **one stage at a time to
+dev**, each as its own PR, merged and deployed on the dev environment. A weekly `/learn` checks
 every shipped bet against what users did. Tickets that run through the CTO's feature-dev cycle keep
 the [GPT gates](README-gpt-gates.md).
 
@@ -43,13 +43,23 @@ asking, and builds the next stage on the stage before it while that one's CI run
 longer ends on a running CI ([`checklists/mvp.md`](checklists/mvp.md) §2, §10). Only stage 1's test
 by hand and the release to main still wait for the requester.
 
-## The three steps
+**Since 2026-10-09, design first.** The same day the requester put a design between the brief and
+the code: a task comes in, we work out what to do, Opus draws it fast as a hi-fi HTML prototype,
+the requester looks at it on their own machine, and **only their ok starts development**
+([`checklists/mvp.md`](checklists/mvp.md) §11). That ok is the one stop before code; after it
+nothing waits for them until the release to main, so the stage plan is a report and stage 1 has no
+hand test. ALL-800 is why: twelve stages reached dev before the requester saw them, and their look
+(«в дизайне у нас есть исполнители, а на деве я этого не вижу») turned into three follow-up tracks.
+A task with nothing users see skips the design and keeps step 2's stop and stage 1's hand test.
+
+## The steps
 
 | step | command | does | checks | result in `superapp/specs/<slug>/` |
 |------|---------|------|--------|------------------------------------|
-| 1 · brief | `/step1 <slug>` | Opus rephrases your input (your words or a Linear ticket) into a short brief for step 2: the problem, the user stories, **the MVP**, Not now; about ten minutes, no second model, no code | no stop unless it must ask; **you** see the brief with the plan at step 2's stop | `brief.md` |
-| 2 · plan  | `/step2 <slug>` | pins a worktree on stage 1's branch; GPT plans cold from the brief and the code (Opus, in the quick lane): the **stage map** (outcome on dev, demo, budget, risk, guard) and **every stage's detail** | Opus checks it inline (~5 min) against the MVP lens and fixes small things itself; a wrong stage 1 goes back to GPT once; then **you** confirm the brief and the stages in one stop, and how stages ship; your yes starts step 3 | `plan.md`, `reviews/plan-N.md`, `progress.md` |
-| 3 · build | starts by itself after your yes; `/step3 <slug>` resumes | **pure implementation** of the next stage, no layers inside and no checks while building; you test stage 1 by hand on a local URL; the local CI pass runs once, right before the push; merged on green CI, deployed, demo for PM on dev; registers the bet when the signal is measurable | the local CI pass and CI; your test of stage 1; **GPT** once for a data or auth stage, on its open PR while CI runs, and once as the release pass when a release carries one; a BLOCK is fixed and goes on | one PR per stage into `dev`; `runs/build-sN.txt`, `reviews/stage-N-K.md`, `reviews/release-*.md`; a PR into `main` per release |
+| 1 · brief | `/step1 <slug>` | Opus rephrases your input (your words or a Linear ticket) into a short brief: the problem, the user stories, **the MVP**, Not now, and `Design:` html, handoff or none; about ten minutes, no second model, no code | no stop unless it must ask; **you** see the brief with the design (or, with nothing to draw, with the plan) | `brief.md` |
+| design | starts by itself after step 1; `/design <slug>` redraws | Opus draws a **hi-fi HTML prototype** of the MVP's screens and states (the later ones badged), on the product's tokens, and opens it in your browser; a PM handoff is shown instead of drawn; skipped when nothing users see changes | **you**: the one stop before code; ok, or what to change, until ok; your ok starts step 2 | `design/index.html`, `design/README.md`, `reviews/design-N.md` |
+| 2 · plan  | starts by itself after your ok; `/step2 <slug>` re-plans | pins a worktree on stage 1's branch; GPT plans cold from the brief, **the confirmed design** and the code (Opus, in the quick lane): the **stage map** (outcome on dev, demo, budget, risk, guard) and **every stage's detail** | Opus checks it inline (~5 min) against the MVP lens and fixes small things itself; a wrong stage 1 goes back to GPT once; then a report and step 3 at once (with nothing to draw: **you** confirm the brief and the stages in one stop) | `plan.md`, `reviews/plan-N.md`, `progress.md` |
+| 3 · build | starts by itself after step 2; `/step3 <slug>` resumes | **pure implementation** of the next stage, and of the design as drawn, no layers inside and no checks while building; the local CI pass runs once, right before the push; PR, Auto-fix and merge into dev on green CI without asking, the next stage built while CI runs; demo for PM on dev; registers the bet when the signal is measurable | the local CI pass and CI; with nothing to draw, your test of stage 1; **GPT** once for a data or auth stage, on its open PR while CI runs, and once as the release pass when a release carries one; a BLOCK is fixed and goes on | one PR per stage into `dev`; `runs/build-sN.txt`, `reviews/stage-N-K.md`, `reviews/release-*.md`; a PR into `main` per release |
 | learn · weekly | `/learn` | measures every registered hypothesis and the demand board in PostHog; Opus and GPT judge independently | **you** confirm the verdicts before anything is written back | `specs/learn-<date>/`; verdicts in the PostHog notebooks |
 
 The invariant is the pipeline's own: **no model grades its own work.** Opus scores GPT's plan; GPT
@@ -63,10 +73,11 @@ plans cold from the brief, so a brief that does not stand on its own comes back 
   at most about four hours of build. It is done when it is merged, deployed and served by the dev
   host, with its demo script in the PR for PM, not when it is coded or approved. Stage 1, the MVP, aims to be on
   dev within a working day of the plan's yes, and value then arrives every few hours.
-- **The MVP is named at the start, not discovered at the end.** Step 1 rephrases the request in
-  minutes and takes the MVP from its literal words; what a design shows beyond them waits for a later
-  stage. Questions are few, one decision each, smallest option first with its cost, and a safe
-  default is assumed rather than waited for.
+- **The MVP is named at the start, and seen before it is built.** Step 1 rephrases the request in
+  minutes and names the MVP; the design draws it, with what comes later badged, and the requester's
+  ok on the drawing fixes the scope before any code. Stage 1 builds the MVP states, but its data takes
+  the shape of the whole design. Questions are few, one decision each, smallest option first with its
+  cost, and a safe default is assumed rather than waited for.
 - **Planning happens in step 2, all of it.** The plan details every stage, so step 3 implements and
   nothing else: no design phase, no builder waves, no internal pre-reviews or fix workflows, even
   with ultracode on. When dev shows the map was wrong, `/step2` re-plans the stages not yet started.
@@ -163,10 +174,11 @@ runs in a worktree of its own, run all the steps in that same session.
 
 ```
 /step1 ALL-646     # brief: your request rephrased, with the MVP; goes straight on unless it must ask
-                   # plan:  GPT plans every stage (Opus alone in the quick lane); ONE stop: you confirm
-                   #        the brief and the stages, and say how stages ship
-                   # build: your yes starts step 3; you test stage 1 by hand locally, the checks
-                   #        run once before each push, stages go to dev on green CI, PM tests there
+                   # design: a hi-fi HTML prototype opens in your browser; ONE stop: ok, or what to
+                   #        change (a task with nothing users see skips it and stops at the plan)
+                   # plan:  GPT plans every stage against the design (Opus alone in the quick lane)
+                   # build: stages go to dev on green CI, PR and merge without asking, PM tests there
+/design ALL-646    # redraw the design (a change after the ok re-plans the stages not yet started)
 /step3 ALL-646     # resume a run; when you say so, it releases the stages to main (3g)
 /learn             # weekly: checks every shipped bet in PostHog; a scheduled task runs it every Monday
 ```
@@ -176,11 +188,11 @@ was asked stays on record. Every call passes `--enable fast_mode -c service_tier
 the speed, more usage), so the pace does not depend on `~/.codex/config.toml`, which the Codex desktop
 app rewrites.
 
-**The pace to expect.** Step 1 about ten minutes; step 2 about half an hour (about ten minutes in
-the quick lane) to the one stop and your yes; each stage up to about four hours of build plus
-about a quarter of an hour of fixed cost (the local CI pass, CI, deploy), and for stage 1 your
-test by hand. Your answers are the other clock: the flow
-asks few questions, assumes safe defaults, and stops only where it needs you.
+**The pace to expect.** Step 1 about ten minutes; the design about half an hour to your first look
+and about ten minutes a correction round; step 2 about half an hour (about ten minutes in the quick
+lane); each stage up to about four hours of build plus the local CI pass, with CI (about eight
+minutes a round) and the deploy running while the next stage is built. Your answers are the other
+clock: after your ok on the design, nothing waits for you until the release to main.
 
 Set up once:
 
@@ -205,13 +217,14 @@ delete its branches. In a session with a worktree of its own, delete the session
 
 | where | stop | why |
 |-------|------|-----|
-| 1c | a question that changes the MVP and has no safe default; with none, no stop | everything else is assumed and shown at 2e |
+| 1c | a question that changes the MVP and has no safe default; with none, no stop | everything else is assumed and shown with the design (or at 2e) |
+| D3 | **the one stop before code**: the prototype is open in your browser; you say ok, or what to change, until ok | the cheapest moment to see what users will get, before any code exists |
 | 2b | GPT returns QUESTIONS that change stage 1 | a stage 1 built around an ambiguity is wrong from its first line; a later stage's ambiguity is planned as an assumption instead |
 | 2c | the plan is still BLOCKED after one return to GPT: you decide each open item | a plan that does not converge in one return is cut wrong |
-| 2e | the one stop before code: you confirm the brief and the stages (say so if you want to look at every stage locally: `Ship: every`) | the last cheap moment to change course |
+| 2e | only with nothing to draw: the one stop before code, you confirm the brief and the stages (say so if you want to look at every stage locally: `Ship: every`); after a design, a report | the last cheap moment to change course |
 | 3a | the plan does not detail the stage, or dev showed it is wrong: back to `/step2` | step 3 implements; it does not design |
 | 3a/3b | a stage passes one and a half times its budget, or a quick stage needs more than its lane allows: you choose what ships and what moves on | the timebox is what keeps value arriving every few hours |
-| 3b | stage 1 is up on a local URL: you test it end to end and say ok, or what to change; then the checks run and its PR opens | the MVP is what you judge; later stages go to dev on green CI and PM tests them there |
+| 3b | only with nothing to draw (`Ship: stage1`): stage 1 is up on a local URL, you test it end to end and say ok, or what to change; then the checks run and its PR opens | the MVP is what you judge; after a design you judged it before the code |
 | 3d | a fix that leaves CI red, or a security or data fix whose re-review blocks again: you choose fix, hide behind the guard, or cut; a review with no verdict in twenty minutes: re-run it or merge on CI | a finding that keeps coming back is a cutting problem |
 | 3g | you decide when stages go to main; a release that carries a data or auth stage waits for its release pass | production is your call |
 

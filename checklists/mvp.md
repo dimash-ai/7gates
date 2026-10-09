@@ -1,8 +1,8 @@
 # MVP lens — stages that ship
 
 The delivery rules of the co-dev flow. Every step reads this file, the way it reads
-[`ponytail.md`](ponytail.md): step 1 names the MVP, step 2 plans it as stages, step 3 implements and
-ships one stage at a time. Ponytail asks "does this code need to exist?"; this file asks "does it
+[`ponytail.md`](ponytail.md): step 1 names the MVP, the design step draws it for the requester's ok,
+step 2 plans it as stages, step 3 implements and ships one stage at a time. Ponytail asks "does this code need to exist?"; this file asks "does it
 need to exist **before users can see something**?"
 
 **Why it exists.** In October 2026 a feature ran through the earlier version of this flow for three
@@ -53,10 +53,16 @@ not wait for that.
 
 ## 3 · Naming the MVP
 
-- **Start from the ticket's literal words** (step 1). What the ticket names is in scope. What a
-  design or a prototype shows beyond it is a candidate for a later stage, not part of the MVP.
+- **Start from the ticket's words, then draw them** (step 1, then the design step, §11). The brief
+  names the MVP from what the ticket asks; the design draws the MVP and the [later] stories on the
+  same screens, the MVP marked; and the drawing the requester confirms is the scope: its MVP states
+  are stage 1, its Later states later stages. A PM handoff, when there is one, is the design.
 - **The MVP is the least a user must see to say "this is it"**, and step 2's stage 1 delivers it. If
   something smaller still serves the request, the planner says so.
+- **Stage 1's data takes the shape of the whole design.** Stage 1 builds only its own states, but
+  its schema and API take the shape the confirmed design needs, so that a later stage adds to them
+  instead of rewriting them. ALL-800 gave every item one assignee in four stages, then rebuilt it
+  for several, which the design had shown from the start.
 - **Reuse before build** (step 2). What already exists and covers part of the ask (an editor, a
   screen, an endpoint) is the cheapest stage there is.
 - **Not now is a list of follow-up tickets**, one line each, never a silent drop.
@@ -81,13 +87,16 @@ not wait for that.
   request, a cost the requester must accept. In the run above, 17 of 25 answers were the recommended
   default, and waiting for them, overnight twice, took longer than all the agent work of steps 1
   and 2 together.
-- **One stop before any code.** Step 1 stops on its own only for a question that cannot be
-  assumed; otherwise it goes straight on into step 2, and the requester sees the brief and the plan
-  together at step 2's stop. Their yes there starts step 3 at once, and a stage's open PR starts the
-  next one: nobody waits for a command to be typed. After the stop, the run waits for the requester
-  once more, while they test stage 1 by hand locally (§10). Moving a stage on is never a question:
-  the builder pushes, opens the PR into dev, turns on its Auto-fix and merges it on green CI by
-  itself (§10). The requester can stop the run, or re-order or cut stages, at any time.
+- **One stop before any code: the design.** Step 1 stops on its own only for a question that cannot
+  be assumed; otherwise it goes straight on into the design step, and the requester sees the brief
+  and the design together, on their own machine (§11). Their ok there starts step 2, which plans and
+  starts step 3 without stopping, and a stage's open PR starts the next one: nobody waits for a
+  command to be typed, and nothing waits for the requester until the release to main. A task with
+  nothing to draw skips the design: its one stop is step 2's (the brief and the stages), and after it
+  the run waits for the requester once more, while they test stage 1 by hand locally (§10). Moving a
+  stage on is never a question: the builder pushes, opens the PR into dev, turns on its Auto-fix and
+  merges it on green CI by itself (§10). The requester can stop the run, or re-order or cut stages,
+  at any time.
 
 ## 5 · Reviews block only on ship-blockers
 
@@ -198,27 +207,31 @@ moved it on: «merge», «да, открывай PR в dev», «да, включ
 green», «what is the status?». A stage's CI round took about 8 minutes (p50 7.6), and a green stage
 PR then waited a median of about 6 more for their word, because the run asked first or ended its
 turn on a running CI. Their words: «не жди меня, открывай PR и делай merge into dev if CI is green».
-After the plan's yes, the run waits for them only for their test of stage 1 and for the release to
-main.
+The same day they put the design first (§11): after their ok on the design nothing waits for them
+until the release to main, and their test of stage 1 by hand stays only for a task with nothing to
+draw.
 
 - **No checks while building.** While a stage is being built, and while the requester is testing
   it, the builder runs no lint, format, type, i18n or test command. Files the change must regenerate
   (API types, locale keys) are part of implementing it, not a check.
-- **Stage 1 is tested by hand, locally, first.** As soon as stage 1 is built, the builder brings the
-  app up from the stage's worktree (the app's usual local port, without a sign-in where the app has
-  a local demo mode) and gives the requester the URL. The requester tests it end to end and says ok,
-  or what to change; a change goes in without checks, and they test again. After the plan's yes,
-  this is the one wait per ticket.
-- **The local CI pass, once, right before the push.** After the requester's ok (stage 1), or as soon
-  as a later stage is built, the builder runs the local CI pass: the static checks of the app's
-  `ci-<app>.yml` for what the stage touched (lint, format, types, i18n, generated API types), the
-  affected tests (`scripts/test-affected.sh`), and, for a schema change, the migration sandbox
-  proof. Not the full suites: CI runs them on the PR. A red check is fixed and the pass re-run; a fix
-  that changes what the requester tested goes back to them. Then the push and the PR into dev.
-- **Later stages go straight to dev.** A stage after the first goes from its local CI pass straight
+- **Stage 1 is tested by hand, locally, first, when there was nothing to draw** (`Ship: stage1`, the
+  default without a design). As soon as stage 1 is built, the builder brings the app up from the
+  stage's worktree (the app's usual local port, without a sign-in where the app has a local demo
+  mode) and gives the requester the URL. The requester tests it end to end and says ok, or what to
+  change; a change goes in without checks, and they test again. After the plan's yes, this is the
+  one wait per ticket. After a confirmed design the brief says `Ship: none`: the requester saw what
+  users get before any code, and no stage waits for a hand test.
+- **The local CI pass, once, right before the push.** After the requester's ok on their hand test,
+  or as soon as a stage without one is built, the builder runs the local CI pass: the static checks
+  of the app's `ci-<app>.yml` for what the stage touched (lint, format, types, i18n, generated API
+  types), the affected tests (`scripts/test-affected.sh`), and, for a schema change, the migration
+  sandbox proof. Not the full suites: CI runs them on the PR. A red check is fixed and the pass
+  re-run; a fix that changes what the requester tested goes back to them. Then the push and the PR
+  into dev.
+- **Stages go straight to dev.** A stage without a hand test goes from its local CI pass straight
   to its PR, reaches dev on green CI behind its guard, and PM tests it there. The requester can ask
   to test every stage by hand first, at the stop or at any time: `Ship: every` in the brief's
-  header. Older briefs: `Ship: ask` means every, `Ship: auto` means none.
+  header. Older briefs: `Ship: ask` means every, `Ship: auto` means none, as `Ship: none` does.
 - **Never ask to move a stage on.** Pushing a stage's branch, opening its PR into dev, turning on its
   Auto-fix and merging it into dev on green CI are the requester's standing ask, for every ticket:
   the builder does them without a question and says in its report that it did. No AskUserQuestion
@@ -241,3 +254,32 @@ main.
 - **On dev, the builder checks the deploy, not the demo.** It confirms that the dev host serves the
   new build, and it writes nothing to the shared dev data; PM walks the demo script from the PR. The
   stage is `on dev` then; the next stage is usually built by then (§2).
+
+## 11 · Design first
+
+The requester's decision of 2026-10-09: a task comes in, we work out what to do, we draw it fast and
+they look at it locally, and **only their ok on the drawing starts development**. The measured cost
+of drawing late: ALL-800 reached dev in twelve stages, and the requester's look at it («в дизайне у
+нас есть исполнители, а на деве я этого не вижу») turned into three follow-up tracks, one of them a
+rebuild of the assignee field the PM design had drawn from the start.
+
+- **What gets drawn.** The brief's `Design:` line (step 1) decides: `html`, a prototype the design
+  step draws; `handoff <path>`, a PM design that already exists and is shown instead; `none`, when
+  nothing users see changes (a backend fix, delivery, infra, monitoring), and the design step is
+  skipped.
+- **The prototype** is one self-contained HTML file in `<S>/design/`, hi-fi on the product's own
+  tokens and fonts, with every state the MVP needs switchable on the page and the real words users
+  will read. It shows the MVP and the [later] states of the same screens, those badged «Later». It
+  is a picture, not code: nothing in the app imports it, and it is drawn in about half an hour.
+- **Looked at locally.** It opens in the requester's browser from disk; the builder does not walk it
+  first.
+- **The one stop before code.** The requester sees the brief and the design together and says ok,
+  or what to change; a change is drawn again, each round in about ten minutes, until they say ok.
+  The ok is recorded (`<S>/reviews/design-<N>.md`) and step 2 refuses to plan without it.
+- **After the ok nothing waits for the requester until the release to main.** The brief says
+  `Ship: none`; step 2 plans against the design and reports the stages without stopping; step 3
+  builds each stage as drawn and ships it to dev on green CI (§10).
+- **The design is the visual spec.** Stage 1 builds the states the design marks MVP, later stages
+  the ones marked Later, each as drawn: layout, sizes, colors and words. A departure goes into the
+  build log with its reason, and a change of the design later runs the design step again for the new
+  part, then re-plans only the stages not yet started.

@@ -1,28 +1,31 @@
 ---
-description: "Step 2 (plan): GPT plans the stages from the brief and the code (Opus alone in the quick lane), every stage in detail so step 3 only implements; Opus checks it inline; one stop where you confirm the brief and the stages, then step 3 starts"
+description: "Step 2 (plan): GPT plans the stages from the brief, the confirmed design and the code (Opus alone in the quick lane), every stage in detail so step 3 only implements; Opus checks it inline; after a confirmed design step 3 starts at once, and only a task with nothing to draw stops for you to confirm the brief and the stages"
 argument-hint: <slug> [repo-path]
 ---
 
-# Step 2 — the stage plan  ·  GPT plans · Opus checks · you confirm
+# Step 2 — the stage plan  ·  GPT plans · Opus checks · then the build
 
-The second step of the **co-dev flow** (`harness/README-codev.md`). It turns the brief from step 1
-into **the stage plan**: the **stage map** (every stage, one row: what users get on dev, its demo
-script, budget, risk, guard) and **every stage's detail**, stage 1's the fullest. All the planning
-happens here, so that step 3 is implementation and nothing else. **GPT plans, cold, from the brief
-and the code**; Opus checks the plan inline against `<H>/checklists/mvp.md` and fixes small things
-itself. In the **quick lane** (the brief's `Lane: quick`, `mvp.md` §9) Opus plans the one stage
-itself (2q), and 2b to 2d do not run. Step 2 ends at the flow's **one stop before code** (2e): the
-requester confirms the brief and the stages together, and their yes starts step 3 at once. When the
-map changes later (dev showed something, the requester re-orders or adds), this step runs again and
+The second step of the **co-dev flow** (`harness/README-codev.md`). It turns the brief from step 1,
+and the design the requester confirmed, into **the stage plan**: the **stage map** (every stage, one
+row: what users get on dev, its demo script, budget, risk, guard) and **every stage's detail**,
+stage 1's the fullest. All the planning happens here, so that step 3 is implementation and nothing
+else. **GPT plans, cold, from the brief, the confirmed design and the code**; Opus checks the plan
+inline against `<H>/checklists/mvp.md` and fixes small things itself. In the **quick lane** (the
+brief's `Lane: quick`, `mvp.md` §9) Opus plans the one stage itself (2q), and 2b to 2d do not run.
+**After a confirmed design** (`Design: html` or `handoff`) the requester's ok on the design was the
+flow's one stop before code, so step 2 does not stop: it reports the stages and starts step 3 at
+once (2e). **With nothing to draw** (`Design: none`) step 2 ends at the one stop instead: the
+requester confirms the brief and the stages together, and their yes starts step 3. When the map
+changes later (dev showed something, the requester re-orders or adds), this step runs again and
 re-plans only the stages not yet started.
 
 There is no separate research phase: the planner reads the code it plans against, cites it as
 `file:line`, and Opus checks the citations. For an epic with large unknowns, run
 `/gate-explore` before step 1, not here.
 
-**Timebox: about half an hour** to the stop: GPT's run (about fifteen minutes), Opus's check (about
-five), and at most one return to GPT; about ten minutes in the quick lane. The plan is under about
-300 lines.
+**Timebox: about half an hour** to 2e: GPT's run (about fifteen minutes), Opus's check (about five),
+and at most one return to GPT; about ten minutes in the quick lane. The plan is under about 300
+lines.
 
 `$1` is the slug from step 1; `$2` is the code repo, optional. Every bash block sources
 `harness/bin/codev-env.sh`, which prints `codev: slug=… results=<S> worktree=<WT> …`; in the prose,
@@ -40,7 +43,7 @@ reviewers, research sweeps or longer documents (`mvp.md` §6). One planner, one 
 ```bash
 H=$(d=$PWD; while [ "$d" != / ] && [ ! -f "$d/harness/prompts/reviewer.md" ]; do d=$(dirname "$d"); done; [ "$d" != / ] && echo "$d/harness")
 . "${H:?no harness/ at or above this directory}/bin/codev-env.sh" "$1" "$2" || exit 1
-codev_need_header || exit 1
+codev_need_header && codev_need_design || exit 1
 if [ -d "$WT" ]; then echo "worktree: on $(git -C "$WT" branch --show-current)"; else echo "worktree: not yet - start at 2a"; fi
 [ -s "$S/plan.md" ] && echo "plan: $(wc -l < "$S/plan.md") lines" || echo "plan: not yet"
 [ -s "$S/progress.md" ] && grep -E '^\| [0-9]+ ' "$S/progress.md"
@@ -84,8 +87,9 @@ echo "planning at: $(git -C "$WT" rev-parse --short HEAD) $(git -C "$WT" log -1 
 
 ## 2q — Quick lane: Opus plans the one stage
 
-Only when the brief says `Lane: quick`; then 2b to 2d do not run. Read the code the request touches
-in `<WT>` (file reads, grep and git only), then write `<S>/plan.md` from
+Only when the brief says `Lane: quick`; then 2b to 2d do not run. Read the confirmed design
+(`<S>/design/`, when there is one) and the code the request touches in `<WT>` (file reads, grep and
+git only), then write `<S>/plan.md` from
 `<H>/design/TEMPLATE-stages.md` with one stage: its row on the map (what users get on dev, the demo,
 a budget of at most about two hours, risk `low`, the guard) and its detail (the approach with the
 `file:line` it builds on, the files, the tests), under about 60 lines.
@@ -93,7 +97,8 @@ a budget of at most about two hours, risk `low`, the guard) and its detail (the 
 If the code shows the stage is not quick (a migration or a backfill, an auth, tenant or RLS surface,
 deletes or rewrites of existing records, more than one stage, or more than about two hours), it
 leaves the lane: set `Lane: stages` in the brief, say why in one line, and run 2b. The plan is not
-graded by a model, because you wrote it: the requester's yes at 2e is its check. Go to 2e.
+graded by a model, because you wrote it: the requester's ok on the design is its check, or, with
+nothing to draw, their yes at 2e. Go to 2e.
 
 ## 2b — GPT plans, cold and read-only
 
@@ -113,6 +118,9 @@ P="$S/runs/plan-codex.prompt.md"
   printf '\n\nTHE MVP LENS (binding):\n\n'; cat "$H/checklists/mvp.md"
   printf '\n\n'; cat "$H/checklists/ponytail.md"
   printf '\n\nTHE BRIEF:\n\n'; cat "$S/brief.md"
+  if [ -s "$S/design/README.md" ]; then
+    printf '\n\nTHE CONFIRMED DESIGN (binding: the requester approved it; the prototype is in %s):\n\n' "$S/design/"; cat "$S/design/README.md"
+  fi
   printf '\n\nTHE PLAN TEMPLATE:\n\n'; cat "$H/design/TEMPLATE-stages.md"
   if [ -s "$S/plan.md" ] && grep -qE '^\| [0-9]+ \|[^|]*\| (building|review|PR|on dev|verified)' "$S/progress.md" 2>/dev/null; then   # a stage is under way: re-plan
     printf '\n\nRE-PLAN. THE CURRENT PLAN:\n\n'; cat "$S/plan.md"
@@ -122,7 +130,7 @@ P="$S/runs/plan-codex.prompt.md"
   cat <<EOF
 
 You are GPT Codex, the doer for the PLAN step of $SLUG, in STAGE MODE. Your working directory is the code repo, at the commit the plan will be built on. The brief above is your whole task, and nobody will answer questions during this run. The repo's own CLAUDE.md, AGENTS.md and the CLAUDE.md of the app the brief names are binding: read them. Then study the code until you can plan against what is actually there, and write the plan in the template's structure, under about 200 lines.
-The plan is a STAGE MAP plus EVERY STAGE'S DETAIL, following the MVP lens above, under about 300 lines in all. Step 3 only implements: it has no design step, so whatever a builder needs to know about a stage is planned here. Stage 1 is the brief's MVP; if something smaller still meets its criteria and is what a user would recognise, propose it in the Decision and say why. Every stage is user-visible on the dev environment, with a demo script a person can follow there, a budget of at most about four hours of build, a risk class (low, data, auth) and a guard that keeps the shared dev environment safe until users are switched over (additive, a hidden route, a dev-only flag). A foundation without a visible result is folded into the first stage that uses it, or is a stage of about two hours that the very next stage uses. Order the stages by value to the user; put what needs a migration, a backfill or a new server contract into the stage where it is first needed, never ahead of it. Stage 1's detail is the fullest; a later stage's detail is short (what the user gets, the approach with the file:line it builds on, the files, the tests, the data), because the code will have moved by the time it is built and its builder records any departure. Do NOT plan the feature to its last edge case: in every stage the tests are its demo path, a regression guard for every behaviour users have today that it touches, and the repo's mandatory proofs; edge cases of the new feature beyond the demo path are follow-ups, listed under the stage's Not in this stage, not built. Every new file, module, dependency or abstraction names the ladder rung it stopped at. Cite every claim about existing code as file:line. Build on what the brief records as answered or decided; do not reopen it. If the brief's Hypothesis signal does not exist yet, one stage adds it, through the app's own analytics helper.
+The plan is a STAGE MAP plus EVERY STAGE'S DETAIL, following the MVP lens above, under about 300 lines in all. Step 3 only implements: it has no design step, so whatever a builder needs to know about a stage is planned here. Stage 1 is the brief's MVP; if something smaller still meets its criteria and is what a user would recognise, propose it in the Decision and say why. Every stage is user-visible on the dev environment, with a demo script a person can follow there, a budget of at most about four hours of build, a risk class (low, data, auth) and a guard that keeps the shared dev environment safe until users are switched over (additive, a hidden route, a dev-only flag). A foundation without a visible result is folded into the first stage that uses it, or is a stage of about two hours that the very next stage uses. Order the stages by value to the user; put what needs a migration, a backfill or a new server contract into the stage where it is first needed, never ahead of it. Stage 1's detail is the fullest; a later stage's detail is short (what the user gets, the approach with the file:line it builds on, the files, the tests, the data), because the code will have moved by the time it is built and its builder records any departure. Do NOT plan the feature to its last edge case: in every stage the tests are its demo path, a regression guard for every behaviour users have today that it touches, and the repo's mandatory proofs; edge cases of the new feature beyond the demo path are follow-ups, listed under the stage's Not in this stage, not built. Every new file, module, dependency or abstraction names the ladder rung it stopped at. Cite every claim about existing code as file:line. Build on what the brief records as answered or decided; do not reopen it. When a CONFIRMED DESIGN is above, it is the scope of what users see: stage 1 delivers the screens and states it marks MVP, as drawn (layout, copy), and later stages deliver the ones marked Later; read the prototype in its folder to see them. Plan stage 1's data model and API for the whole confirmed design, so that no later stage rewrites what an earlier one built (a list of assignees from the start when the design shows several, not one that a later stage turns into a list). If the brief's Hypothesis signal does not exist yet, one stage adds it, through the app's own analytics helper.
 The superapp rules the plan carries wherever they apply: the rule headed AI-track code in the repo's CLAUDE.md, applied as written (Python only, in services/assistant and the agent-API, agent-token and MCP modules of apps/focal/server and apps/prima/server; frontend code and Alembic revisions are exempt); a schema change ships its Alembic revision with RLS and grants written in and the sandbox proof (scripts/migration-sandbox.sh with the app's server dir and schema, plus an assertion that the policies exist), additive only, never applied to a shared database; DB-backed behaviour is tested by the app's real-DB suite against that sandbox; user-facing strings go through i18next with ru and en; the verification commands are the jobs of .github/workflows/ci-<app>.yml for each app a stage touches.
 For anything version-sensitive the brief does not settle, name the pinned version you read from the lockfile and mark it UNVERIFIED. Do not open or quote any .env file. IF the brief is ambiguous in a way that would change STAGE 1, do not plan around it: make your final message a section titled QUESTIONS listing each ambiguity, with the answer you would assume, and nothing else; an ambiguity that only touches a later stage goes into that stage's detail as an assumption marked UNVERIFIED. You are read-only and must NEVER edit any file. Your FINAL message must be the complete plan in Markdown, or the QUESTIONS section, and nothing else.
 EOF
@@ -207,48 +215,52 @@ else
 fi
 ```
 
-## 2e — The one stop: the requester confirms the brief and the stages
+## 2e — The stages: a report after a confirmed design, the one stop without one
 
-This is the flow's **one stop before code** (`mvp.md` §4). Create `<S>/progress.md` from
-`<H>/briefs/PROGRESS.md` (on a re-plan, update it) from the stage map: one row per stage with its
-budget, stages already under way keeping their status, and the review's follow-ups from 2c under
-Follow-ups. Then **STOP** and show in the chat:
+Create `<S>/progress.md` from `<H>/briefs/PROGRESS.md` (on a re-plan, update it) from the stage map:
+one row per stage with its budget, stages already under way keeping their status, and the review's
+follow-ups from 2c under Follow-ups. Then show in the chat:
 
-- **the brief in short**, since step 1 went on without stopping: In short, the MVP, Not now, the
-  lane, and the assumptions taken as defaults, with a link to `<S>/brief.md`;
 - the **stage map** as a table, with stage 1 first and the hours to its arrival on dev;
 - stage 1 in three lines: what users get, how to see it on dev, what it leaves to later stages;
 - the fixes you made and the follow-ups you found, one line each;
-- how the stages ship (`mvp.md` §10), in one line: you test stage 1 by hand on a local URL, then
-  the local CI pass runs and its PR opens; every later stage goes from its local CI pass to dev on
-  green CI, without a stop, and PM tests it there; the builder opens, Auto-fixes and merges every PR
-  into dev itself and builds the next stage while CI runs, so nothing waits for you until the
-  release to main;
+- how the stages ship (`mvp.md` §10), in one line: every stage goes from its local CI pass to dev on
+  green CI without a stop, and PM tests it there; the builder opens, Auto-fixes and merges every PR
+  into dev itself and builds the next stage while CI runs; with nothing to draw, you first test
+  stage 1 by hand on a local URL;
 - a link to `<S>/plan.md` and to the verdict (see **Links**); the quick lane has none.
 
-Ask in one round (AskUserQuestion), one question: **the brief and the stages**: confirm, correct the
-brief, or re-order, cut or merge stages; the smallest change is the default. Record `Ship: stage1`
-in the brief's header, or `Ship: every` when the requester says they want to test every stage by
-hand locally before it ships. Shipping is not a question of its own: the requester decided it for every
-ticket on 2026-10-06.
+**After a confirmed design** (`Design: html` or `handoff`) this is a report, not a stop: the
+requester's ok on the design was the flow's one stop before code (`mvp.md` §4), and the brief says
+`Ship: none`. Record the approval of a quick-lane plan (the block below) and start step 3 at once.
+The requester can still stop the run, or re-order or cut stages, at any time.
 
-Corrections go into the brief and the plan; one that changes stage 1 re-runs 2b (2q in the quick
-lane) before step 3 starts. In the quick lane, record the requester's yes as the plan's approval,
-which step 3 checks before it builds:
+**With nothing to draw** (`Design: none`, or a brief written before the design step) this is the
+flow's **one stop before code** (`mvp.md` §4): **STOP**, and show the brief in short first, since
+step 1 went on without stopping (In short, the MVP, Not now, the lane, and the assumptions taken as
+defaults, with a link to `<S>/brief.md`). Ask in one round (AskUserQuestion), one question: **the
+brief and the stages**: confirm, correct the brief, or re-order, cut or merge stages; the smallest
+change is the default. Record `Ship: stage1` in the brief's header, or `Ship: every` when the
+requester says they want to test every stage by hand locally before it ships. Shipping is not a
+question of its own: the requester decided it for every ticket on 2026-10-06. Corrections go into the
+brief and the plan; one that changes stage 1 re-runs 2b (2q in the quick lane) before step 3 starts.
+
+In the quick lane, record the approval that step 3 checks before it builds:
 
 ```bash
 H=$(d=$PWD; while [ "$d" != / ] && [ ! -f "$d/harness/prompts/reviewer.md" ]; do d=$(dirname "$d"); done; [ "$d" != / ] && echo "$d/harness")
 . "${H:?no harness/ at or above this directory}/bin/codev-env.sh" "$1" "$2" || exit 1
 codev_need_header || exit 1
 mkdir -p "$S/reviews"; V="$S/reviews/plan-$(( $(ls "$S"/reviews/plan-*.md 2>/dev/null | wc -l) + 1 )).md"
-printf '# Plan approval\n\nReviewer: the requester (quick lane: Opus wrote this plan, so no model graded it)\nStep: plan\nStatus: APPROVED\n\n## Reason\n%s: the requester confirmed the brief and the one-stage plan at the stop.\n' "$(date '+%Y-%m-%d %H:%M')" > "$V" && echo "recorded: $V"
+printf '# Plan approval\n\nReviewer: the requester (quick lane: Opus wrote this plan, so no model graded it)\nStep: plan\nStatus: APPROVED\n\n## Reason\n%s: covered by the requester'"'"'s ok on the design (Ship: none, nothing waits after it), or by their yes on the brief and the one-stage plan at the stop.\n' "$(date '+%Y-%m-%d %H:%M')" > "$V" && echo "recorded: $V"
 ```
 
-Their yes ends step 2: **start step 3 at once** by invoking `/step3 $1` yourself with the Skill
-tool, the slug as its only argument. Do not wait for the requester to type it.
+Then **start step 3 at once** by invoking `/step3 $1` yourself with the Skill tool, the slug as its
+only argument. Do not wait for the requester to type it.
 
 **When the brief or the map changes later**, nothing that shipped is redone and nothing restarts:
 put the change into the brief (the stages, Questions and answers), then run `/step2 $1` again. It
-re-plans only the stages not yet started (2b's re-plan), you check the result (2c), and the stop shows
-the new map. A one-line change to a single not-yet-started stage (a budget, an order) can
-be edited into the map and the board directly, without a run.
+re-plans only the stages not yet started (2b's re-plan), you check the result (2c), and the report
+(or, with nothing to draw, the stop) shows the new map. A one-line change to a single
+not-yet-started stage (a budget, an order) can be edited into the map and the board directly,
+without a run.

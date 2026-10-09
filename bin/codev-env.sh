@@ -19,6 +19,8 @@
 #         desktop app's default) keeps both in that worktree instead: S=R/specs/<slug>, WT=R.
 #   BR    the brief's Branch: line (the base name of the stage branches), BASE its Base: line
 #         (both empty until the brief header exists)
+#   DESIGN the first word of the brief's Design: line: html, handoff or none (empty in a brief
+#         written before the design step, which counts as none)
 # and defines the codev_need_* checks the blocks call before acting.
 
 SLUG="$1"
@@ -34,16 +36,17 @@ WT="$M/.worktrees/$SLUG"
 # Except in a session that runs in a worktree of its own: the app lets that session write only
 # inside its worktree, so the flow keeps its results there and builds in the worktree itself.
 case "$R/" in "$M/.claude/worktrees/"*) S="$R/specs/$SLUG"; WT="$R";; esac
-BR=""; BASE=""
+BR=""; BASE=""; DESIGN=""
 if [ -f "$S/brief.md" ]; then
   BR=$(sed -n 's/^Branch:[[:space:]]*//p' "$S/brief.md" | head -1 | tr -d '`*' | awk '{print $1}')
   BASE=$(sed -n 's/^Base:[[:space:]]*//p' "$S/brief.md" | head -1 | tr -d '`*' | awk '{print $1}')
+  DESIGN=$(sed -n 's/^Design:[[:space:]]*//p' "$S/brief.md" | head -1 | tr -d '`*' | awk '{print $1}')
 else   # a later step run from another session: name the checkout that holds this slug's brief
   git -C "$M" worktree list --porcelain | sed -n 's/^worktree //p' | while IFS= read -r d; do
     [ -f "$d/specs/$SLUG/brief.md" ] && echo "codev: the brief for $SLUG is in $d/specs/$SLUG - run the steps from the session that works there" >&2
   done
 fi
-echo "codev: slug=$SLUG  results=$S  worktree=$WT${BR:+  branch=$BR}${BASE:+  base=$BASE}"
+echo "codev: slug=$SLUG  results=$S  worktree=$WT${BR:+  branch=$BR}${BASE:+  base=$BASE}${DESIGN:+  design=$DESIGN}"
 
 # Branch and Base must be real values; a missing line or a template placeholder fails loudly.
 codev_need_header() {
@@ -60,6 +63,15 @@ codev_need_worktree() {
     "$BR"|"$BR"-s[0-9]*|"$BR"-main|"$BR"-main-[0-9]*) ;;
     *) echo "codev: $WT is not on $BR-s<N> or $BR-main (it is on '$(git -C "$WT" branch --show-current)')" >&2; return 1;;
   esac
+}
+
+# A brief with something to draw (Design: html or handoff) needs the requester's ok on the design
+# (reviews/design-<N>.md, Status: APPROVED) before step 2 plans: development starts only after it.
+codev_need_design() {
+  case "$DESIGN" in ""|"<"*|none) return 0;; esac
+  local v
+  v=$(ls "$S"/reviews/design-*.md 2>/dev/null | sort | tail -1)
+  { [ -n "$v" ] && grep -q '^Status: APPROVED' "$v"; } || { echo "codev: the design of $SLUG has no ok from the requester yet - run /design $SLUG first" >&2; return 1; }
 }
 
 # The newest plan verdict must be APPROVED.

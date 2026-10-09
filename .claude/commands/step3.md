@@ -1,19 +1,20 @@
 ---
-description: "Step 3 (build): Opus implements the stages of the plan one by one with no layers inside and no checks while building; you test stage 1 by hand locally, the local CI pass runs once right before the push; every stage PR is opened, Auto-fixed and merged into dev on green CI without asking, the next stage built while CI runs, and PM tests on dev; GPT reviews only data/auth stages on their open PR while CI runs, and a release to main that carries one"
+description: "Step 3 (build): Opus implements the stages of the plan, and the confirmed design as drawn, one by one with no layers inside and no checks while building; the local CI pass runs once right before the push; every stage PR is opened, Auto-fixed and merged into dev on green CI without asking, the next stage built while CI runs, and PM tests on dev; you test stage 1 by hand locally only for a task with nothing to draw; GPT reviews only data/auth stages on their open PR while CI runs, and a release to main that carries one"
 argument-hint: <slug> [repo-path]
 ---
 
-# Step 3 — build and ship a stage  ·  Opus implements · you test locally · checks before the push
+# Step 3 — build and ship a stage  ·  Opus implements · checks before the push · dev on green CI
 
-The third step of the **co-dev flow** (`harness/README-codev.md`). It starts by itself when the
-requester says yes at step 2's stop, and it works **stage by stage**. Step 3 is **pure
-implementation of the plan**: it takes the next stage, implements it as the plan details it, ships
-it as its own PR into `dev`, and the stage is done when it is **on the dev environment**: merged,
-deployed, the dev host serving the new build, the progress board updated
-(`<H>/checklists/mvp.md` §1). **Test by hand first, check right before the push** (`mvp.md` §10):
-nothing is checked while a stage is built; the requester tests stage 1 end to end on a local URL;
-the local CI pass runs once, right before the push; every later stage goes from that pass straight
-to its PR, merges on green CI and is tested on dev by PM. **Nothing between the stages waits for the
+The third step of the **co-dev flow** (`harness/README-codev.md`). It starts by itself once step 2
+has planned (after the requester's ok on the design, or their yes at step 2's stop when there was
+nothing to draw), and it works **stage by stage**. Step 3 is **pure implementation of the plan**,
+and of the confirmed design where a stage shows it: it takes the next stage, implements it as the
+plan details it, ships it as its own PR into `dev`, and the stage is done when it is **on the dev
+environment**: merged, deployed, the dev host serving the new build, the progress board updated
+(`<H>/checklists/mvp.md` §1). **Check right before the push** (`mvp.md` §10): nothing is checked
+while a stage is built; under `Ship: stage1` (a task with nothing to draw) the requester first tests
+stage 1 end to end on a local URL; the local CI pass runs once, right before the push; every stage
+goes from that pass straight to its PR, merges on green CI and is tested on dev by PM. **Nothing between the stages waits for the
 requester** (`mvp.md` §10, their decision of 2026-10-09): you push, open each PR, turn on its
 Auto-fix and merge it into dev on green CI without asking, and you build the next stage while CI
 runs (3f). Run `/step3 $1` by hand only to resume, or to release to main (3g).
@@ -133,6 +134,9 @@ from `/step2 $1`'s re-plan.
 - Read the stage's row and its `## Stage N` section in `<S>/plan.md`, and
   `<H>/checklists/ponytail.md`. Implement the minimum that delivers the stage's outcome, inside its
   guard. Climb the ladder before adding any surface; touch only the files the stage needs.
+- **The confirmed design is the visual spec** (`mvp.md` §11). A stage that shows what the design
+  draws builds those screens and states as drawn in `<S>/design/`: layout, sizes, colors and the
+  words. A departure goes into the build log's Deviations with its reason.
 - **Tests prove the stage** (`mvp.md` §6): its demo path; a regression guard for every behaviour
   users have today that it touches; the repo's mandatory proofs. Write them with the stage; the
   local CI pass runs the affected ones before the push, and CI runs them all. A schema change ships
@@ -146,18 +150,19 @@ from `/step2 $1`'s re-plan.
   while you implement the stage or while the requester tests it. Generate what the change itself
   needs (API types after a server schema change, the ru and en locale keys of new strings): that is
   implementing the stage, not checking it.
-- **Stage 1: the requester tests it by hand, locally.** As soon as stage 1 is committed, bring the
-  app up from `<WT>`, on the app's usual local port and without a sign-in where the app has a local
-  demo mode, and give the requester the URL with the steps of the demo script. Do not walk it
-  yourself first, and do not wait for screenshots. They test it end to end; their ok starts the
-  local CI pass, and what they want changed goes into the stage without checks, then they test
-  again. Timebox the bring-up to about ten minutes: if the local environment fights you, say so and
-  let the requester choose between waiting and testing on dev. Stop the local servers once they are
-  done. Under `Ship: every` every stage gets this test; otherwise a later stage gets none and goes
-  straight to the local CI pass.
-- **The local CI pass, once, right before the push.** After the requester's ok (stage 1), or as soon
-  as a later stage is built: the static checks of the app's CI job for what the stage touched (lint,
-  format, types; i18n and generated API types when they apply), the affected tests
+- **Stage 1 under `Ship: stage1`: the requester tests it by hand, locally.** As soon as stage 1 is
+  committed, bring the app up from `<WT>`, on the app's usual local port and without a sign-in where
+  the app has a local demo mode, and give the requester the URL with the steps of the demo script.
+  Do not walk it yourself first, and do not wait for screenshots. They test it end to end; their ok
+  starts the local CI pass, and what they want changed goes into the stage without checks, then they
+  test again. Timebox the bring-up to about ten minutes: if the local environment fights you, say so
+  and let the requester choose between waiting and testing on dev. Stop the local servers once they
+  are done. Under `Ship: every` every stage gets this test, and a later stage otherwise gets none.
+  Under `Ship: none` (after a confirmed design) no stage waits for one: stage 1 goes from its build
+  straight to the local CI pass, like every later stage.
+- **The local CI pass, once, right before the push.** After the requester's ok on their hand test,
+  or as soon as the stage is built when it has none: the static checks of the app's CI job for what
+  the stage touched (lint, format, types; i18n and generated API types when they apply), the affected tests
   (`scripts/test-affected.sh` from the repo root runs the tests that import, are named after or name
   what changed, the real-DB ones in a throwaway sandbox; `--list` shows what it picks and why), and
   the migration sandbox proof when a schema change ships. Not the full suites: CI runs them on the
@@ -190,8 +195,8 @@ Draft the PR body in `<S>/pr-s<N>.md`, for the people who read the PR:
 - `## What`: what users get on dev in this stage, in their words.
 - `## How to see it on dev`: the demo script, for PM, who walks it on dev.
 - `## Changes`: per area, one line each.
-- `## Verification`: the local CI pass's commands and counts from the build log, and for stage 1
-  the requester's test by hand; CI on this PR runs every suite. For a data or auth stage, add the
+- `## Verification`: the local CI pass's commands and counts from the build log, and the
+  requester's test by hand when there was one; CI on this PR runs every suite. For a data or auth stage, add the
   GPT verdict's Status and Release Risk and the Must Fix items fixed after it, once it is in (3d).
 - `## Follow-ups`: the known follow-ups and the `ponytail:` markers the stage adds.
 - `## Stages`: the plan's stage map and the progress board, so GitHub keeps the record.
@@ -199,9 +204,9 @@ Draft the PR body in `<S>/pr-s<N>.md`, for the people who read the PR:
 No AI attribution, no secrets, tokens or personal data.
 
 **When it opens** (`mvp.md` §10): right after the local CI pass, without asking whether to push or
-to open it. For **stage 1** (and every stage under `Ship: every` or an older brief's `Ship: ask`)
-that pass comes after the requester's ok on their local test; for **every later stage** (and every
-stage under an older `Ship: auto`) it comes right after the build. **A stage built on the stage
+to open it. For **stage 1 under `Ship: stage1`** (and every stage under `Ship: every` or an older
+brief's `Ship: ask`) that pass comes after the requester's ok on their local test; for **every other
+stage** (every stage under `Ship: none` or an older `Ship: auto`) it comes right after the build. **A stage built on the stage
 before it** (3a) opens only once that stage has merged: read its PR and merge it if it is green
 (3d). On the first push the block refuses while that stage has not merged, and rebases this one
 onto the fresh `origin/<BASE>`, so the PR carries this stage's commits only (stages merge with a
@@ -328,8 +333,8 @@ Follow-ups; add its Status and Release Risk to the PR body's Verification
 
 **The merge.** With CI green, and for a data or auth stage its review APPROVED or its Must Fix items
 fixed as above, mark a draft ready and merge it into `<BASE>` **on your own**, without asking:
-merging into dev on green CI is the requester's standing ask (`mvp.md` §10), and their test came
-before the PR (stage 1) or is not part of the stage.
+merging into dev on green CI is the requester's standing ask (`mvp.md` §10), and their ok on the
+design, or their test of stage 1, came before the PR.
 
 ```bash
 H=$(d=$PWD; while [ "$d" != / ] && [ ! -f "$d/harness/prompts/reviewer.md" ]; do d=$(dirname "$d"); done; [ "$d" != / ] && echo "$d/harness")
