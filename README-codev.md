@@ -33,6 +33,16 @@ stage 1 end to end on a local URL; the local CI pass (static checks, affected te
 before the push; every later stage goes from that pass to dev on green CI without a stop, merged by
 the builder without asking; and PM, not the builder, walks the demo on dev.
 
+**Since 2026-10-09.** The session logs since 2026-10-03, checked against GitHub, showed the flow
+still waiting on the requester between stages: about a third of their messages (83 of 241) only
+moved it on («merge», «да, открывай PR в dev», «да, включи auto-fix», «продолжай, мержи когда CI
+green»), and a green stage PR waited a median of about 6 minutes more for that word, on a CI round
+of about 8. Their answer: «не жди меня, открывай PR и делай merge into dev if CI is green». The
+builder now pushes, opens the PR, turns on its Auto-fix and merges it into dev on green CI without
+asking, and builds the next stage on the stage before it while that one's CI runs, so a turn no
+longer ends on a running CI ([`checklists/mvp.md`](checklists/mvp.md) §2, §10). Only stage 1's test
+by hand and the release to main still wait for the requester.
+
 ## The three steps
 
 | step | command | does | checks | result in `superapp/specs/<slug>/` |

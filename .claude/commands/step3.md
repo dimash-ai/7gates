@@ -1,5 +1,5 @@
 ---
-description: "Step 3 (build): Opus implements the stages of the plan one by one with no layers inside and no checks while building; you test stage 1 by hand locally, the local CI pass runs once right before the push, later stages go straight to dev on green CI and PM tests them there; GPT reviews only data/auth stages on their open PR while CI runs, and a release to main that carries one"
+description: "Step 3 (build): Opus implements the stages of the plan one by one with no layers inside and no checks while building; you test stage 1 by hand locally, the local CI pass runs once right before the push; every stage PR is opened, Auto-fixed and merged into dev on green CI without asking, the next stage built while CI runs, and PM tests on dev; GPT reviews only data/auth stages on their open PR while CI runs, and a release to main that carries one"
 argument-hint: <slug> [repo-path]
 ---
 
@@ -13,9 +13,10 @@ deployed, the dev host serving the new build, the progress board updated
 (`<H>/checklists/mvp.md` §1). **Test by hand first, check right before the push** (`mvp.md` §10):
 nothing is checked while a stage is built; the requester tests stage 1 end to end on a local URL;
 the local CI pass runs once, right before the push; every later stage goes from that pass straight
-to its PR, merges on green CI and is tested on dev by PM. Then the run goes straight on to the next
-stage (3f). Run `/step3 $1` by hand only to resume, or
-to release to main (3g).
+to its PR, merges on green CI and is tested on dev by PM. **Nothing between the stages waits for the
+requester** (`mvp.md` §10, their decision of 2026-10-09): you push, open each PR, turn on its
+Auto-fix and merge it into dev on green CI without asking, and you build the next stage while CI
+runs (3f). Run `/step3 $1` by hand only to resume, or to release to main (3g).
 
 GPT reviews where a second model changes the outcome, and nowhere else: a stage whose risk is
 **data** or **auth** gets one GPT review on its open PR, while CI runs, before it merges into dev
@@ -45,7 +46,14 @@ backticks.
 - **Timebox.** The stage's budget is on the map. At one and a half times the budget, stop and tell
   the requester, then re-cut: ship what works behind the stage's guard and move the rest to the
   next stage.
-- **Serial.** A stage starts from `origin/<BASE>` after the stage before it has merged.
+- **One stage at a time, without waiting** (`mvp.md` §2). The next stage is built while the stage
+  before it waits for CI, on that stage's branch (3a); its PR opens only after that stage merged,
+  rebased onto the fresh `origin/<BASE>` (3c).
+- **Never ask to move a stage on** (`mvp.md` §10). Pushing, opening the PR into dev, turning on its
+  Auto-fix and merging it into dev on green CI are the requester's standing ask of 2026-10-09: «не
+  жди меня, открывай PR и делай merge into dev if CI is green». Do them and report that you did;
+  never ask about them, and never end a turn to wait for such an answer. The release to main (3g) is
+  still theirs.
 - **Checks once, right before the push** (`mvp.md` §10). No lint, format, type, i18n or test
   command while you build or while the requester tests; the local CI pass runs once, before the push
   (3b), and CI runs every suite on the PR.
@@ -69,7 +77,8 @@ git -C "$WT" log --oneline "origin/$BASE..HEAD"
 
 No approved plan, no build. **The stage of this run** is the first one on the board that is neither
 `on dev` nor `verified`: finish a stage that is already under way (building, test, PR, review)
-before starting a new one. If `<S>` is gone (the session that held it ended), the last stage PR's
+before starting a new one, except the next stage, built on a stage whose PR waits for CI (3a). If
+`<S>` is gone (the session that held it ended), the last stage PR's
 body carries the stage map and the board: rebuild `progress.md` from it, and take the plan's details
 from `/step2 $1`'s re-plan.
 
@@ -77,36 +86,45 @@ from `/step2 $1`'s re-plan.
 
 ## 3a — Start the stage
 
-1. **The stage before it has merged.** For stage N ≥ 2, `gh pr view <its PR> --json state` must say
-   `MERGED`; if it does not, finish that stage first (3d and 3e).
+1. **The stage before it is in its PR.** For stage N ≥ 2, the stage before it has merged, or its PR
+   is open and waiting for CI. Not yet in a PR: finish it first (3b, 3c). Waiting for CI: build this
+   stage on its branch (the block below does it) and merge it the moment a read shows green (3d). A
+   data or auth stage whose GPT review is still running keeps `<WT>` on its branch: prepare this
+   stage without touching `<WT>` until the verdict is in and its fixes are pushed.
 2. **The plan details it.** The plan has a `## Stage N` section. If it does not, or dev showed that
    the stage as planned is wrong, STOP: re-plan with `/step2 $1`, which re-plans only the stages not
    yet started.
 3. **The branch.** Stage 1 is already on `<BR>-s1` from step 2. For stage N ≥ 2, cut `<BR>-s<N>` from
-   the fresh `origin/<BASE>` (replace `<N>`). Re-cut stage 1 the same way when the base moved since
-   step 2 and the branch has no commits yet.
+   the fresh `origin/<BASE>` when the stage before it has merged, or from that stage's branch while
+   its PR waits for CI (replace `<N>`); 3c rebases it onto `origin/<BASE>` before its PR opens.
+   Re-cut stage 1 the same way when the base moved since step 2 and the branch has no commits yet.
 
    ```bash
    H=$(d=$PWD; while [ "$d" != / ] && [ ! -f "$d/harness/prompts/reviewer.md" ]; do d=$(dirname "$d"); done; [ "$d" != / ] && echo "$d/harness")
    . "${H:?no harness/ at or above this directory}/bin/codev-env.sh" "$1" "$2" || exit 1
    codev_need_header && codev_need_worktree || exit 1
-   N=<N>; B="$BR-s$N"
+   N=<N>; B="$BR-s$N"; P="$BR-s$((N-1))"
    [ -z "$(git -C "$WT" status --porcelain)" ] || { echo "codev: $WT has uncommitted changes - commit or move them first"; exit 1; }
    git -C "$M" fetch origin "$BASE" --quiet || { echo "codev: cannot fetch origin/$BASE"; exit 1; }
-   if [ "$(git -C "$WT" branch --show-current)" = "$B" ] && [ -z "$(git -C "$WT" log --oneline "origin/$BASE..HEAD")" ]; then
-     git -C "$WT" reset --hard "origin/$BASE" --quiet                     # no commits of its own yet: re-cut on the fresh base
+   FROM="origin/$BASE"
+   if [ "$N" -gt 1 ] && git -C "$M" show-ref --verify --quiet "refs/heads/$P" && ! git -C "$M" merge-base --is-ancestor "$P" "origin/$BASE"; then
+     FROM="$P"                                                           # the stage before waits for CI: build on it, stacked
+   fi
+   if [ "$(git -C "$WT" branch --show-current)" = "$B" ] && [ -z "$(git -C "$WT" log --oneline "$FROM..HEAD")" ]; then
+     git -C "$WT" reset --hard "$FROM" --quiet                           # no commits of its own yet: re-cut on the fresh base
    elif git -C "$M" show-ref --verify --quiet "refs/heads/$B"; then
      git -C "$WT" switch "$B" || exit 1
    else
-     git -C "$WT" switch --no-track -c "$B" "origin/$BASE" || exit 1
+     git -C "$WT" switch --no-track -c "$B" "$FROM" || exit 1
    fi
-   echo "stage $N on $B at $(git -C "$WT" rev-parse --short HEAD)"
+   echo "stage $N on $B at $(git -C "$WT" rev-parse --short HEAD), cut from $FROM"
    ```
 
 4. **First stage only:** install what the app needs in `<WT>` (`uv sync` in its server dir,
    `pnpm install` at the root): the requester's test of stage 1 and every local CI pass run from
    here. The checks do not need a `.env`: CI runs them without one.
-5. **The board:** the stage is `building`, with the time it started.
+5. **The board:** the stage is `building`, with the time it started, and `stacked on #<PR>` while
+   the stage before it waits for CI.
 
 ## 3b — Implement the stage
 
@@ -180,10 +198,14 @@ Draft the PR body in `<S>/pr-s<N>.md`, for the people who read the PR:
 
 No AI attribution, no secrets, tokens or personal data.
 
-**When it opens** (`mvp.md` §10): right after the local CI pass, without asking. For **stage 1**
-(and every stage under `Ship: every` or an older brief's `Ship: ask`) that pass comes after the
-requester's ok on their local test; for **every later stage** (and every stage under an older
-`Ship: auto`) it comes right after the build.
+**When it opens** (`mvp.md` §10): right after the local CI pass, without asking whether to push or
+to open it. For **stage 1** (and every stage under `Ship: every` or an older brief's `Ship: ask`)
+that pass comes after the requester's ok on their local test; for **every later stage** (and every
+stage under an older `Ship: auto`) it comes right after the build. **A stage built on the stage
+before it** (3a) opens only once that stage has merged: read its PR and merge it if it is green
+(3d). On the first push the block refuses while that stage has not merged, and rebases this one
+onto the fresh `origin/<BASE>`, so the PR carries this stage's commits only (stages merge with a
+merge commit, so the commits of the stage before it are in `origin/<BASE>` already).
 The block checks the Linear wording, then pushes and opens the PR **with the base named
 explicitly** (`gh pr create` otherwise targets the default branch). A data or auth stage opens as a
 **draft**, so nobody merges it before its review is in; CI runs on a draft all the same:
@@ -201,6 +223,14 @@ if [ -n "$ID" ]; then   # mvp.md section 8: link the issue without closing it
   printf '%s\n%s\n' "$B" "$TITLE" | grep -qi "$ID" && { echo "codev: $ID in the branch or the title would close the issue on merge - take it out"; exit 1; }
   { printf '%s\n' "$TITLE"; cat "$F"; } | grep -qiE "(^|[^[:alnum:]])(close[sd]?|closing|fix(e[sd]|ing)?|resolve[sd]?|resolving|complete[sd]?|completing|implement(s|ed|ing)?|linear issue)[[:space:]]+(https://linear\.app/[^[:space:]]*/)?$ID" && { echo "codev: a closing word before $ID would close the issue - reword it"; exit 1; }
 fi
+if ! git -C "$WT" rev-parse --verify --quiet "refs/remotes/origin/$B" >/dev/null; then   # the first push: the PR carries this stage only
+  git -C "$M" fetch origin "$BASE" --quiet || { echo "codev: cannot fetch origin/$BASE"; exit 1; }
+  P="$BR-s$((N-1))"
+  if [ "$N" -gt 1 ] && git -C "$M" show-ref --verify --quiet "refs/heads/$P" && git -C "$WT" merge-base --is-ancestor "$P" HEAD && ! git -C "$WT" merge-base --is-ancestor "$P" "origin/$BASE"; then
+    echo "codev: $B is built on stage $((N-1)), which has not merged yet - merge it on green first (3d), then re-run this block"; exit 1
+  fi
+  git -C "$WT" rebase --quiet "origin/$BASE" || { echo "codev: the rebase onto origin/$BASE stopped on a conflict - resolve it, git rebase --continue, re-run the local CI pass for what it touched, then re-run this block"; exit 1; }
+fi
 git -C "$WT" push -u origin "$B" || exit 1
 cd "$WT" && if [ "$DRAFT" = yes ]; then gh pr create --draft --base "$BASE" --head "$B" --title "$TITLE" --body-file "$F"; else gh pr create --base "$BASE" --head "$B" --title "$TITLE" --body-file "$F"; fi
 ```
@@ -212,14 +242,21 @@ re-evaluates it on save.
 ## 3d — Review and merge
 
 CI runs every suite on the PR, so it is where a breakage outside the local selection shows up; a
-red CI is fixed on the stage branch like a Must Fix. Bind the PR with the desktop app's PR tools and
-never poll its checks in a loop. When you report the PR, offer its Auto-fix (the app then wakes this
-session when CI goes red) in the same message, without waiting for the answer. The app does not wake
-the session when CI turns green, so use the CI time: prepare the next stage (read its row and its
-section of the plan, and the code it builds on, keeping notes in the scratchpad), then read the PR
-once with the app's PR status tool. Green: merge it (below) and go on to 3e. Still running: end the
-turn with one line, "stage N waits for CI; any message from you resumes the run, and I merge it if
-CI is green".
+red CI is fixed on the stage branch like a Must Fix. As soon as the PR is open, bind it with the
+desktop app's PR tools (`get_status`, then `bind_pr` if it does not report this PR) and **turn its
+Auto-fix on yourself** (`set_monitor` with `auto_fix: true` and the PR's url): the requester asked
+for it on every stage PR (`mvp.md` §10), so it is not a question, and the app then wakes this
+session when CI goes red, the PR conflicts or a review comment arrives. Never poll the checks. The
+app does not wake the session when CI turns green, so **CI time is build time**: go straight on to
+the next stage, built on this one's branch (3a), and read this PR with the app's PR status tool at
+every natural point: the next stage built, its local CI pass done, a review back. The first read
+that shows green (and, for a data or auth stage, its review in): merge it (below), do 3e, and go on.
+**Never end a turn on a running CI while a next stage is left to build.** At the last stage, spend
+the CI time on the wrap-up (the build log, the board, the bet in PostHog, 3f), then read; only if CI
+still runs after that, end the turn with the board and one line, "stage N: CI running, I merge it on
+green; any message resumes the run". When Auto-fix wakes you on a red stage you have already built
+on, stash the next stage's work, switch `<WT>` back to the red stage's branch, fix and push, then
+switch back and pop the stash.
 
 **A data or auth stage** gets one GPT review while CI runs: start it as soon as the PR is open.
 **Reviewer = GPT (Codex)**, on the committed branch, looking for what CI cannot see. It does not
@@ -290,8 +327,9 @@ Follow-ups; add its Status and Release Risk to the PR body's Verification
   more, or merge on CI alone with the stage marked unreviewed on the board.
 
 **The merge.** With CI green, and for a data or auth stage its review APPROVED or its Must Fix items
-fixed as above, mark a draft ready and merge it into `<BASE>` **on your own**, without asking: the
-requester's test came before the PR (stage 1) or is not part of the stage (`mvp.md` §10).
+fixed as above, mark a draft ready and merge it into `<BASE>` **on your own**, without asking:
+merging into dev on green CI is the requester's standing ask (`mvp.md` §10), and their test came
+before the PR (stage 1) or is not part of the stage.
 
 ```bash
 H=$(d=$PWD; while [ "$d" != / ] && [ ! -f "$d/harness/prompts/reviewer.md" ]; do d=$(dirname "$d"); done; [ "$d" != / ] && echo "$d/harness")
@@ -317,13 +355,14 @@ The board: `PR` (and `review` while GPT runs), then `on dev` once the deploy bel
 3. **The board:** `on dev`, with the time, and a line in the Log; print it. A stage becomes
    `verified` when PM or the requester says its demo passed on dev: record who and when.
 4. **Report** to the requester: stage N is on dev, the link, the three to five steps PM follows, the
-   follow-ups waiting for their decision, and the next stage with its budget, which starts at once
-   (3f).
+   follow-ups waiting for their decision, and the next stage with its budget, already under way
+   (3f). The report says what was done and asks nothing; the run does not wait for an answer.
 
 ## 3f — Next
 
 - **The next stage starts by itself.** With a next stage on the board, report stage N (3e) and go
-  straight on to stage N+1 (3a); do not wait for the requester to type `/step3`. What dev showed
+  straight on to stage N+1 (3a), usually already built on stage N's branch while N's CI ran; do not
+  wait for the requester to type `/step3` or to answer the report. What dev showed
   may change the map: the requester may stop the run, re-order, cut, merge or add stages at any
   time, and follow-ups may become stages. A change to stages not yet started goes through
   `/step2 $1` (a re-plan); nothing that shipped is redone. When every stage is on dev, stop: PM's

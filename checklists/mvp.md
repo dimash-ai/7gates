@@ -41,9 +41,11 @@ not wait for that.
 - **Safe on dev.** `dev` is shared with PM and QA and is the pre-prod surface. Every stage names its
   **guard**: additive only (nothing users have today changes), a hidden route, or a dev-only flag,
   until the stage that switches users over. Migrations are additive (expand → migrate → contract).
-- **Serial by default.** Stage N+1 starts from `origin/<base>` after stage N merged. Parallel stages
-  only on disjoint files and on the requester's ask; never build on an unmerged stage's commit.
-  Parallel work multiplies code, not delivered value.
+- **One stage at a time, without waiting between them.** Stage N+1 is built while stage N's PR waits
+  for CI, on N's branch (stacked), so CI time is build time (§10). Its PR opens only after N merged,
+  rebased onto the fresh `origin/<base>`, so every PR into dev carries one stage and nothing else;
+  a stage N that CI or its review sends back is fixed first. Parallel stages only on disjoint files
+  and on the requester's ask. Parallel work multiplies code, not delivered value.
 - **The map is alive.** After every stage the requester may re-order, cut or add stages. A change
   re-plans only the stages not yet started (step 2 again); nothing that shipped is redone.
 - **A deadline decides the cut.** When the ticket has a target date (a Linear milestone, a promise),
@@ -81,10 +83,11 @@ not wait for that.
   and 2 together.
 - **One stop before any code.** Step 1 stops on its own only for a question that cannot be
   assumed; otherwise it goes straight on into step 2, and the requester sees the brief and the plan
-  together at step 2's stop. Their yes there starts step 3 at once, and a stage on dev starts the
+  together at step 2's stop. Their yes there starts step 3 at once, and a stage's open PR starts the
   next one: nobody waits for a command to be typed. After the stop, the run waits for the requester
-  once more, while they test stage 1 by hand locally (§10). The requester can stop the run, or re-order or cut
-  stages, at any time.
+  once more, while they test stage 1 by hand locally (§10). Moving a stage on is never a question:
+  the builder pushes, opens the PR into dev, turns on its Auto-fix and merges it on green CI by
+  itself (§10). The requester can stop the run, or re-order or cut stages, at any time.
 
 ## 5 · Reviews block only on ship-blockers
 
@@ -189,6 +192,15 @@ permission for a demo on dev). Locally the requester wants the app up as fast as
 it end to end by hand; the checks run after that, once, right before the push into dev; on dev, CI
 runs every suite and PM tests.
 
+The requester's decision of 2026-10-09, after a second measurement (the session logs since
+2026-10-03, checked against GitHub): about a third of their messages to the flow (83 of 241) only
+moved it on: «merge», «да, открывай PR в dev», «да, включи auto-fix», «продолжай, мержи когда CI
+green», «what is the status?». A stage's CI round took about 8 minutes (p50 7.6), and a green stage
+PR then waited a median of about 6 more for their word, because the run asked first or ended its
+turn on a running CI. Their words: «не жди меня, открывай PR и делай merge into dev if CI is green».
+After the plan's yes, the run waits for them only for their test of stage 1 and for the release to
+main.
+
 - **No checks while building.** While a stage is being built, and while the requester is testing
   it, the builder runs no lint, format, type, i18n or test command. Files the change must regenerate
   (API types, locale keys) are part of implementing it, not a check.
@@ -207,10 +219,25 @@ runs every suite and PM tests.
   to its PR, reaches dev on green CI behind its guard, and PM tests it there. The requester can ask
   to test every stage by hand first, at the stop or at any time: `Ship: every` in the brief's
   header. Older briefs: `Ship: ask` means every, `Ship: auto` means none.
-- **Merge on green, without asking.** The builder merges a stage's PR itself as soon as CI is green
-  (a data or auth stage once its review is in, too). The desktop app does not wake a session when CI
-  turns green, so while CI runs the builder prepares the next stage, then reads the PR once: green,
-  it merges; still running, the requester's next message resumes the run.
+- **Never ask to move a stage on.** Pushing a stage's branch, opening its PR into dev, turning on its
+  Auto-fix and merging it into dev on green CI are the requester's standing ask, for every ticket:
+  the builder does them without a question and says in its report that it did. No AskUserQuestion
+  and no "shall I…?" for any of them, and no turn that ends to wait for such an answer. The release
+  to main stays the requester's call (step 3g).
+- **Merge on green; CI time is build time.** The builder merges a stage's PR itself as soon as CI is
+  green (a data or auth stage once its review is in, too). The desktop app wakes a session when CI
+  goes red (Auto-fix) but not when it turns green, and the builder never polls the checks, so while a
+  stage's CI runs it builds the next stage on that stage's branch (§2) and reads the PR's status at
+  every natural point: the next stage built, its local CI pass done, a review back. It merges as
+  soon as a read shows green. A turn never ends on a running CI while a next stage is left to build;
+  at the last stage the CI time goes to the wrap-up (the build log, the board, the bet in PostHog),
+  and only if CI still runs after that does the turn end, with the board and one line.
+- **GitHub auto-merge only with required checks.** Where the repo allows auto-merge and the base
+  branch requires the CI checks, the builder turns auto-merge on (method merge) for each stage PR
+  once it may merge, and then nothing waits at all. Allosta-Group/superapp has neither (2026-10-09):
+  auto-merge is off and `dev` requires no check, so auto-merge there would merge before CI finished;
+  never turn it on. Its CI workflows are path-filtered, so requiring them needs an always-running
+  gate job first.
 - **On dev, the builder checks the deploy, not the demo.** It confirms that the dev host serves the
   new build, and it writes nothing to the shared dev data; PM walks the demo script from the PR. The
-  stage is `on dev` then, and the next stage starts.
+  stage is `on dev` then; the next stage is usually built by then (§2).

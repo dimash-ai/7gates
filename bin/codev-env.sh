@@ -13,7 +13,8 @@
 #   S     M/specs/<slug>      every result of the flow (gitignored in superapp)
 #   WT    M/.worktrees/<slug> the one tree step 2 plans against and step 3 builds in; it moves
 #         from stage branch to stage branch (<Branch>-s1, <Branch>-s2, ...), each cut from
-#         origin/<Base> once the stage before it has merged.
+#         origin/<Base> once the stage before it has merged, or from that stage's branch while
+#         its PR waits for CI (rebased onto origin/<Base> before its own PR opens).
 #         A session that runs in a worktree of its own (R under M/.claude/worktrees/, the Claude
 #         desktop app's default) keeps both in that worktree instead: S=R/specs/<slug>, WT=R.
 #   BR    the brief's Branch: line (the base name of the stage branches), BASE its Base: line

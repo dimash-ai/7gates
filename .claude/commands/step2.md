@@ -221,7 +221,9 @@ Follow-ups. Then **STOP** and show in the chat:
 - the fixes you made and the follow-ups you found, one line each;
 - how the stages ship (`mvp.md` §10), in one line: you test stage 1 by hand on a local URL, then
   the local CI pass runs and its PR opens; every later stage goes from its local CI pass to dev on
-  green CI, without a stop, and PM tests it there;
+  green CI, without a stop, and PM tests it there; the builder opens, Auto-fixes and merges every PR
+  into dev itself and builds the next stage while CI runs, so nothing waits for you until the
+  release to main;
 - a link to `<S>/plan.md` and to the verdict (see **Links**); the quick lane has none.
 
 Ask in one round (AskUserQuestion), one question: **the brief and the stages**: confirm, correct the
