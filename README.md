@@ -20,7 +20,7 @@ a review blocks only on ship-blockers; everything else becomes a follow-up you d
 |---|------|------|--------|--------|
 | 1 | brief | **Opus** rephrases your input (your words or a Linear ticket) into a short brief: the problem, the user stories, **the MVP**; minutes, not hours | **you** | `specs/<slug>/brief.md` |
 | 2 | plan  | **GPT** plans every stage, cold, from the brief and the code | Opus, inline; then **you** | `specs/<slug>/plan.md` |
-| 3 | build, once per stage | **Opus** implements the next stage, no layers inside; its own PR into `dev`, verified on dev; registers the hypothesis in PostHog | your checks and CI; **GPT** for a data or auth stage, and once before main | a PR per stage, verified on dev |
+| 3 | build, once per stage | **Opus** implements the next stage, no layers inside, no checks while building; you test stage 1 by hand on a local URL; the checks run once before each push; later stages go straight to their PR into `dev`, merged on green CI, tested on dev by PM; registers the hypothesis in PostHog | the local CI pass and CI; your test of stage 1; **GPT** for a data or auth stage, and once before main | a PR per stage, on dev |
 | — | learn, weekly | **Opus** measures every shipped hypothesis in PostHog; **Opus and GPT** judge independently | **you** | verdicts in PostHog |
 
 Results land in the code repo's gitignored `specs/<slug>/` (for superapp, `superapp/specs/`), never
@@ -57,7 +57,7 @@ In Claude Code, from superapp, one of its worktrees, or the harness itself (`sup
 ```
 /step1 <slug>    # brief — your request rephrased, with the MVP; no stop unless it must ask
                  # plan  — GPT plans the stages (Opus alone in the quick lane); ONE stop: brief + stages
-                 # build — then stage after stage: implemented, its PR into dev, verified on dev
+                 # build — you test stage 1 by hand locally; checks once before each push; PRs into dev on green CI
 /step3 <slug>    # resume a run, or release the stages to main when you say so
 /learn           # learn — weekly: checks every shipped hypothesis against what users did
 ```

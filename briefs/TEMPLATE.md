@@ -4,7 +4,7 @@ Branch: <the base name of the stage branches, without the Linear id: feat/focal-
 Base: dev
 Linear: <ALL-id — url, or none>
 Deadline: <the milestone's target date or a promised date, or none>
-Ship: <set in step 2: ask or auto>
+Ship: <stage1 (the default: you look at stage 1 locally, later stages go to dev on green CI) or every; set in step 2>
 Lane: <quick or stages: set in step 1, checked in step 2 (harness/checklists/mvp.md §9)>
 Harness: <the harness commit step 1 ran on>
 Date: YYYY-MM-DD

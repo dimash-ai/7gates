@@ -18,11 +18,15 @@ that let that happen.
 A **stage** is the smallest increment a user can see on dev. It is **done** only when all four hold:
 
 1. its PR into `dev` is merged;
-2. the deploy succeeded, on every service the change touches;
-3. its **demo script** was walked on the dev environment and passed: someone looked at it;
+2. the deploy succeeded, on every service the change touches, and the dev host serves the new
+   build;
+3. its **demo script** is in the PR for PM, who walks it on dev (§10); stage 1 was also tested by
+   hand, locally, by the requester before its PR opened;
 4. the progress board (§7) says so.
 
-Code on a branch, an approved review or a green CI is not a delivered stage.
+Code on a branch, an approved review or a green CI is not a delivered stage. A stage is
+**verified** once PM or the requester has walked its demo on dev and said so; the next stage does
+not wait for that.
 
 ## 2 · Stage rules
 
@@ -77,9 +81,10 @@ Code on a branch, an approved review or a green CI is not a delivered stage.
   and 2 together.
 - **One stop before any code.** Step 1 stops on its own only for a question that cannot be
   assumed; otherwise it goes straight on into step 2, and the requester sees the brief and the plan
-  together at step 2's stop. Their yes there starts step 3 at once, and a verified stage starts the
-  next one: nobody waits for a command to be typed. The requester can stop the run, or re-order or
-  cut stages, at any time.
+  together at step 2's stop. Their yes there starts step 3 at once, and a stage on dev starts the
+  next one: nobody waits for a command to be typed. After the stop, the run waits for the requester
+  once more, while they test stage 1 by hand locally (§10). The requester can stop the run, or re-order or cut
+  stages, at any time.
 
 ## 5 · Reviews block only on ship-blockers
 
@@ -138,7 +143,8 @@ again, goes to the requester: fix now, hide behind the guard, or cut.
   diff, not every document the flow ever wrote.
 - **Tests prove the stage**: its demo path, a regression guard for every existing behaviour it
   touches, and the repo's mandatory proofs (the migration sandbox, RLS assertions). Not an
-  exhaustive matrix of the new feature's edge cases; those are follow-ups.
+  exhaustive matrix of the new feature's edge cases; those are follow-ups. They are written with the
+  stage; the affected ones run once, right before the push (§10), and CI runs them all.
 - **Speed over exhaustiveness.** This flow optimises time to dev. Ultracode and max effort make a
   step more exhaustive, not faster: when either is on, do not spend it on extra review layers, spec
   documents, wider test matrices or future stages built ahead.
@@ -147,9 +153,9 @@ again, goes to the requester: fix now, hide behind the guard, or cut.
 
 ## 7 · The progress board
 
-`<S>/progress.md` holds one row per stage: its outcome, its status (planned → building → PR → review
-→ on dev → verified), its budget and the time spent, the PR, when it reached dev, and its
-follow-ups. Every step updates it and prints it, and a "status?" is answered from it. Each stage
+`<S>/progress.md` holds one row per stage: its outcome, its status (planned → building → test, for
+stage 1 → PR → review → on dev → verified), its budget and the time spent, the PR, when it reached
+dev, and its follow-ups. Every step updates it and prints it, and a "status?" is answered from it. Each stage
 PR's body carries the board too, so GitHub keeps the record if the session's files are lost.
 
 ## 8 · Linear
@@ -169,8 +175,42 @@ it at the one stop (§4) and can switch it.
 - **Quick**: one stage of at most about two hours of build, with low risk: no schema change or
   backfill, no auth, tenant or RLS surface, no deletes or rewrites of existing records. Opus plans
   the stage itself in step 2, from the code; there is no GPT plan, no plan check and no GPT review,
-  in step 3 or at the release. The requester's yes is the check of the plan; the builder's checks,
-  CI and the demo on dev are the checks of the build. A quick stage that turns out to need more (a
-  migration, an auth change, a second stage, over three hours of build) leaves the lane: stop, tell
-  the requester, and re-plan it with `/step2` in the stages lane.
+  in step 3 or at the release. The requester's yes is the check of the plan; the requester's local
+  test, the local CI pass, CI and PM on dev are the checks of the build. A quick stage that turns
+  out to need more (a migration, an auth change, a second stage, over three hours of build) leaves
+  the lane: stop, tell the requester, and re-plan it with `/step2` in the stages lane.
 - **Stages**: everything else, as the rest of this file describes.
+
+## 10 · Test by hand first, check right before the push
+
+The requester's decisions of 2026-10-06, after a measurement of four runs: about 78% of their
+wall-clock was the flow waiting for the requester at a gate (a "ship", a merge after green CI, a
+permission for a demo on dev). Locally the requester wants the app up as fast as possible, to test
+it end to end by hand; the checks run after that, once, right before the push into dev; on dev, CI
+runs every suite and PM tests.
+
+- **No checks while building.** While a stage is being built, and while the requester is testing
+  it, the builder runs no lint, format, type, i18n or test command. Files the change must regenerate
+  (API types, locale keys) are part of implementing it, not a check.
+- **Stage 1 is tested by hand, locally, first.** As soon as stage 1 is built, the builder brings the
+  app up from the stage's worktree (the app's usual local port, without a sign-in where the app has
+  a local demo mode) and gives the requester the URL. The requester tests it end to end and says ok,
+  or what to change; a change goes in without checks, and they test again. After the plan's yes,
+  this is the one wait per ticket.
+- **The local CI pass, once, right before the push.** After the requester's ok (stage 1), or as soon
+  as a later stage is built, the builder runs the local CI pass: the static checks of the app's
+  `ci-<app>.yml` for what the stage touched (lint, format, types, i18n, generated API types), the
+  affected tests (`scripts/test-affected.sh`), and, for a schema change, the migration sandbox
+  proof. Not the full suites: CI runs them on the PR. A red check is fixed and the pass re-run; a fix
+  that changes what the requester tested goes back to them. Then the push and the PR into dev.
+- **Later stages go straight to dev.** A stage after the first goes from its local CI pass straight
+  to its PR, reaches dev on green CI behind its guard, and PM tests it there. The requester can ask
+  to test every stage by hand first, at the stop or at any time: `Ship: every` in the brief's
+  header. Older briefs: `Ship: ask` means every, `Ship: auto` means none.
+- **Merge on green, without asking.** The builder merges a stage's PR itself as soon as CI is green
+  (a data or auth stage once its review is in, too). The desktop app does not wake a session when CI
+  turns green, so while CI runs the builder prepares the next stage, then reads the PR once: green,
+  it merges; still running, the requester's next message resumes the run.
+- **On dev, the builder checks the deploy, not the demo.** It confirms that the dev host serves the
+  new build, and it writes nothing to the shared dev data; PM walks the demo script from the PR. The
+  stage is `on dev` then, and the next stage starts.

@@ -219,16 +219,16 @@ Follow-ups. Then **STOP** and show in the chat:
 - the **stage map** as a table, with stage 1 first and the hours to its arrival on dev;
 - stage 1 in three lines: what users get, how to see it on dev, what it leaves to later stages;
 - the fixes you made and the follow-ups you found, one line each;
+- how the stages ship (`mvp.md` §10), in one line: you test stage 1 by hand on a local URL, then
+  the local CI pass runs and its PR opens; every later stage goes from its local CI pass to dev on
+  green CI, without a stop, and PM tests it there;
 - a link to `<S>/plan.md` and to the verdict (see **Links**); the quick lane has none.
 
-Ask in one round (AskUserQuestion):
-
-1. **The brief and the stages**: confirm, correct the brief, or re-order, cut or merge stages. The
-   smallest change is the default.
-2. **Shipping**: (a) show me each stage, then I say "ship", and you open its PR and merge it once
-   CI (and, for a data or auth stage, its review) is green (Recommended), or (b) open and merge it
-   on your own, and show me on dev. Record the answer as `Ship: ask` or `Ship: auto` in the brief's
-   header.
+Ask in one round (AskUserQuestion), one question: **the brief and the stages**: confirm, correct the
+brief, or re-order, cut or merge stages; the smallest change is the default. Record `Ship: stage1`
+in the brief's header, or `Ship: every` when the requester says they want to test every stage by
+hand locally before it ships. Shipping is not a question of its own: the requester decided it for every
+ticket on 2026-10-06.
 
 Corrections go into the brief and the plan; one that changes stage 1 re-runs 2b (2q in the quick
 lane) before step 3 starts. In the quick lane, record the requester's yes as the plan's approval,

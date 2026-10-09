@@ -23,13 +23,23 @@ around one stop before code; a small, low-risk change takes a quick lane without
 fixed and goes on with CI as its proof; and GPT reviews in parallel with CI, only where data or
 auth is at stake.
 
+**Since 2026-10-06.** The session logs of four runs, checked against GitHub, showed that about 78%
+of their wall-clock was the flow waiting for the requester at a gate: a "ship", a merge after green
+CI, a permission for a demo on dev. GPT took about 2.5%, CI and deploys under 2%, and local checks
+and tests one or two minutes a stage. The requester's answer: **local is for looking, dev is for
+checking** ([`checklists/mvp.md`](checklists/mvp.md) §10), refined the same evening to **test by hand
+first, check right before the push**. Nothing is checked while a stage is built; the requester tests
+stage 1 end to end on a local URL; the local CI pass (static checks, affected tests) runs once, right
+before the push; every later stage goes from that pass to dev on green CI without a stop, merged by
+the builder without asking; and PM, not the builder, walks the demo on dev.
+
 ## The three steps
 
 | step | command | does | checks | result in `superapp/specs/<slug>/` |
 |------|---------|------|--------|------------------------------------|
 | 1 · brief | `/step1 <slug>` | Opus rephrases your input (your words or a Linear ticket) into a short brief for step 2: the problem, the user stories, **the MVP**, Not now; about ten minutes, no second model, no code | no stop unless it must ask; **you** see the brief with the plan at step 2's stop | `brief.md` |
 | 2 · plan  | `/step2 <slug>` | pins a worktree on stage 1's branch; GPT plans cold from the brief and the code (Opus, in the quick lane): the **stage map** (outcome on dev, demo, budget, risk, guard) and **every stage's detail** | Opus checks it inline (~5 min) against the MVP lens and fixes small things itself; a wrong stage 1 goes back to GPT once; then **you** confirm the brief and the stages in one stop, and how stages ship; your yes starts step 3 | `plan.md`, `reviews/plan-N.md`, `progress.md` |
-| 3 · build | starts by itself after your yes; `/step3 <slug>` resumes | **pure implementation** of the next stage, no layers inside; its own PR into `dev`, merged, deployed, its demo walked on dev; registers the bet when the signal is measurable | your checks and CI; **GPT** once for a data or auth stage, on its open PR while CI runs, and once as the release pass when a release carries one; a BLOCK is fixed and goes on | one PR per stage into `dev`; `runs/build-sN.txt`, `reviews/stage-N-K.md`, `reviews/release-*.md`; a PR into `main` per release |
+| 3 · build | starts by itself after your yes; `/step3 <slug>` resumes | **pure implementation** of the next stage, no layers inside and no checks while building; you test stage 1 by hand on a local URL; the local CI pass runs once, right before the push; merged on green CI, deployed, demo for PM on dev; registers the bet when the signal is measurable | the local CI pass and CI; your test of stage 1; **GPT** once for a data or auth stage, on its open PR while CI runs, and once as the release pass when a release carries one; a BLOCK is fixed and goes on | one PR per stage into `dev`; `runs/build-sN.txt`, `reviews/stage-N-K.md`, `reviews/release-*.md`; a PR into `main` per release |
 | learn · weekly | `/learn` | measures every registered hypothesis and the demand board in PostHog; Opus and GPT judge independently | **you** confirm the verdicts before anything is written back | `specs/learn-<date>/`; verdicts in the PostHog notebooks |
 
 The invariant is the pipeline's own: **no model grades its own work.** Opus scores GPT's plan; GPT
@@ -40,8 +50,8 @@ plans cold from the brief, so a brief that does not stand on its own comes back 
 ## Why this shape
 
 - **The stage is the unit of delivery.** A stage is the smallest increment a user can see on dev,
-  at most about four hours of build. It is done when it is merged, deployed and its demo script
-  passed on the dev environment, not when it is coded or approved. Stage 1, the MVP, aims to be on
+  at most about four hours of build. It is done when it is merged, deployed and served by the dev
+  host, with its demo script in the PR for PM, not when it is coded or approved. Stage 1, the MVP, aims to be on
   dev within a working day of the plan's yes, and value then arrives every few hours.
 - **The MVP is named at the start, not discovered at the end.** Step 1 rephrases the request in
   minutes and takes the MVP from its literal words; what a design shows beyond them waits for a later
@@ -52,7 +62,7 @@ plans cold from the brief, so a brief that does not stand on its own comes back 
   with ultracode on. When dev shows the map was wrong, `/step2` re-plans the stages not yet started.
 - **Reviews where they change the outcome.** Opus checks GPT's plan inline, in minutes: the plan is
   the cheapest place to cut, and your yes on the brief and the stages is the last word. A low-risk
-  stage reaches dev on Opus's checks and CI. A stage that touches data or access gets one GPT review
+  stage reaches dev on the local CI pass and CI (stage 1 after your test by hand). A stage that touches data or access gets one GPT review
   on its open PR, while CI runs; a release to main that carries such a stage gets one GPT release
   pass the same way, and a release of low-risk stages goes on CI and your merge. CI runs the checks,
   so GPT does not repeat them: it looks for what CI cannot see. Every review blocks only on
@@ -63,11 +73,11 @@ plans cold from the brief, so a brief that does not stand on its own comes back 
   plans it alone, and no GPT plan or review runs. Everything else takes the stages lane
   ([`checklists/mvp.md`](checklists/mvp.md) §9).
 - **One stop before code.** Step 1 goes straight on into step 2 unless it must ask; you see the
-  brief and the plan together at step 2's stop, your yes starts step 3, and each verified stage
-  starts the next. Nobody waits for a command to be typed.
+  brief and the plan together at step 2's stop, your yes starts step 3, and each stage on dev
+  starts the next. The one other wait is your test of stage 1 by hand, on a local URL. Nobody waits for a command to be typed.
 - **Safe on a shared dev.** PM and QA use dev. Every stage names its guard (additive only, a hidden
   route, a dev-only flag) until the stage that switches users over, and migrations stay additive.
-- **Progress means stages on dev.** `progress.md` counts stages verified on dev, not pipeline steps,
+- **Progress means stages on dev.** `progress.md` counts stages on dev, not pipeline steps,
   and every step prints it. Each stage PR's body carries it, so GitHub keeps the record.
 - **A bet, then a check.** Every change states its hypothesis in step 1; step 3 registers it in
   PostHog once its signal is measurable on dev; `/learn` judges it weekly after the release to main.
@@ -145,7 +155,8 @@ runs in a worktree of its own, run all the steps in that same session.
 /step1 ALL-646     # brief: your request rephrased, with the MVP; goes straight on unless it must ask
                    # plan:  GPT plans every stage (Opus alone in the quick lane); ONE stop: you confirm
                    #        the brief and the stages, and say how stages ship
-                   # build: your yes starts step 3, stage after stage, each verified on dev
+                   # build: your yes starts step 3; you test stage 1 by hand locally, the checks
+                   #        run once before each push, stages go to dev on green CI, PM tests there
 /step3 ALL-646     # resume a run; when you say so, it releases the stages to main (3g)
 /learn             # weekly: checks every shipped bet in PostHog; a scheduled task runs it every Monday
 ```
@@ -156,8 +167,9 @@ the speed, more usage), so the pace does not depend on `~/.codex/config.toml`, w
 app rewrites.
 
 **The pace to expect.** Step 1 about ten minutes; step 2 about half an hour (about ten minutes in
-the quick lane) to the one stop and your yes; each stage up to about four hours of build plus about
-half an hour of fixed cost (CI, deploy, the look on dev). Your answers are the other clock: the flow
+the quick lane) to the one stop and your yes; each stage up to about four hours of build plus
+about a quarter of an hour of fixed cost (the local CI pass, CI, deploy), and for stage 1 your
+test by hand. Your answers are the other clock: the flow
 asks few questions, assumes safe defaults, and stops only where it needs you.
 
 Set up once:
@@ -186,12 +198,11 @@ delete its branches. In a session with a worktree of its own, delete the session
 | 1c | a question that changes the MVP and has no safe default; with none, no stop | everything else is assumed and shown at 2e |
 | 2b | GPT returns QUESTIONS that change stage 1 | a stage 1 built around an ambiguity is wrong from its first line; a later stage's ambiguity is planned as an assumption instead |
 | 2c | the plan is still BLOCKED after one return to GPT: you decide each open item | a plan that does not converge in one return is cut wrong |
-| 2e | the one stop before code: you confirm the brief and the stages, and whether stages ship on your word (`Ship: ask`) or on their own (`Ship: auto`) | the last cheap moment to change course |
+| 2e | the one stop before code: you confirm the brief and the stages (say so if you want to look at every stage locally: `Ship: every`) | the last cheap moment to change course |
 | 3a | the plan does not detail the stage, or dev showed it is wrong: back to `/step2` | step 3 implements; it does not design |
 | 3a/3b | a stage passes one and a half times its budget, or a quick stage needs more than its lane allows: you choose what ships and what moves on | the timebox is what keeps value arriving every few hours |
-| 3c | `Ship: ask`: you look at the stage and say "ship" before its PR opens | you see what goes to the shared dev environment |
+| 3b | stage 1 is up on a local URL: you test it end to end and say ok, or what to change; then the checks run and its PR opens | the MVP is what you judge; later stages go to dev on green CI and PM tests them there |
 | 3d | a fix that leaves CI red, or a security or data fix whose re-review blocks again: you choose fix, hide behind the guard, or cut; a review with no verdict in twenty minutes: re-run it or merge on CI | a finding that keeps coming back is a cutting problem |
-| 3e | a step of the demo writes to shared dev data: you say yes first | dev is shared with PM and QA |
 | 3g | you decide when stages go to main; a release that carries a data or auth stage waits for its release pass | production is your call |
 
 ## What this flow does not give you
@@ -201,13 +212,13 @@ delete its branches. In a session with a worktree of its own, delete the session
   Where a wrong test is as dangerous as wrong code (migrations, auth and tenant isolation, money),
   those stages are exactly the ones GPT reviews; raise anything more with the requester before the
   stage.
-- **A cross-model review of every stage.** A low-risk stage reaches dev on Opus's checks, CI and the
-  look on dev; GPT sees it only in a release that carries a data or auth stage, and in the quick lane
+- **A cross-model review of every stage.** A low-risk stage reaches dev on CI and is looked at there
+  by PM; GPT sees it only in a release that carries a data or auth stage, and in the quick lane
   no second model sees the change at all. That is deliberate: dev is the
   place where such a stage is checked by being used.
-- **A second run of the suites.** GPT does not re-run them. Opus runs the affected tests before the
-  push, the real-DB ones against the migration sandbox, and CI runs every suite on the PR, the
-  real-DB ones against its own Postgres.
+- **A second run of the suites.** GPT does not re-run them. Opus runs the static checks and the
+  affected tests once, right before the push (the real-DB ones against the migration sandbox), and
+  CI runs every suite on the PR, the real-DB ones against its own Postgres.
 - **A guard around `.env`.** If you copy a `.env` into the worktree to run the app, GPT's reviews run
   where it is. GPT is told never to open it; that is an instruction, not a sandbox rule. The checks
   do not need a `.env`, so keep it out when you can.
