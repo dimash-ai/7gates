@@ -100,14 +100,14 @@ not wait for that.
 
 ## 5 · Reviews block only on ship-blockers
 
-The flow has three reviews, each by the other model: the **plan** (step 2, Opus inline; in the
-quick lane, §9, the requester's yes instead), a stage whose risk is **data** or **auth** (step 3,
-GPT, on its open PR while CI runs, before the merge into dev), and the **release to main** when it
-carries a data or auth stage or a cherry-pick that had to be resolved (step 3, GPT, once, while the
-main PR's CI runs). A low-risk stage reaches dev, and a release of low-risk stages reaches main, on
-the builder's checks, CI and the requester's merge. CI is the evidence for every mechanical check,
-so a review does not re-run it: it looks for what CI cannot see. Every review returns a **Must Fix
-only for a ship-blocker**, opened by its class in brackets:
+The flow has three reviews, each by the other model: the **plan** (step 2, GPT, blind, before any
+code; in the quick lane, §9, the requester's yes instead), a stage whose risk is **data** or
+**auth** (step 3, GPT, on its open PR while CI runs, before the merge into dev), and the **release
+to main** when it carries a data or auth stage or a cherry-pick that had to be resolved (step 3,
+GPT, once, while the main PR's CI runs). A low-risk stage reaches dev, and a release of low-risk
+stages reaches main, on the builder's checks, CI and the requester's merge. CI is the evidence for
+every mechanical check, so a review does not re-run it: it looks for what CI cannot see. Every
+review returns a **Must Fix only for a ship-blocker**, opened by its class in brackets:
 
 1. **Regression** `[regression]`: something users have today breaks, or changes without the plan
    saying so.
@@ -141,7 +141,9 @@ cited Must Fix items on the stage's branch, shows each fix with a test or a chec
 it, and pushes; green CI on the fix is the proof, and the stage merges without another GPT run. Only
 a `[security]` or `[data]` item gets one re-review of its fix, because those are the findings a
 wrong fix turns into an incident. CI still red after the fix round, or a re-review that blocks
-again, goes to the requester: fix now, hide behind the guard, or cut.
+again, goes to the requester: fix now, hide behind the guard, or cut. A plan's BLOCK is fixed the
+same way, in the plan by its author, and the list of fixes is recorded in place of a second verdict
+(step 2's 2d); a Must Fix the author believes is wrong goes to the requester, never overruled.
 
 ## 6 · Weight
 
@@ -186,8 +188,8 @@ it at the one stop (§4) and can switch it.
 
 - **Quick**: one stage of at most about two hours of build, with low risk: no schema change or
   backfill, no auth, tenant or RLS surface, no deletes or rewrites of existing records. Opus plans
-  the stage itself in step 2, from the code; there is no GPT plan, no plan check and no GPT review,
-  in step 3 or at the release. The requester's yes is the check of the plan; the requester's local
+  the stage in step 2, from the code, as in every lane; but no GPT reviews it, not the plan, not the
+  stage, not the release. The requester's yes is the check of the plan; the requester's local
   test, the local CI pass, CI and PM on dev are the checks of the build. A quick stage that turns
   out to need more (a migration, an auth change, a second stage, over three hours of build) leaves
   the lane: stop, tell the requester, and re-plan it with `/step2` in the stages lane.

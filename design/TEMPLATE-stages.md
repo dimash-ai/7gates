@@ -5,11 +5,11 @@ Base: <the brief's Base>
 Planned at: <the sha the plan was written against>
 
 <!-- Step 2 of the co-dev flow (/step2): the stage map and every stage's detail, so that step 3 is
-     implementation only. GPT writes it cold from the brief and the code; Opus checks it inline
-     against harness/checklists/mvp.md. Under about 300 lines: stage 1's detail is the fullest, a
-     later stage's detail is short, because the code will have moved by the time it is built and its
-     builder records any departure. Re-planning (/step2 again, after the map changes) rewrites only
-     the stages not yet started. Cite every claim about existing code as file:line. -->
+     implementation only. Opus writes it from the brief, the confirmed design and the code; GPT
+     reviews it blind against harness/checklists/mvp.md. Under about 300 lines: stage 1's detail is
+     the fullest, a later stage's detail is short, because the code will have moved by the time it is
+     built and its builder records any departure. Re-planning (/step2 again, after the map changes)
+     rewrites only the stages not yet started. Cite every claim about existing code as file:line. -->
 
 ## Decision
 <!-- Two to five sentences: the approach for the whole feature, and each rejected alternative in one
@@ -31,7 +31,7 @@ Planned at: <the sha the plan was written against>
      that place and that width too.
      covers: the brief's criterion ids.
      In the quick lane (mvp.md §9) the map has one row, risk low, a budget of at most about two
-     hours, and Opus writes the plan. -->
+     hours, and no GPT reviews the plan. -->
 
 | # | what users get on dev | demo on dev | budget | risk | guard | covers |
 |---|-----------------------|-------------|--------|------|-------|--------|

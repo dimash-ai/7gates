@@ -14,10 +14,10 @@ confirms the drawing; step 2 turns the brief and the confirmed design into stage
 **Fast by design: about ten minutes, and no stop unless it must ask.** Opus alone, from the input
 alone: no second model, no research, no reading of the code, no subagents, no plan, no branch. The
 brief stays under about 80 lines. If ultracode or a high effort is on, do not spend it here. In the
-stages lane GPT reads the brief cold in step 2, so an ambiguity this step misses comes back there as
-a question. The requester sees the brief together with the design at the design step's stop, the
-flow's one stop before any code (`<H>/checklists/mvp.md` §4); a brief with nothing to draw is seen
-with the plan at step 2's stop instead.
+stages lane GPT reads the brief cold when it reviews the plan in step 2, so an ambiguity this step
+misses comes back there as a question. The requester sees the brief together with the design at the
+design step's stop, the flow's one stop before any code (`<H>/checklists/mvp.md` §4); a brief with
+nothing to draw is seen with the plan at step 2's stop instead.
 
 `$1` is the slug: the Linear id when there is an issue (`ALL-646`), otherwise a short kebab-case
 name. `$2` is the code repo, optional. If the arguments carry anything else (a URL, a path, the

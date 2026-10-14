@@ -19,9 +19,8 @@ All of the build flows rest on the same three rules:
   **stage mode**, a Must Fix is only a ship-blocker
   ([`harness/checklists/mvp.md`](checklists/mvp.md) §5), everything else becomes a follow-up, and
   a BLOCK is fixed and goes on with CI as its proof, re-scored only for a security or data item.
-- **The reviewer runs "blind"** (one exception: in the co-dev flow Opus checks GPT's plan inline,
-  for speed, and the requester's yes is the last word). GPT reviews in a separate `codex exec`
-  process; Opus reviews from a fresh, clean-context subagent. The reviewer never grades an artifact
+- **The reviewer runs "blind".** GPT reviews in a separate `codex exec` process; Opus reviews from
+  a fresh, clean-context subagent. The reviewer never grades an artifact
   it watched being built.
 
 Both roles work to the four house-rule principles in [`CLAUDE.md`](CLAUDE.md) — Think Before Coding,
@@ -40,13 +39,13 @@ becomes its own PR into dev, merged on green CI and checked on the dev environme
 |------|----------|------|--------|
 | **1 — brief** | One short document: the request rephrased for the planner, with the problem, the user stories, the MVP, Not now and whether there is something to draw | **Opus**, in minutes | **you**, with the design |
 | **design** | A hi-fi HTML prototype of what users will see, opened in your browser (a PM handoff shown instead; skipped when nothing users see changes) | **Opus**, in about half an hour | **you**: the one stop before code |
-| **2 — plan**  | The stage map (outcome on dev, demo, budget, risk, guard) and every stage's detail | **GPT** plans, cold, from the brief, the confirmed design and the code (**Opus** alone in the quick lane) | Opus, inline; with nothing to draw, then **you**, brief and plan in one stop |
+| **2 — plan**  | The stage map (outcome on dev, demo, budget, risk, guard) and every stage's detail | **Opus** plans from the brief, the confirmed design and the code | **GPT**, blind, after cutting stage 1 itself (none in the quick lane); with nothing to draw, then **you**, brief and plan in one stop |
 | **3 — build, once per stage** | The stage, implemented with no layers inside, its PR merged into dev and verified there; the release to main when you say; the hypothesis registered in PostHog | **Opus** | CI; **GPT** for data/auth stages and a release that carries one |
 | **learn — weekly** | A verdict on every shipped hypothesis, and what is in demand | **Opus** measures in PostHog; **Opus and GPT** judge independently | **you** |
 
 Step 1 is not scored: the only judge of an intent is the person who has it. GPT's independent
-reading comes in step 2, where it plans cold from the brief, so a brief that does not stand on its
-own comes back as questions. Every result lands in the code repo's gitignored
+reading comes in step 2, where it reviews the plan cold, without the conversation, so a brief that
+does not stand on its own comes back as questions. Every result lands in the code repo's gitignored
 `specs/<slug>/`. [ponytail](https://github.com/DietrichGebert/ponytail)'s ladder and
 over-engineering review run through all three steps from
 [`harness/checklists/ponytail.md`](checklists/ponytail.md). Full detail:

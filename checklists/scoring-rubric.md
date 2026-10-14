@@ -65,8 +65,9 @@ table above:
   `[security]`, `[broken]`, `[ci-rule]` or `[unsafe-on-dev]` (`[mvp]` in a plan review), and says
   what input or sequence leads to what wrong result.
 - **A BLOCK is fixed and goes on** (`mvp.md` §5): the doer fixes the cited items, and green CI on
-  the fix is the proof. There is no re-score, except for a `[security]` or `[data]` item, whose fix
-  gets one re-review. The BLOCKED verdict and its score stay on record.
+  the fix is the proof (for a plan, the recorded list of fixes). There is no re-score, except for a
+  `[security]` or `[data]` item, whose fix gets one re-review. The BLOCKED verdict and its score
+  stay on record.
 - CI runs the checks on the change's PR while the review runs, so a stage-mode review does not
   re-run them and reports no pass or fail counts of its own.
 

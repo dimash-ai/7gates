@@ -11,12 +11,14 @@ written to a file by `-o`; results land in the code repo's `specs/<slug>/`, neve
 
 - **Step 1, brief — no Codex.** Opus rephrases the request into the brief in minutes; Codex's
   independent reading comes in step 2.
-- **Step 2, plan — Codex is the doer.** Read-only, it plans cold from the brief and the code: the
-  stage map and every stage's detail, so step 3 only implements, and returns the plan as its final
-  message. If the brief is ambiguous in a way that would change stage 1, it returns QUESTIONS; an
-  ambiguity that only touches a later stage is planned as an UNVERIFIED assumption. Opus checks it
-  inline, in stage mode, and may send it back once with the reason. In the quick lane (one low-risk
-  stage of about two hours) Codex does not plan: Opus does, and the requester's yes is the check.
+- **Step 2, plan — Codex is the reviewer.** Opus plans the stage map and every stage's detail, so
+  step 3 only implements. Codex, read-only and blind to the conversation, first cuts stage 1 itself
+  from the brief, the confirmed design and the code (the smallest stage 1 a user would recognise,
+  and its hours of build), then reads the plan and reviews it in stage mode (`Step: plan`): only the
+  plan ship-blockers of `harness/checklists/mvp.md` §5 are Must Fix items, its own cut the evidence
+  for a stage 1 that is too big. If the brief is ambiguous in a way that would change stage 1, it
+  returns QUESTIONS; a later stage's ambiguity is a follow-up. In the quick lane (one low-risk stage
+  of about two hours) Codex does not run: Opus plans it, and the requester's yes is the check.
 - **Step 3, build — Codex reviews where it changes the outcome.** Opus implements each stage with no
   review layers inside it. Codex reviews a stage whose risk is data or auth on its open PR, while CI
   runs, before it merges into dev (`Step: build`), and a release to main that carries such a stage,
@@ -33,8 +35,8 @@ written to a file by `-o`; results land in the code repo's `specs/<slug>/`, neve
   requester decides. Not scored, so no verdict block.
 
 The doer fixes only the reviewer's cited Must Fix items on a BLOCK, then resubmits; in the co-dev
-flow's stage mode the fix goes on with CI as its proof, re-reviewed only for a security or data
-item. Full flow:
+flow's stage mode the fix goes on, with CI as its proof for a stage and a recorded list of fixes for
+a plan, re-reviewed only for a security or data item. Full flow:
 `harness/README-codev.md`. The other flows, and Codex's roles in them, are in each flow's
 `harness/README-*.md`; `PIPELINE_OVERVIEW.md` says when each still applies.
 

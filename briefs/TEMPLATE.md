@@ -10,11 +10,11 @@ Design: <html (a prototype the design step draws), handoff <path> (a PM design e
 Harness: <the harness commit step 1 ran on>
 Date: YYYY-MM-DD
 
-<!-- Step 1 of the co-dev flow (/step1): the requester's input, rephrased into the prompt step 2 plans
-     from. The planner never saw the conversation, so the brief stands on its own: no "as
-     discussed". It says WHAT and WHY in the user's terms, never HOW: no modules, endpoints, tables or
-     designs. Under about 80 lines. Written in English; the requester's words and every UI string stay
-     verbatim in their language.
+<!-- Step 1 of the co-dev flow (/step1): the requester's input, rephrased into what step 2 plans
+     from. GPT reviews the plan against it without the conversation, so the brief stands on its own:
+     no "as discussed". It says WHAT and WHY in the user's terms, never HOW: no modules, endpoints,
+     tables or designs. Under about 80 lines. Written in English; the requester's words and every UI
+     string stay verbatim in their language.
      The header is machine-read: one key per line, a plain value with no backticks or bold. Branch is
      the base name of the stage branches (<Branch>-s1, <Branch>-s2, …, and <Branch>-main); it never
      carries the Linear id, because a branch or PR title with the id makes Linear close the issue when
