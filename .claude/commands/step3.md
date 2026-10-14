@@ -260,8 +260,10 @@ that shows green (and, for a data or auth stage, its review in): merge it (below
 the CI time on the wrap-up (the build log, the board, the bet in PostHog, 3f), then read; only if CI
 still runs after that, end the turn with the board and one line, "stage N: CI running, I merge it on
 green; any message resumes the run". When Auto-fix wakes you on a red stage you have already built
-on, stash the next stage's work, switch `<WT>` back to the red stage's branch, fix and push, then
-switch back and pop the stash.
+on, commit the next stage's work in progress on its own branch (`git -C <WT> add -A && git -C <WT>
+commit -m wip`), switch `<WT>` back to the red stage's branch, fix and push, then switch back
+and undo the WIP commit (`git -C <WT> reset --soft HEAD~1`). Never `git stash`: every worktree of
+the repo shares one stash stack, and another session's `stash pop` takes whatever is on top.
 
 **A data or auth stage** gets one GPT review while CI runs: start it as soon as the PR is open.
 **Reviewer = GPT (Codex)**, on the committed branch, looking for what CI cannot see. It does not
@@ -313,8 +315,9 @@ git -C "$WT" status --porcelain   # must be empty
 **If that last `status` is not empty**, look at what changed before anything else: a generated file a
 check rewrote is drift GPT should have reported as a Must Fix; anything else is the reviewer
 touching the tree, and a verdict made while editing the code is not a review. Clear it without
-losing it (`git stash push --include-untracked -m "codev $SLUG $TAG: left by the review"`, then note
-the stash's sha from `git stash list --format='%H %gs'`), and re-run the review.
+losing it, and without the shared stash stack: save it as a patch, then reset the tree
+(`git -C <WT> add -A && git -C <WT> diff --cached --binary > <S>/runs/<the review tag>.left.patch &&
+git -C <WT> reset --hard --quiet`), and re-run the review.
 
 Read the verdict, report its **Status**, and put every Should Consider item on the board's
 Follow-ups; add its Status and Release Risk to the PR body's Verification
@@ -334,12 +337,23 @@ Follow-ups; add its Status and Release Risk to the PR body's Verification
 **The merge.** With CI green, and for a data or auth stage its review APPROVED or its Must Fix items
 fixed as above, mark a draft ready and merge it into `<BASE>` **on your own**, without asking:
 merging into dev on green CI is the requester's standing ask (`mvp.md` §10), and their ok on the
-design, or their test of stage 1, came before the PR.
+design, or their test of stage 1, came before the PR. Right before the merge, the block checks the
+Alembic chains against the fresh `<BASE>`: a parallel lane may have merged a migration since this
+stage was cut, CI on this PR ran before that, and two heads fail the pre-deploy `alembic upgrade
+head` on every service of the app. When it refuses, do what it says: point this stage's first new
+revision at the head it names (the revision is applied nowhere yet, so re-pointing it is safe),
+re-run the migration sandbox proof, push, and merge on the next green. A `<BASE>` that is already
+forked needs an Alembic merge revision first: that is the requester's call.
 
 ```bash
 H=$(d=$PWD; while [ "$d" != / ] && [ ! -f "$d/harness/prompts/reviewer.md" ]; do d=$(dirname "$d"); done; [ "$d" != / ] && echo "$d/harness")
 . "${H:?no harness/ at or above this directory}/bin/codev-env.sh" "$1" "$2" || exit 1
-cd "$R" && { [ "$(gh pr view <PR number> --json isDraft --jq .isDraft)" != true ] || gh pr ready <PR number>; } && gh pr merge <PR number> --merge
+codev_need_header || exit 1
+PR=<PR number>
+cd "$R" && B=$(gh pr view "$PR" --json headRefName --jq .headRefName) || exit 1
+git -C "$M" fetch origin "$BASE" "$B" --quiet || { echo "codev: cannot fetch origin/$BASE and origin/$B"; exit 1; }
+codev_need_one_alembic_head "origin/$BASE" "origin/$B" || exit 1
+{ [ "$(gh pr view "$PR" --json isDraft --jq .isDraft)" != true ] || gh pr ready "$PR"; } && gh pr merge "$PR" --merge
 ```
 
 The board: `PR` (and `review` while GPT runs), then `on dev` once the deploy below is done.
@@ -384,7 +398,10 @@ When the requester says (after PM signs off on dev; superapp's `CLAUDE.md`, "Pro
 
 1. **The branch.** Cut `<BR>-main` from `origin/main` (a later promotion of more stages uses
    `<BR>-main-2`, and so on) and cherry-pick each promoted stage's own commits, in stage order. A
-   conflict means someone else's unpromoted work overlaps these files: stop and coordinate.
+   conflict means someone else's unpromoted work overlaps these files: stop and coordinate. The
+   block ends by checking the Alembic chains the release touches: one head each on main, and every
+   parent already there. A migration whose parent another engineer has not promoted yet cannot go
+   first (superapp's `CLAUDE.md`, "Migrations ride with their code"): stop and coordinate.
 
    ```bash
    H=$(d=$PWD; while [ "$d" != / ] && [ ! -f "$d/harness/prompts/reviewer.md" ]; do d=$(dirname "$d"); done; [ "$d" != / ] && echo "$d/harness")
@@ -398,6 +415,7 @@ When the requester says (after PM signs off on dev; superapp's `CLAUDE.md`, "Pro
      for c in $(gh pr view "$pr" --json commits --jq '.commits[].oid'); do git -C "$WT" cherry-pick "$c" || { echo "codev: conflict at $c (PR $pr) - stop and coordinate"; exit 1; }; done
    done
    git -C "$WT" log --oneline origin/main..HEAD
+   codev_need_one_alembic_head origin/main "$BR-$L"
    ```
 
 2. **Does it need a release pass?** Only when the release carries a stage whose risk is data or

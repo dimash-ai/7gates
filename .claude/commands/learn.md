@@ -8,8 +8,9 @@ argument-hint: [repo-path]
 The last step of the loop. `/step1` states a hypothesis, `/step2` makes it measurable, `/step3`
 ships it and registers it in PostHog; `/learn` checks every registered hypothesis against what
 users did, and reads the demand board for what is used and what is not. It runs weekly, from a
-scheduled task or by hand. It reads, judges and proposes; it writes nothing to PostHog until the
-requester says yes.
+scheduled task or by hand. It reads, judges and proposes; before the requester's yes, the only thing
+it writes to PostHog is the release record of a hypothesis that reached prod (L2), a fact that needs
+no judgment.
 
 `$1` is the code repo, optional, as in the steps. Every bash block sources
 `harness/bin/codev-env.sh` with the slug `learn-<today>`, so this run's files land in `<S>` = the
@@ -18,9 +19,10 @@ directory.
 
 Three rules hold throughout:
 
-- **PostHog only, and read-only until the stop.** The numbers come from PostHog through its MCP.
-  Never a database: superapp's rule against agents touching dev or prod databases holds here too,
-  and PostHog holds what the review needs.
+- **PostHog only, and no judgment written before the yes.** The numbers come from PostHog through
+  its MCP. Never a database: superapp's rule against agents touching dev or prod databases holds
+  here too, and PostHog holds what the review needs. Release records (L2) are written at once;
+  verdicts, the review notebook and new bets wait for the requester (L6).
 - **No verdict stands on one model.** Opus and GPT judge independently from the same data file;
   where they differ, the requester decides.
 - **Small numbers stay small.** With about a hundred weekly users, most changes cannot reach
@@ -57,7 +59,13 @@ H=$(d=$PWD; while [ "$d" != / ] && [ ! -f "$d/harness/prompts/reviewer.md" ]; do
 cd "$R" && gh pr list --base main --state merged --head "<branch>-main" --json number,title,mergedAt,url
 ```
 
-Its `mergedAt` is the release date, and the window starts there. Note it for L6; write nothing yet.
+Its `mergedAt` is the release date, and the window starts there. **Record it right away**: a release
+is a fact and waits for no verdict. For every registered hypothesis whose release you found and
+whose notebook still says `building`, add an annotation `<slug> released` at its release date, and
+in its notebook set Status `live`, Released to that date, and Review after to the release date plus
+the window its Hypothesis states; when it states none, leave Review after empty and raise it at L5.
+These writes stand even when nobody answers at L5: the writes the review of 2026-10-05 proposed
+there were never made, and a week later PostHog held no annotation since 2026-09-01.
 
 ## L3 — Measure
 
@@ -109,17 +117,18 @@ echo "codex exit=$?  verdict bytes=$(wc -c < "$S/verdict-codex.md" 2>/dev/null |
 Merge the two: where the verdicts agree, propose that verdict; where they differ, show both with
 their reasons. **STOP** and show the requester, per hypothesis, the signal, its target, the value,
 how many people it rests on, both verdicts and the decision each proposes; then the demand summary
-and the new bets. A scheduled run ends its turn here, and the requester answers in that session.
-Their answers are final.
+and the new bets. Before the turn ends, send the requester a push notification when the session can
+(the PushNotification tool): one line with how many verdicts wait for them and the date of the
+review, since a scheduled run that stops quietly is easy to miss. A scheduled run ends its turn
+here, and the requester answers in that session. Their answers are final.
 
 ## L6 — Record
 
-On the yes, and only then, write to PostHog:
+On the yes, and only then, write to PostHog (the release records went in at L2):
 
-- every newly released hypothesis: an annotation `<slug> released` at its release date, and in its
-  notebook Status `live`, Released and Review after;
 - every judged hypothesis: a row in its notebook's Verdict log (date, value and people, target,
   verdict, decision) and its new Status;
+- a Review after the requester set at L5 for a hypothesis whose window was missing;
 - one review notebook, `Hypothesis review · <date>`: the verdict table, the demand summary, and the
   bets the requester chose to take.
 

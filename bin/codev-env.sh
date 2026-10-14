@@ -80,3 +80,50 @@ codev_need_approved_plan() {
   v=$(ls "$S"/reviews/plan-*.md 2>/dev/null | sort | tail -1)
   { [ -s "$S/plan.md" ] && [ -n "$v" ] && grep -q '^Status: APPROVED' "$v"; } || { echo "codev: no APPROVED plan verdict in $S/reviews - finish /step2 $SLUG first" >&2; return 1; }
 }
+
+# Merging <head> into <base> must leave every Alembic chain that <head> adds a revision to with one
+# head, and every down_revision must name a revision the merged tree holds. Two migrations cut from
+# the same parent in parallel lanes fork the chain, and the pre-deploy `alembic upgrade head` then
+# fails on every service of the app; CI on the PR ran before the other migration merged, so its
+# green does not show the fork. Reads the two refs only (the caller fetches them first): no
+# checkout, no database.
+codev_need_one_alembic_head() {
+  local base="$1" head="$2" t d n rc=0
+  t=$(mktemp -d) || return 1
+  for d in $(git -C "$M" diff --name-only --no-renames --diff-filter=AMD "$base...$head" -- '*alembic/versions/*.py' | sed 's#/[^/]*$##' | sort -u); do
+    # The directory as the merge leaves it: <head>'s version of every file it adds, changes or
+    # deletes, <base>'s of the rest.
+    { git -C "$M" diff --raw --no-abbrev --no-renames --diff-filter=AMD "$base...$head" -- "$d/" | awk '{ print "H", $6, $4 }'
+      git -C "$M" ls-tree "$base" -- "$d/" | awk '$2 == "blob" { print "B", $4, $3 }'
+    } | awk '$2 ~ /\.py$/ { if ($1 == "H") h[$2] = $3; else if (!($2 in h)) b[$2] = $3 }
+             END { for (p in h) if (h[p] !~ /^0+$/) print h[p]; for (p in b) print b[p] }' | _codev_alembic_ids > "$t/merged"
+    git -C "$M" diff --raw --no-abbrev --no-renames --diff-filter=A "$base...$head" -- "$d/" | awk '{ print $4 }' | _codev_alembic_ids > "$t/added"
+    sed -n 's/^R //p' "$t/merged" | sort -u > "$t/revs"
+    sed -n 's/^D //p' "$t/merged" | sort -u > "$t/downs"
+    n=$(comm -23 "$t/revs" "$t/downs" | grep -c .)
+    if [ "$n" -gt 1 ]; then
+      echo "codev: merging $head into $base leaves $n Alembic heads in $d: $(comm -23 "$t/revs" "$t/downs" | tr '\n' ' ')" >&2
+      echo "codev: this change adds: $(sed -n 's/^R //p' "$t/added" | tr '\n' ' ')- point the down_revision of its first new revision at the other head (it is applied nowhere yet), re-run the migration sandbox proof, push, and merge on the next green; if neither head is this change's, $base is already forked and needs an Alembic merge revision first: stop and tell the requester" >&2
+      rc=1
+    fi
+    if [ -n "$(comm -13 "$t/revs" "$t/downs")" ]; then
+      echo "codev: in $d a down_revision names $(comm -13 "$t/revs" "$t/downs" | tr '\n' ' ')which $base does not hold: that migration has to reach $base first, or go with this change" >&2
+      rc=1
+    fi
+  done
+  rm -rf "$t"
+  return $rc
+}
+
+# Reads blob ids on stdin; prints "R <id>" for each revision and "D <id>" for each id a down_revision
+# names (one, none, or a tuple, also one spread over several lines). Ids are double-quoted, as ruff
+# formats them.
+_codev_alembic_ids() {
+  git -C "$M" cat-file --batch | awk '
+    function ids(   n, q, i) { n = split($0, q, "\""); for (i = 2; i <= n; i += 2) print "D " q[i] }
+    /^[0-9a-f]+ blob [0-9]+$/ { down = 0; next }
+    /^revision(:[^=]*)?[[:space:]]*=[[:space:]]*"/ { split($0, r, "\""); print "R " r[2]; next }
+    /^down_revision(:[^=]*)?[[:space:]]*=/ { ids(); down = ($0 ~ /\([^)]*$/); next }
+    down { ids(); if ($0 ~ /\)/) down = 0 }
+  '
+}

@@ -60,6 +60,10 @@ planned around the same one (a service that does not run under RLS, planned as i
 builder re-decided much of each plan at build time anyway. Now the builder plans, with everything
 the session knows, and GPT reviews the plan blind. It cuts stage 1 itself before it reads the plan,
 so its cold reading of the brief, which twice caught a stage 1 too big for one stage, still happens.
+The same day, the merge into dev and the release branch started checking the Alembic chains (a
+fork of two migrations had failed every Focal pre-deploy on 2026-10-09), step 3 traded `git stash`
+for a WIP commit and a patch file (every worktree shares one stash stack), and `/learn` started
+recording a release at once instead of after the requester's yes, which had not come for a week.
 
 ## The steps
 
