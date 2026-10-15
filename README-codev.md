@@ -209,7 +209,7 @@ lane); each stage up to about four hours of build plus the local CI pass, with C
 minutes a round) and the deploy running while the next stage is built. Your answers are the other
 clock: after your ok on the design, nothing waits for you until the release to main.
 
-Set up once:
+Set up once (step by step, from the clone to a first run: [`SETUP.md`](SETUP.md)):
 
 - **Codex CLI**, logged in: GPT reviews the plan in step 2, and data and auth stages in step 3.
 - **git ≥ 2.31** (for `rev-parse --path-format`), and **`gh`**, authenticated, for the PRs.

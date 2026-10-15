@@ -77,6 +77,8 @@ cycle. The 3-gate and 7-step commands were removed on 2026-09-24.
 
 ## Prerequisites
 
+Step by step on a new machine, from the clone to a first run: [`SETUP.md`](SETUP.md).
+
 - **Claude Code** (Opus) — author of the brief in step 1, of the design, and of the plan in step 2;
   builder in step 3.
 - **Codex CLI**, authenticated — GPT runs as `codex exec`: reviewer of the plan in step 2
